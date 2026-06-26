@@ -10,9 +10,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Snackbar,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -27,20 +33,26 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SearchIcon from '@mui/icons-material/Search';
 import { api } from '../api/client';
 
-const emptyForm = { name: '', domain: '', ip: '', mac: '' };
+const emptyForm = { name: '', domain: '', ip: '', mac: '', group_id: '', use_broadcast: false, wake_cooldown_seconds: 30 };
 
 const DevicesPage = () => {
   const [devices, setDevices] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanSubnet, setScanSubnet] = useState('192.168.1.0/24');
+  const [scanResults, setScanResults] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   const loadDevices = async () => {
-    const data = await api.getDevices(true);
+    const [data, groupData] = await Promise.all([api.getDevices(true), api.getGroups()]);
     setDevices(data);
+    setGroups(groupData);
   };
 
   useEffect(() => {
@@ -111,10 +123,13 @@ const DevicesPage = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Apparaten</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Koppel elk domein aan het juiste IP-adres en MAC-adres voor Wake-on-LAN.
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" gutterBottom>Apparaten</Typography>
+          <Typography color="text.secondary">Koppel domeinen aan IP/MAC voor slimme Wake-on-LAN.</Typography>
+        </Box>
+        <Button variant="outlined" startIcon={<SearchIcon />} onClick={() => setScanOpen(true)}>Netwerk scannen</Button>
+      </Box>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -158,6 +173,30 @@ const DevicesPage = () => {
                   value={form.mac}
                   onChange={(e) => setForm({ ...form, mac: e.target.value })}
                   placeholder="AA:BB:CC:DD:EE:FF"
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Cooldown (s)"
+                  value={form.wake_cooldown_seconds}
+                  onChange={(e) => setForm({ ...form, wake_cooldown_seconds: Number(e.target.value) })}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Groep</InputLabel>
+                  <Select value={form.group_id} label="Groep" onChange={(e) => setForm({ ...form, group_id: e.target.value })}>
+                    <MenuItem value="">Geen</MenuItem>
+                    {groups.map((group) => <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControlLabel
+                  control={<Switch checked={form.use_broadcast} onChange={(e) => setForm({ ...form, use_broadcast: e.target.checked })} />}
+                  label="Broadcast WOL"
                 />
               </Grid>
               <Grid item xs={12} md={2}>
@@ -288,6 +327,23 @@ const DevicesPage = () => {
           <Button onClick={() => setDialogOpen(false)}>Annuleren</Button>
           <Button variant="contained" onClick={handleUpdate}>Opslaan</Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog open={scanOpen} onClose={() => setScanOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Netwerkscanner</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Subnet" value={scanSubnet} onChange={(e) => setScanSubnet(e.target.value)} sx={{ mt: 1, mb: 2 }} />
+          <Button variant="contained" onClick={() => api.scanNetwork({ subnet: scanSubnet }).then((result) => setScanResults(result.hosts || []))}>
+            Start scan
+          </Button>
+          {scanResults.map((host) => (
+            <Box key={host.ip} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+              <Typography>{host.ip}</Typography>
+              <Button size="small" onClick={() => { setForm({ ...form, ip: host.ip }); setScanOpen(false); }}>Gebruik IP</Button>
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions><Button onClick={() => setScanOpen(false)}>Sluiten</Button></DialogActions>
       </Dialog>
 
       <Snackbar

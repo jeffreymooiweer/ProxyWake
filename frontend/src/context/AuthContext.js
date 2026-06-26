@@ -7,11 +7,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [passwordRequired, setPasswordRequired] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
   const refresh = useCallback(async () => {
     const status = await api.authStatus();
     setAuthenticated(status.authenticated);
     setPasswordRequired(status.password_required);
+    setOnboardingCompleted(status.onboarding_completed);
     setLoading(false);
     return status;
   }, []);
@@ -31,8 +33,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ loading, authenticated, passwordRequired, login, logout, refresh }),
-    [loading, authenticated, passwordRequired, login, logout, refresh],
+    () => ({ loading, authenticated, passwordRequired, onboardingCompleted, login, logout, refresh }),
+    [loading, authenticated, passwordRequired, onboardingCompleted, login, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

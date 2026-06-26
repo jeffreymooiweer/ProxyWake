@@ -1,24 +1,32 @@
-import hashlib
-import hmac
+import bcrypt
 from functools import wraps
 
 from flask import jsonify, request, session
 
-from config import get_admin_password, get_or_create_api_key
+from config import (
+    get_admin_password_hash,
+    get_or_create_api_key,
+    get_previous_api_key,
+    save_admin_password_hash,
+)
+
+
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def _password_matches(candidate):
-    stored = get_admin_password()
+    stored = get_admin_password_hash()
     if not stored:
         return True
-    return hmac.compare_digest(
-        hashlib.sha256(candidate.encode()).hexdigest(),
-        hashlib.sha256(stored.encode()).hexdigest(),
-    )
+    try:
+        return bcrypt.checkpw(candidate.encode(), stored.encode())
+    except ValueError:
+        return False
 
 
 def is_auth_configured():
-    return bool(get_admin_password())
+    return bool(get_admin_password_hash())
 
 
 def is_authenticated():
@@ -30,8 +38,14 @@ def is_authenticated():
 def verify_api_key(provided_key):
     if not provided_key:
         return False
-    expected = get_or_create_api_key()
-    return hmac.compare_digest(provided_key.strip(), expected)
+    provided_key = provided_key.strip()
+    current = get_or_create_api_key()
+    previous = get_previous_api_key()
+    if provided_key == current:
+        return True
+    if previous and provided_key == previous:
+        return True
+    return False
 
 
 def get_request_api_key():
@@ -39,6 +53,10 @@ def get_request_api_key():
     if auth_header.lower().startswith('bearer '):
         return auth_header[7:].strip()
     return request.headers.get('X-API-Key', '').strip()
+
+
+def set_password(password):
+    save_admin_password_hash(hash_password(password))
 
 
 def login_required(f):

@@ -9,7 +9,8 @@ backend/__pycache__/
 backend/devices.db
 backend/app.log
 backend/data/
-backend/.api_key
+backend/api_keys.json
+backend/password.hash
 
 # Docker
 *.pyc

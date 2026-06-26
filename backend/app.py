@@ -1,33 +1,59 @@
+import csv
+import io
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_sqlalchemy import SQLAlchemy
-from wakeonlan import send_magic_packet
+from sqlalchemy import func
 
 from auth import (
+    _password_matches,
     api_key_or_session_required,
     api_key_required,
-    get_request_api_key,
     is_auth_configured,
     is_authenticated,
     login_required,
-    verify_api_key,
+    set_password,
 )
-from config import DATA_DIR, DB_PATH, LOG_FILE, get_allowed_origins, get_or_create_api_key, get_secret_key
-from utils import check_host_online, is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac
+from config import DATA_DIR, LOG_FILE, get_allowed_origins, get_or_create_api_key, get_previous_api_key, get_secret_key, rotate_api_key
+from integrations import (
+    build_caddy_config,
+    build_home_assistant_config,
+    build_npm_global_config,
+    build_npm_host_config,
+    build_traefik_config,
+    integration_instructions,
+)
+from models import AuditLog, Device, DeviceGroup, NpmHost, ScheduledWake, WakeEvent, Webhook, db
+from services import (
+    export_devices,
+    get_setting,
+    import_devices,
+    is_onboarding_complete,
+    log_audit,
+    migrate_db,
+    record_wake_event,
+    set_setting,
+    smart_wake_device,
+    start_scheduler,
+    wake_and_wait,
+    wake_group,
+)
+from utils import is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac, scan_subnet, subnet_from_ip
 
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 app.config['SECRET_KEY'] = get_secret_key()
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATA_DIR / "devices.db"}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400
+
+db.init_app(app)
 
 allowed_origins = get_allowed_origins()
 if allowed_origins:
@@ -35,44 +61,10 @@ if allowed_origins:
 else:
     CORS(app, supports_credentials=True)
 
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=['200 per minute'],
-    storage_uri='memory://',
-)
-
+limiter = Limiter(get_remote_address, app=app, default_limits=['300 per minute'], storage_uri='memory://')
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-logging.basicConfig(
-    filename=str(LOG_FILE),
-    level=logging.INFO,
-    format='%(asctime)s:%(levelname)s:%(message)s',
-)
-
-db = SQLAlchemy(app)
-
-
-class Device(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    domain = db.Column(db.String(255), nullable=False, unique=True)
-    ip = db.Column(db.String(15), nullable=False)
-    mac = db.Column(db.String(17), nullable=False)
-    name = db.Column(db.String(120), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    def to_dict(self, include_status=False):
-        payload = {
-            'id': self.id,
-            'domain': self.domain,
-            'ip': self.ip,
-            'mac': self.mac,
-            'name': self.name or self.domain,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-        }
-        if include_status:
-            payload['online'] = check_host_online(self.ip)
-        return payload
+logging.basicConfig(filename=str(LOG_FILE), level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def validate_device_payload(data, device=None):
@@ -83,57 +75,50 @@ def validate_device_payload(data, device=None):
 
     if not domain or not ip or not mac:
         return None, 'Alle verplichte velden moeten ingevuld zijn.'
-
     if not is_valid_domain(domain):
         return None, 'Ongeldige domeinnaam.'
-
     if not is_valid_ip(ip):
         return None, 'Ongeldig IP-adres.'
-
     if not is_valid_mac(mac):
-        return None, 'Ongeldig MAC-adres (formaat: AA:BB:CC:DD:EE:FF).'
+        return None, 'Ongeldig MAC-adres.'
 
     existing = Device.query.filter_by(domain=domain).first()
     if existing and (device is None or existing.id != device.id):
         return None, 'Dit domein is al gekoppeld aan een ander apparaat.'
 
-    return {'domain': domain, 'ip': ip, 'mac': mac, 'name': name}, None
+    group_id = data.get('group_id')
+    npm_host_id = data.get('npm_host_id')
+    if group_id == '' or group_id is None:
+        group_id = None
+    else:
+        group_id = int(group_id)
+    if npm_host_id == '' or npm_host_id is None:
+        npm_host_id = None
+    else:
+        npm_host_id = int(npm_host_id)
 
-
-def send_wake_packet(device):
-    send_magic_packet(device.mac, ip_address=device.ip)
-    logging.info('Magic Packet verzonden naar %s (%s)', device.domain, device.ip)
+    return {
+        'domain': domain,
+        'ip': ip,
+        'mac': mac,
+        'name': name,
+        'group_id': group_id,
+        'npm_host_id': npm_host_id,
+        'use_broadcast': bool(data.get('use_broadcast', False)),
+        'broadcast_ip': data.get('broadcast_ip'),
+        'wake_cooldown_seconds': int(data.get('wake_cooldown_seconds', 30)),
+    }, None
 
 
 def get_proxywake_base_url():
+    stored = get_setting('proxywake_url')
+    if stored:
+        return stored.rstrip('/')
     return (request.headers.get('X-ProxyWake-Base-Url') or request.host_url.rstrip('/')).rstrip('/')
 
 
-def build_npm_global_config(base_url, api_key):
-    return f"""# ProxyWake - Globale configuratie (eenmalig)
-# Plak dit in NPM: Settings > Custom Locations > of /data/nginx/custom/server_proxy.conf
-#
-# Vervang PROXYWAKE_HOST indien nodig door het IP van je ProxyWake-server.
-
-location = /_proxywake_trigger {{
-    internal;
-    proxy_pass {base_url}/api/wake/by-host;
-    proxy_pass_request_body off;
-    proxy_set_header Content-Length "";
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-API-Key "{api_key}";
-    proxy_connect_timeout 2s;
-    proxy_read_timeout 2s;
-}}
-"""
-
-
-def build_npm_host_config():
-    return """# ProxyWake - Voeg dit toe aan Advanced van deze proxy host
-mirror /_proxywake_trigger;
-mirror_request_body off;
-"""
+def actor_ip():
+    return request.headers.get('X-Forwarded-For', request.remote_addr)
 
 
 @app.after_request
@@ -145,18 +130,39 @@ def add_security_headers(response):
     return response
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'service': 'ProxyWake'}), 200
+    return jsonify({'status': 'ok', 'service': 'ProxyWake', 'version': '3.0'})
 
 
-@app.route('/api/auth/status', methods=['GET'])
+@app.route('/api/metrics')
+def metrics():
+    device_count = Device.query.count()
+    wake_total = WakeEvent.query.count()
+    wake_success = WakeEvent.query.filter_by(success=True, skipped=False).count()
+    lines = [
+        '# HELP proxywake_devices_total Total configured devices',
+        '# TYPE proxywake_devices_total gauge',
+        f'proxywake_devices_total {device_count}',
+        '# HELP proxywake_wake_events_total Total wake events',
+        '# TYPE proxywake_wake_events_total counter',
+        f'proxywake_wake_events_total {wake_total}',
+        '# HELP proxywake_wake_success_total Successful wake events',
+        '# TYPE proxywake_wake_success_total counter',
+        f'proxywake_wake_success_total {wake_success}',
+    ]
+    return '\n'.join(lines) + '\n', 200, {'Content-Type': 'text/plain; version=0.0.4'}
+
+
+@app.route('/api/auth/status')
 def auth_status():
     return jsonify({
         'authenticated': is_authenticated(),
         'password_required': is_auth_configured(),
         'api_key_configured': bool(get_or_create_api_key()),
-    }), 200
+        'onboarding_completed': is_onboarding_complete(),
+        'theme': get_setting('theme', 'dark'),
+    })
 
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -165,21 +171,16 @@ def login():
     if not is_auth_configured():
         session['authenticated'] = True
         session.permanent = True
-        return jsonify({'message': 'Geen wachtwoord geconfigureerd, sessie gestart.'}), 200
+        return jsonify({'message': 'Geen wachtwoord geconfigureerd.'}), 200
 
     data = request.get_json(silent=True) or {}
     password = data.get('password', '')
-    if not password:
-        return jsonify({'error': 'Wachtwoord is vereist.'}), 400
-
-    from auth import _password_matches
-    if not _password_matches(password):
-        logging.warning('Mislukte loginpoging vanaf %s', request.remote_addr)
+    if not password or not _password_matches(password):
         return jsonify({'error': 'Onjuist wachtwoord.'}), 401
 
     session['authenticated'] = True
     session.permanent = True
-    logging.info('Succesvolle login vanaf %s', request.remote_addr)
+    log_audit('login', 'Succesvolle login', actor_ip())
     return jsonify({'message': 'Succesvol ingelogd.'}), 200
 
 
@@ -189,22 +190,83 @@ def logout():
     return jsonify({'message': 'Uitgelogd.'}), 200
 
 
-@app.route('/api/settings', methods=['GET'])
+@app.route('/api/setup', methods=['POST'])
+def setup():
+    if is_onboarding_complete() and is_auth_configured():
+        return jsonify({'error': 'Setup is al voltooid.'}), 400
+
+    data = request.get_json(silent=True) or {}
+    password = data.get('password', '').strip()
+    proxywake_url = (data.get('proxywake_url') or '').strip().rstrip('/')
+
+    if password:
+        set_password(password)
+    if proxywake_url:
+        set_setting('proxywake_url', proxywake_url)
+    if data.get('theme') in ('dark', 'light'):
+        set_setting('theme', data['theme'])
+
+    set_setting('onboarding_completed', 'true')
+    session['authenticated'] = True
+    session.permanent = True
+    log_audit('setup_complete', 'Eerste setup voltooid', actor_ip())
+    return jsonify({'message': 'Setup voltooid.', 'api_key': get_or_create_api_key()}), 200
+
+
+@app.route('/api/settings')
 @login_required
 def get_settings():
     return jsonify({
         'api_key': get_or_create_api_key(),
+        'previous_api_key': get_previous_api_key(),
         'proxywake_url': get_proxywake_base_url(),
         'password_required': is_auth_configured(),
+        'theme': get_setting('theme', 'dark'),
+        'onboarding_completed': is_onboarding_complete(),
+    })
+
+
+@app.route('/api/settings/theme', methods=['PUT'])
+@login_required
+def update_theme():
+    data = request.get_json(silent=True) or {}
+    theme = data.get('theme', 'dark')
+    if theme not in ('dark', 'light'):
+        return jsonify({'error': 'Ongeldig thema.'}), 400
+    set_setting('theme', theme)
+    return jsonify({'theme': theme}), 200
+
+
+@app.route('/api/settings/password', methods=['PUT'])
+@login_required
+def update_password():
+    data = request.get_json(silent=True) or {}
+    password = data.get('password', '').strip()
+    if len(password) < 8:
+        return jsonify({'error': 'Wachtwoord moet minimaal 8 tekens zijn.'}), 400
+    set_password(password)
+    log_audit('password_changed', None, actor_ip())
+    return jsonify({'message': 'Wachtwoord bijgewerkt.'}), 200
+
+
+@app.route('/api/settings/rotate-api-key', methods=['POST'])
+@login_required
+def rotate_key():
+    new_key = rotate_api_key()
+    log_audit('api_key_rotated', 'Nieuwe API-sleutel gegenereerd', actor_ip())
+    return jsonify({
+        'api_key': new_key,
+        'previous_api_key': get_previous_api_key(),
+        'message': 'API-sleutel geroteerd. Vorige sleutel blijft tijdelijk geldig.',
     }), 200
 
 
-@app.route('/api/devices', methods=['GET'])
+@app.route('/api/devices')
 @api_key_or_session_required
 def list_devices():
     include_status = request.args.get('status', 'false').lower() == 'true'
     devices = Device.query.order_by(Device.domain.asc()).all()
-    return jsonify([device.to_dict(include_status=include_status) for device in devices]), 200
+    return jsonify([device.to_dict(include_status=include_status) for device in devices])
 
 
 @app.route('/api/devices', methods=['POST'])
@@ -214,53 +276,33 @@ def create_device():
     payload, error = validate_device_payload(data)
     if error:
         return jsonify({'error': error}), 400
-
     device = Device(**payload)
-    try:
-        db.session.add(device)
-        db.session.commit()
-        logging.info('Apparaat toegevoegd: %s', device.domain)
-        return jsonify(device.to_dict()), 201
-    except Exception as exc:
-        db.session.rollback()
-        logging.error('Fout bij toevoegen apparaat: %s', exc)
-        return jsonify({'error': 'Fout bij toevoegen apparaat.'}), 500
+    db.session.add(device)
+    db.session.commit()
+    log_audit('device_created', device.domain, actor_ip())
+    return jsonify(device.to_dict()), 201
 
 
 @app.route('/api/devices/<int:device_id>', methods=['PUT', 'DELETE'])
 @api_key_or_session_required
 def modify_device(device_id):
     device = Device.query.get_or_404(device_id)
-
     if request.method == 'PUT':
         data = request.get_json(silent=True) or {}
         payload, error = validate_device_payload(data, device=device)
         if error:
             return jsonify({'error': error}), 400
-
-        device.domain = payload['domain']
-        device.ip = payload['ip']
-        device.mac = payload['mac']
-        device.name = payload['name']
-
-        try:
-            db.session.commit()
-            logging.info('Apparaat bijgewerkt: %s', device.domain)
-            return jsonify(device.to_dict()), 200
-        except Exception as exc:
-            db.session.rollback()
-            logging.error('Fout bij bijwerken apparaat: %s', exc)
-            return jsonify({'error': 'Fout bij bijwerken apparaat.'}), 500
-
-    try:
-        db.session.delete(device)
+        for key, value in payload.items():
+            setattr(device, key, value)
         db.session.commit()
-        logging.info('Apparaat verwijderd: %s', device.domain)
-        return jsonify({'message': 'Apparaat verwijderd.'}), 200
-    except Exception as exc:
-        db.session.rollback()
-        logging.error('Fout bij verwijderen apparaat: %s', exc)
-        return jsonify({'error': 'Fout bij verwijderen apparaat.'}), 500
+        log_audit('device_updated', device.domain, actor_ip())
+        return jsonify(device.to_dict()), 200
+
+    domain = device.domain
+    db.session.delete(device)
+    db.session.commit()
+    log_audit('device_deleted', domain, actor_ip())
+    return jsonify({'message': 'Apparaat verwijderd.'}), 200
 
 
 @app.route('/api/devices/<int:device_id>/wake', methods=['POST'])
@@ -268,20 +310,111 @@ def modify_device(device_id):
 @limiter.limit('30 per minute')
 def wake_device(device_id):
     device = Device.query.get_or_404(device_id)
+    force = request.args.get('force', 'false').lower() == 'true'
     try:
-        send_wake_packet(device)
-        return jsonify({'message': f'Magic Packet verzonden naar {device.name or device.domain}'}), 200
+        result = smart_wake_device(device, source='manual', force=force)
+        return jsonify(result), 200
     except Exception as exc:
-        logging.error('Fout bij verzenden Magic Packet naar %s: %s', device.domain, exc)
-        return jsonify({'error': 'Fout bij verzenden Magic Packet.'}), 500
+        return jsonify({'error': str(exc)}), 500
 
 
-@app.route('/api/devices/<int:device_id>/status', methods=['GET'])
+@app.route('/api/devices/<int:device_id>/status')
 @api_key_or_session_required
 def device_status(device_id):
     device = Device.query.get_or_404(device_id)
-    online = check_host_online(device.ip)
-    return jsonify({'id': device.id, 'online': online, 'ip': device.ip}), 200
+    return jsonify(device.to_dict(include_status=True))
+
+
+@app.route('/api/devices/export')
+@login_required
+def export_devices_route():
+    fmt = request.args.get('format', 'json')
+    devices = export_devices()
+    if fmt == 'csv':
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=['name', 'domain', 'ip', 'mac', 'use_broadcast', 'wake_cooldown_seconds'])
+        writer.writeheader()
+        for device in devices:
+            writer.writerow({key: device.get(key) for key in writer.fieldnames})
+        return output.getvalue(), 200, {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename=proxywake-devices.csv'}
+    return jsonify({'devices': devices, 'exported_at': datetime.now(timezone.utc).isoformat()})
+
+
+@app.route('/api/devices/import', methods=['POST'])
+@login_required
+def import_devices_route():
+    data = request.get_json(silent=True) or {}
+    devices = data.get('devices', [])
+    merge = data.get('merge', True)
+    count = import_devices(devices, merge=merge)
+    log_audit('devices_imported', f'{count} apparaten', actor_ip())
+    return jsonify({'imported': count}), 200
+
+
+@app.route('/api/groups')
+@api_key_or_session_required
+def list_groups():
+    return jsonify([group.to_dict() for group in DeviceGroup.query.all()])
+
+
+@app.route('/api/groups', methods=['POST'])
+@login_required
+def create_group():
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({'error': 'Groepsnaam is vereist.'}), 400
+    group = DeviceGroup(name=name, color=data.get('color', '#6366f1'))
+    db.session.add(group)
+    db.session.commit()
+    return jsonify(group.to_dict()), 201
+
+
+@app.route('/api/groups/<int:group_id>/wake', methods=['POST'])
+@api_key_or_session_required
+def wake_group_route(group_id):
+    DeviceGroup.query.get_or_404(group_id)
+    return jsonify({'results': wake_group(group_id)}), 200
+
+
+@app.route('/api/groups/<int:group_id>', methods=['PUT', 'DELETE'])
+@login_required
+def modify_group(group_id):
+    group = DeviceGroup.query.get_or_404(group_id)
+    if request.method == 'PUT':
+        data = request.get_json(silent=True) or {}
+        group.name = data.get('name', group.name)
+        group.color = data.get('color', group.color)
+        db.session.commit()
+        return jsonify(group.to_dict()), 200
+    db.session.delete(group)
+    db.session.commit()
+    return jsonify({'message': 'Groep verwijderd.'}), 200
+
+
+@app.route('/api/npm-hosts')
+@login_required
+def list_npm_hosts():
+    return jsonify([host.to_dict() for host in NpmHost.query.all()])
+
+
+@app.route('/api/npm-hosts', methods=['POST'])
+@login_required
+def create_npm_host():
+    data = request.get_json(silent=True) or {}
+    host = NpmHost(name=data.get('name'), base_url=data.get('base_url'))
+    db.session.add(host)
+    db.session.commit()
+    return jsonify(host.to_dict()), 201
+
+
+@app.route('/api/npm-hosts/<int:host_id>', methods=['DELETE'])
+@login_required
+def delete_npm_host(host_id):
+    host = NpmHost.query.get_or_404(host_id)
+    db.session.delete(host)
+    db.session.commit()
+    return jsonify({'message': 'NPM host verwijderd.'}), 200
 
 
 @app.route('/api/wake/by-host', methods=['GET', 'POST'])
@@ -296,38 +429,54 @@ def wake_by_host():
     ).split(':')[0].strip().lower()
     if not host:
         return jsonify({'error': 'Host-header ontbreekt.'}), 400
-
     device = Device.query.filter_by(domain=host).first()
     if not device:
-        logging.warning('Wake-aanvraag voor onbekend domein: %s', host)
         return jsonify({'error': 'Geen apparaat gevonden voor dit domein.'}), 404
-
     try:
-        send_wake_packet(device)
-        return jsonify({'message': f'Wake verzonden voor {device.domain}', 'device_id': device.id}), 200
+        result = smart_wake_device(device, source='npm')
+        return jsonify({'message': f'Wake verwerkt voor {device.domain}', 'device_id': device.id, **result}), 200
     except Exception as exc:
-        logging.error('Fout bij wake-by-host voor %s: %s', host, exc)
-        return jsonify({'error': 'Fout bij verzenden Magic Packet.'}), 500
+        return jsonify({'error': str(exc)}), 500
 
 
-@app.route('/api/npm/config', methods=['GET'])
+@app.route('/api/public/status/<domain>')
+@limiter.limit('120 per minute')
+def public_status(domain):
+    device = Device.query.filter_by(domain=domain.lower()).first()
+    if not device:
+        return jsonify({'error': 'Apparaat niet gevonden.'}), 404
+    return jsonify({
+        'domain': device.domain,
+        'name': device.name or device.domain,
+        'online': device.to_dict(include_status=True)['online'],
+    })
+
+
+@app.route('/api/public/wake/<domain>', methods=['POST'])
+@limiter.limit('30 per minute')
+def public_wake(domain):
+    device = Device.query.filter_by(domain=domain.lower()).first()
+    if not device:
+        return jsonify({'error': 'Apparaat niet gevonden.'}), 404
+    result = wake_and_wait(device, source='public')
+    return jsonify(result), 200
+
+
+@app.route('/api/npm/config')
 @api_key_or_session_required
 def npm_config():
     base_url = request.args.get('base_url') or get_proxywake_base_url()
     api_key = get_or_create_api_key()
+    instructions = integration_instructions()
     return jsonify({
-        'global_config': build_npm_global_config(base_url, api_key),
-        'host_config': build_npm_host_config(),
-        'instructions': [
-            'Voeg de globale configuratie eenmalig toe in NPM (Custom Nginx Configuration).',
-            'Voeg per proxy host de host-configuratie toe onder Advanced.',
-            'Zorg dat ProxyWake bereikbaar is vanaf je NPM-container op het netwerk.',
-            'Bij het eerste bezoek aan een domein wordt automatisch een Magic Packet verstuurd.',
-        ],
-    }), 200
+        'npm': {'global_config': build_npm_global_config(base_url, api_key), 'host_config': build_npm_host_config(), 'instructions': instructions['npm']},
+        'traefik': {'config': build_traefik_config(base_url, api_key), 'instructions': instructions['traefik']},
+        'caddy': {'config': build_caddy_config(base_url, api_key), 'instructions': instructions['caddy']},
+        'home_assistant': {'instructions': instructions['home_assistant']},
+    })
 
 
-@app.route('/api/npm/config/<int:device_id>', methods=['GET'])
+@app.route('/api/npm/config/<int:device_id>')
 @api_key_or_session_required
 def npm_config_for_device(device_id):
     device = Device.query.get_or_404(device_id)
@@ -335,26 +484,171 @@ def npm_config_for_device(device_id):
     api_key = get_or_create_api_key()
     return jsonify({
         'device': device.to_dict(),
-        'global_config': build_npm_global_config(base_url, api_key),
-        'host_config': build_npm_host_config(),
+        'npm': {'global_config': build_npm_global_config(base_url, api_key), 'host_config': build_npm_host_config()},
+        'home_assistant': build_home_assistant_config(device.to_dict(), base_url, api_key),
         'test_url': f'{base_url}/api/wake/by-host',
         'test_headers': {'Host': device.domain, 'X-API-Key': api_key},
-    }), 200
+    })
 
 
-@app.route('/api/logs', methods=['GET'])
+@app.route('/api/npm/test/<int:device_id>', methods=['POST'])
+@login_required
+def npm_test(device_id):
+    device = Device.query.get_or_404(device_id)
+    api_key = get_or_create_api_key()
+    try:
+        with app.test_client() as client:
+            response = client.get(
+                '/api/wake/by-host',
+                headers={'Host': device.domain, 'X-API-Key': api_key},
+            )
+        return jsonify({'success': response.status_code == 200, 'status_code': response.status_code, 'body': response.get_json()}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/webhooks')
+@login_required
+def list_webhooks():
+    return jsonify([hook.to_dict() for hook in Webhook.query.all()])
+
+
+@app.route('/api/webhooks', methods=['POST'])
+@login_required
+def create_webhook():
+    data = request.get_json(silent=True) or {}
+    hook = Webhook(
+        name=data.get('name'),
+        url=data.get('url'),
+        events=','.join(data.get('events', ['wake_failed', 'wake_success'])),
+        enabled=data.get('enabled', True),
+    )
+    db.session.add(hook)
+    db.session.commit()
+    return jsonify(hook.to_dict()), 201
+
+
+@app.route('/api/webhooks/<int:hook_id>', methods=['PUT', 'DELETE'])
+@login_required
+def modify_webhook(hook_id):
+    hook = Webhook.query.get_or_404(hook_id)
+    if request.method == 'PUT':
+        data = request.get_json(silent=True) or {}
+        hook.name = data.get('name', hook.name)
+        hook.url = data.get('url', hook.url)
+        hook.events = ','.join(data.get('events', hook.events.split(',')))
+        hook.enabled = data.get('enabled', hook.enabled)
+        db.session.commit()
+        return jsonify(hook.to_dict()), 200
+    db.session.delete(hook)
+    db.session.commit()
+    return jsonify({'message': 'Webhook verwijderd.'}), 200
+
+
+@app.route('/api/schedules')
+@login_required
+def list_schedules():
+    return jsonify([item.to_dict() for item in ScheduledWake.query.all()])
+
+
+@app.route('/api/schedules', methods=['POST'])
+@login_required
+def create_schedule():
+    data = request.get_json(silent=True) or {}
+    schedule = ScheduledWake(
+        device_id=data.get('device_id'),
+        hour=int(data.get('hour', 7)),
+        minute=int(data.get('minute', 0)),
+        days=','.join(str(day) for day in data.get('days', [0, 1, 2, 3, 4, 5, 6])),
+        enabled=data.get('enabled', True),
+    )
+    db.session.add(schedule)
+    db.session.commit()
+    return jsonify(schedule.to_dict()), 201
+
+
+@app.route('/api/schedules/<int:schedule_id>', methods=['DELETE'])
+@login_required
+def delete_schedule(schedule_id):
+    schedule = ScheduledWake.query.get_or_404(schedule_id)
+    db.session.delete(schedule)
+    db.session.commit()
+    return jsonify({'message': 'Schema verwijderd.'}), 200
+
+
+@app.route('/api/stats')
+@login_required
+def stats():
+    since = datetime.now(timezone.utc) - timedelta(days=7)
+    total = WakeEvent.query.count()
+    week = WakeEvent.query.filter(WakeEvent.created_at >= since).count()
+    successes = WakeEvent.query.filter_by(success=True, skipped=False).count()
+    per_day = db.session.query(
+        func.date(WakeEvent.created_at),
+        func.count(WakeEvent.id),
+    ).filter(WakeEvent.created_at >= since).group_by(func.date(WakeEvent.created_at)).all()
+
+    device_stats = []
+    for device in Device.query.all():
+        events = WakeEvent.query.filter_by(device_id=device.id).order_by(WakeEvent.created_at.desc()).limit(5).all()
+        avg_wake = db.session.query(func.avg(WakeEvent.online_after_ms)).filter(
+            WakeEvent.device_id == device.id,
+            WakeEvent.online_after_ms.isnot(None),
+        ).scalar()
+        device_stats.append({
+            'device': device.to_dict(include_status=True),
+            'wake_count': WakeEvent.query.filter_by(device_id=device.id).count(),
+            'avg_wake_ms': int(avg_wake) if avg_wake else None,
+            'recent_events': [event.to_dict() for event in events],
+        })
+
+    return jsonify({
+        'total_wake_events': total,
+        'wake_events_7d': week,
+        'successful_wakes': successes,
+        'per_day': [{'date': str(day), 'count': count} for day, count in per_day],
+        'devices': device_stats,
+    })
+
+
+@app.route('/api/wake-events')
+@login_required
+def wake_events():
+    limit = min(int(request.args.get('limit', 50)), 200)
+    events = WakeEvent.query.order_by(WakeEvent.created_at.desc()).limit(limit).all()
+    return jsonify([event.to_dict() for event in events])
+
+
+@app.route('/api/audit')
+@login_required
+def audit_logs():
+    limit = min(int(request.args.get('limit', 100)), 300)
+    logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(limit).all()
+    return jsonify([log.to_dict() for log in logs])
+
+
+@app.route('/api/scan', methods=['POST'])
+@login_required
+@limiter.limit('5 per minute')
+def scan_network():
+    data = request.get_json(silent=True) or {}
+    subnet = data.get('subnet')
+    if not subnet and data.get('ip'):
+        subnet = subnet_from_ip(data['ip'])
+    if not subnet:
+        return jsonify({'error': 'Subnet of IP is vereist.'}), 400
+    hosts = scan_subnet(subnet, max_hosts=int(data.get('max_hosts', 64)))
+    return jsonify({'subnet': subnet, 'hosts': hosts})
+
+
+@app.route('/api/logs')
 @login_required
 def get_logs():
     lines = min(int(request.args.get('lines', 100)), 500)
     if not LOG_FILE.exists():
         return jsonify({'logs': []}), 200
-
-    try:
-        content = LOG_FILE.read_text(encoding='utf-8', errors='replace').splitlines()
-        return jsonify({'logs': content[-lines:]}), 200
-    except OSError as exc:
-        logging.error('Fout bij lezen logbestand: %s', exc)
-        return jsonify({'error': 'Kon logboek niet lezen.'}), 500
+    content = LOG_FILE.read_text(encoding='utf-8', errors='replace').splitlines()
+    return jsonify({'logs': content[-lines:]})
 
 
 @app.route('/', defaults={'path': ''})
@@ -376,16 +670,13 @@ def not_found(_error):
 
 @app.errorhandler(429)
 def rate_limited(_error):
-    return jsonify({'error': 'Te veel verzoeken. Probeer het later opnieuw.'}), 429
-
-
-@app.errorhandler(500)
-def internal_error(_error):
-    return jsonify({'error': 'Interne serverfout.'}), 500
+    return jsonify({'error': 'Te veel verzoeken.'}), 429
 
 
 with app.app_context():
+    migrate_db(db.engine)
     db.create_all()
+    start_scheduler(app)
 
 
 if __name__ == '__main__':

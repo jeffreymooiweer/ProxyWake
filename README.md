@@ -1,93 +1,138 @@
-# ProxyWake
+# ProxyWake v3.0
 
-**ProxyWake** integreert Wake-on-LAN (WOL) met [Nginx Proxy Manager (NPM)](https://nginxproxymanager.com/). Apparaten worden automatisch geactiveerd via een Magic Packet wanneer iemand een proxy/domein benadert.
-
-Ontworpen voor self-hosted omgevingen zoals Unraid, met een moderne webinterface en veilige API.
+**ProxyWake** is een compleet Wake-on-LAN platform voor self-hosted omgevingen, met diepe integratie voor **Nginx Proxy Manager**, plus ondersteuning voor Traefik, Caddy en Home Assistant.
 
 ---
 
 ## Features
 
-- **Wake-on-LAN** — Verstuur Magic Packets naar apparaten op je netwerk
-- **NPM-integratie** — Genereer kant-en-klare Nginx-configuratie met mirror-module
-- **Apparaatbeheer** — Toevoegen, bewerken, verwijderen en testen
-- **Live status** — Online/offline detectie via ping
-- **Logboek** — Bekijk wake-acties en fouten in de UI
-- **Beveiliging** — Wachtwoordbeveiliging, API-sleutel, rate limiting, security headers
-- **Docker-ready** — Productie-server met Gunicorn en health checks
+### Kern
+- Slimme Wake-on-LAN (alleen als offline, cooldown, broadcast)
+- Wachtpagina met auto-redirect (`/waiting?domain=...`)
+- Online/offline status via ping
+- Apparaatgroepen — batch wake
+
+### Integraties
+- **NPM** — mirror-module + optionele error_page wachtpagina
+- **Traefik** — Docker labels voorbeeld
+- **Caddy** — Caddyfile snippet
+- **Home Assistant** — REST switch configuratie
+- Inline NPM-test vanuit de UI
+
+### Automatisering
+- Webhooks (Discord, ntfy, etc.)
+- Geplande wake (cron-achtig per uur/minuut)
+- Export/import JSON
+
+### Beveiliging
+- Bcrypt wachtwoorden
+- API-sleutel met rotatie (vorige sleutel blijft geldig)
+- Rate limiting
+- Auditlog
+- Security headers
+
+### Observability
+- Wake-geschiedenis & statistieken
+- Prometheus metrics op `/api/metrics`
+- Systeemlog + audittrail in UI
+
+### UX
+- Setup-wizard bij eerste start
+- Donker/licht thema
+- PWA (installeerbaar)
+- Netwerkscanner
 
 ---
 
 ## Snel starten
 
-### Docker Compose
-
 ```bash
 cd docker
-PROXYWAKE_PASSWORD=jouwwachtwoord docker compose up -d
+PROXYWAKE_PASSWORD=SterkWachtwoord123 docker compose up -d
 ```
 
-Open daarna: `http://<server-ip>:8462`
+Open: `http://<server-ip>:8462`
 
-### Omgevingsvariabelen
+De setup-wizard begeleidt je door beveiliging en netwerkconfiguratie.
+
+---
+
+## Omgevingsvariabelen
 
 | Variabele | Beschrijving |
 |-----------|--------------|
-| `PROXYWAKE_PASSWORD` | Wachtwoord voor de webinterface (aanbevolen) |
-| `PROXYWAKE_API_KEY` | Vaste API-sleutel voor NPM (optioneel, anders auto-gegenereerd) |
-| `PROXYWAKE_SECRET_KEY` | Flask sessiesleutel (optioneel) |
-| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins, komma-gescheiden (optioneel) |
-| `PROXYWAKE_DATA_DIR` | Pad voor database, logs en API-sleutel |
+| `PROXYWAKE_PASSWORD` | Wachtwoord webinterface |
+| `PROXYWAKE_PASSWORD_HASH` | Bcrypt hash (alternatief) |
+| `PROXYWAKE_API_KEY` | Vaste API-sleutel |
+| `PROXYWAKE_SECRET_KEY` | Flask sessiesleutel |
+| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins |
+| `PROXYWAKE_DATA_DIR` | Data directory |
 
 ---
 
 ## NPM configureren
 
-1. Open **Integratie** in ProxyWake
-2. Kopieer de **globale configuratie** naar NPM (`server_proxy.conf` of Custom Nginx)
-3. Voeg per proxy host de **host-configuratie** toe onder **Advanced**
-4. Zorg dat NPM ProxyWake kan bereiken op je interne netwerk
-
-Bij elk bezoek stuurt NPM op de achtergrond een wake-verzoek naar ProxyWake zonder de gebruiker te vertragen.
+1. Tab **Integratie** → kopieer globale config naar `server_proxy.conf`
+2. Per proxy host: plak Advanced snippet
+3. Optioneel: `error_page` toont wachtpagina bij offline backend
+4. Test via **NPM Test** tab
 
 ---
 
-## API
+## Wachtpagina
 
-Basis-URL: `http://<server-ip>:8462/api`
+Wanneer een backend offline is, redirect NPM naar:
 
-| Methode | Endpoint | Auth | Beschrijving |
-|---------|----------|------|--------------|
-| GET | `/health` | — | Health check |
-| GET | `/devices` | Sessie/API-key | Apparaten ophalen |
-| POST | `/devices` | Sessie/API-key | Apparaat toevoegen |
-| PUT | `/devices/:id` | Sessie/API-key | Apparaat bijwerken |
-| DELETE | `/devices/:id` | Sessie/API-key | Apparaat verwijderen |
-| POST | `/devices/:id/wake` | Sessie/API-key | Magic Packet testen |
-| GET/POST | `/wake/by-host` | API-key | Wake op basis van Host-header (voor NPM) |
-| GET | `/npm/config` | Sessie/API-key | NPM-configuratie genereren |
-| GET | `/logs` | Sessie | Logboek ophalen |
-
-Authenticatie via sessiecookie (webinterface) of header `X-API-Key` / `Authorization: Bearer <key>`.
-
----
-
-## Ontwikkeling
-
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-PROXYWAKE_DATA_DIR=./data python app.py
-
-# Frontend (aparte terminal)
-cd frontend
-npm install
-npm start
 ```
+http://<proxywake-ip>:8462/waiting?domain=jouw.domein.nl
+```
+
+De pagina triggert wake, toont voortgang en redirect naar HTTPS zodra online.
+
+---
+
+## Home Assistant
+
+```yaml
+switch:
+  - platform: rest
+    name: "Wake NAS"
+    resource: "http://proxywake:8462/api/devices/1/wake"
+    method: POST
+    headers:
+      X-API-Key: "jouw-api-sleutel"
+```
+
+Of genereer automatisch via **Integratie → Home Assistant**.
+
+---
+
+## API overzicht
+
+| Endpoint | Auth | Beschrijving |
+|----------|------|--------------|
+| `GET /api/health` | — | Health check |
+| `GET /api/metrics` | — | Prometheus metrics |
+| `POST /api/setup` | — | Eerste setup |
+| `GET /api/stats` | Sessie | Statistieken |
+| `GET /api/wake-events` | Sessie | Wake-geschiedenis |
+| `GET /api/audit` | Sessie | Auditlog |
+| `POST /api/scan` | Sessie | Netwerkscan |
+| `POST /api/groups/:id/wake` | Sessie/API | Groep wake |
+| `GET /api/public/status/:domain` | — | Publieke status |
+| `POST /api/public/wake/:domain` | — | Publieke wake+wait |
+
+Zie ook eerdere device/npm endpoints.
+
+---
+
+## HTTPS & Wake-on-WAN
+
+- **HTTPS**: plaats ProxyWake achter NPM met Let's Encrypt
+- **Wake-on-WAN**: gebruik Tailscale/WireGuard; open geen WOL-poorten naar internet
 
 ---
 
 ## Licentie
 
-MIT — zie [LICENSE](LICENSE).
+MIT

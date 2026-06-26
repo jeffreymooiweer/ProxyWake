@@ -1,18 +1,27 @@
-version: '3.8'
-
 services:
-  app:
+  proxywake:
     build:
       context: ..
       dockerfile: Dockerfile
-    image: jeffersonmouze/npm-wake-on-lan-configurator:latest
-    container_name: wol-configurator
+    image: proxywake:latest
+    container_name: proxywake
     ports:
       - "8462:5001"
+    environment:
+      - PROXYWAKE_PASSWORD=${PROXYWAKE_PASSWORD:-}
+      - PROXYWAKE_API_KEY=${PROXYWAKE_API_KEY:-}
+      - PROXYWAKE_SECRET_KEY=${PROXYWAKE_SECRET_KEY:-}
+      - PROXYWAKE_ALLOWED_ORIGINS=${PROXYWAKE_ALLOWED_ORIGINS:-}
+      - PROXYWAKE_DATA_DIR=/app/backend/data
     volumes:
-      - wol_data:/app/backend/devices.db
-      - ./backend/app.log:/app/backend/app.log
+      - proxywake_data:/app/backend/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
-  wol_data:
+  proxywake_data:

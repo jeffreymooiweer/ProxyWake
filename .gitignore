@@ -8,6 +8,8 @@ frontend/build/
 backend/__pycache__/
 backend/devices.db
 backend/app.log
+backend/data/
+backend/.api_key
 
 # Docker
 *.pyc

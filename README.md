@@ -1,133 +1,93 @@
 # ProxyWake
 
-**ProxyWake** is een handige tool die Wake-on-LAN-functionaliteit integreert met [Nginx Proxy Manager (NPM)](https://nginxproxymanager.com/). Het stelt je in staat om apparaten automatisch te activeren via een Magic Packet wanneer een domeinnaam of proxy wordt benaderd.
+**ProxyWake** integreert Wake-on-LAN (WOL) met [Nginx Proxy Manager (NPM)](https://nginxproxymanager.com/). Apparaten worden automatisch geactiveerd via een Magic Packet wanneer iemand een proxy/domein benadert.
 
-Met ProxyWake kun je eenvoudig apparaten configureren, beheren en activeren binnen een netwerk. Het is speciaal ontworpen om te draaien op een Unraid-server en maakt gebruik van een Docker-container voor eenvoudige implementatie.
+Ontworpen voor self-hosted omgevingen zoals Unraid, met een moderne webinterface en veilige API.
 
 ---
 
 ## Features
 
-- **Wake-on-LAN (WOL):** Verstuur Magic Packets om apparaten op je netwerk te activeren.
-- **NPM Integratie:** Genereer scripts voor geavanceerde instellingen van Nginx Proxy Manager.
-- **Apparaatbeheer:** Voeg, verwijder en bewerk apparaten (domeinnaam, intern IP-adres, MAC-adres).
-- **Responsieve Webinterface:** Intuïtief ontworpen met React en Material-UI.
-- **Docker Ready:** Eenvoudige installatie via een Docker-container.
-- **Polling of Websockets:** Live updates van apparaatstatussen.
-- **Logboek:** Volg alle acties, inclusief verstuurde WOL-pakketten.
+- **Wake-on-LAN** — Verstuur Magic Packets naar apparaten op je netwerk
+- **NPM-integratie** — Genereer kant-en-klare Nginx-configuratie met mirror-module
+- **Apparaatbeheer** — Toevoegen, bewerken, verwijderen en testen
+- **Live status** — Online/offline detectie via ping
+- **Logboek** — Bekijk wake-acties en fouten in de UI
+- **Beveiliging** — Wachtwoordbeveiliging, API-sleutel, rate limiting, security headers
+- **Docker-ready** — Productie-server met Gunicorn en health checks
 
 ---
 
-## Screenshots
+## Snel starten
 
-### Dashboard
-![ProxyWake Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Image)
+### Docker Compose
 
----
+```bash
+cd docker
+PROXYWAKE_PASSWORD=jouwwachtwoord docker compose up -d
+```
 
-## Installatie
+Open daarna: `http://<server-ip>:8462`
 
-### Vereisten
+### Omgevingsvariabelen
 
-- **Unraid** of een vergelijkbaar systeem met Docker-ondersteuning.
-- Nginx Proxy Manager.
-- Een netwerkconfiguratie die Wake-on-LAN ondersteunt.
-
-### Stappen
-
-1. **Docker-container installeren:**
-   - Voeg de Docker-image toe vanuit de repository:
-     ```
-     https://hub.docker.com/repository/docker/jeffersonmouze/proxywake/
-     ```
-   - Zorg ervoor dat de volgende poorten en volumes correct zijn ingesteld:
-     - **Poorten:**
-       - `8462:5001` (Host:Container)
-     - **Volumes:**
-       - `/mnt/user/appdata/proxywake/devices.db` → `/app/backend/devices.db`
-       - `/mnt/user/appdata/proxywake/app.log` → `/app/backend/app.log`
-
-2. **Webinterface openen:**
-   - Navigeer naar: `http://<UNRAID-IP>:8462/`
-
-3. **Apparaten configureren:**
-   - Voeg apparaten toe via de interface door domeinnaam, intern IP en MAC-adres op te geven.
-
-4. **Script genereren:**
-   - Genereer een script in de interface en voeg het toe aan de "Geavanceerde instellingen" van je NPM-host.
-
-5. **Wake-on-LAN activeren:**
-   - Wanneer een domeinnaam wordt benaderd, verstuurt ProxyWake automatisch een Magic Packet.
+| Variabele | Beschrijving |
+|-----------|--------------|
+| `PROXYWAKE_PASSWORD` | Wachtwoord voor de webinterface (aanbevolen) |
+| `PROXYWAKE_API_KEY` | Vaste API-sleutel voor NPM (optioneel, anders auto-gegenereerd) |
+| `PROXYWAKE_SECRET_KEY` | Flask sessiesleutel (optioneel) |
+| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins, komma-gescheiden (optioneel) |
+| `PROXYWAKE_DATA_DIR` | Pad voor database, logs en API-sleutel |
 
 ---
 
-## Gebruik
+## NPM configureren
 
-### Webinterface
+1. Open **Integratie** in ProxyWake
+2. Kopieer de **globale configuratie** naar NPM (`server_proxy.conf` of Custom Nginx)
+3. Voeg per proxy host de **host-configuratie** toe onder **Advanced**
+4. Zorg dat NPM ProxyWake kan bereiken op je interne netwerk
 
-- **Add Device:** Voeg apparaten toe met hun domeinnaam, intern IP en MAC-adres.
-- **Edit Device:** Bewerk bestaande apparaatconfiguraties.
-- **Delete Device:** Verwijder apparaten uit de configuratie.
-- **Test WOL:** Test direct of een Magic Packet succesvol wordt verzonden.
-- **Generate Script:** Genereer een script voor Nginx Proxy Manager.
-
----
-
-## API Documentatie
-
-### Basis-URL
-
-`http://<UNRAID-IP>:5001/api`
-
-### Eindpunten
-
-| Methode | Endpoint           | Beschrijving                   |
-|---------|--------------------|--------------------------------|
-| GET     | `/devices`         | Haal alle apparaten op.        |
-| POST    | `/devices`         | Voeg een nieuw apparaat toe.   |
-| PUT     | `/devices/:id`     | Bewerk een apparaat.           |
-| DELETE  | `/devices/:id`     | Verwijder een apparaat.        |
-| POST    | `/devices/:id/wake`| Verstuur een Magic Packet.     |
+Bij elk bezoek stuurt NPM op de achtergrond een wake-verzoek naar ProxyWake zonder de gebruiker te vertragen.
 
 ---
 
-## Probleemoplossing
+## API
 
-### Ik krijg een foutmelding "Ongeldig IP-adres" bij het toevoegen van een apparaat.
+Basis-URL: `http://<server-ip>:8462/api`
 
-- Controleer of je een geldig IPv4-adres hebt ingevoerd (bijv. `192.168.1.100`).
+| Methode | Endpoint | Auth | Beschrijving |
+|---------|----------|------|--------------|
+| GET | `/health` | — | Health check |
+| GET | `/devices` | Sessie/API-key | Apparaten ophalen |
+| POST | `/devices` | Sessie/API-key | Apparaat toevoegen |
+| PUT | `/devices/:id` | Sessie/API-key | Apparaat bijwerken |
+| DELETE | `/devices/:id` | Sessie/API-key | Apparaat verwijderen |
+| POST | `/devices/:id/wake` | Sessie/API-key | Magic Packet testen |
+| GET/POST | `/wake/by-host` | API-key | Wake op basis van Host-header (voor NPM) |
+| GET | `/npm/config` | Sessie/API-key | NPM-configuratie genereren |
+| GET | `/logs` | Sessie | Logboek ophalen |
 
-### De webinterface toont "Resource niet gevonden."
-
-- Controleer of de Docker-container correct draait.
-- Zorg ervoor dat je het juiste IP en poort gebruikt.
-
-### Magic Packet wordt niet verzonden.
-
-- Controleer of je netwerk Wake-on-LAN ondersteunt.
-- Controleer of het juiste MAC-adres is ingevoerd.
+Authenticatie via sessiecookie (webinterface) of header `X-API-Key` / `Authorization: Bearer <key>`.
 
 ---
 
-## Toekomstige Functionaliteiten
+## Ontwikkeling
 
-- **Meerdere NPM-hosts ondersteunen:** Voeg apparaten toe voor meerdere Nginx Proxy Manager-instanties.
-- **Export en import:** Configureerbare apparaatlijsten exporteren en importeren (JSON/CSV).
-- **Wake-on-LAN over WAN:** Ondersteuning voor apparaten activeren via een extern netwerk.
+```bash
+# Backend
+cd backend
+pip install -r requirements.txt
+PROXYWAKE_DATA_DIR=./data python app.py
+
+# Frontend (aparte terminal)
+cd frontend
+npm install
+npm start
+```
 
 ---
 
 ## Licentie
 
-Dit project wordt uitgebracht onder de MIT-licentie. Zie het bestand `LICENSE` voor meer informatie.
-
----
-
-## Bijdragen
-
-Bijdragen zijn welkom! Maak een fork van de repository, doe je wijzigingen en open een pull request.
-
----
-
-
-Veel plezier met **ProxyWake**!
+MIT — zie [LICENSE](LICENSE).

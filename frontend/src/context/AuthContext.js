@@ -1,0 +1,41 @@
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { api } from '../api/client';
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+  const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const status = await api.authStatus();
+    setAuthenticated(status.authenticated);
+    setPasswordRequired(status.password_required);
+    setLoading(false);
+    return status;
+  }, []);
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+  }, [refresh]);
+
+  const login = useCallback(async (password) => {
+    await api.login(password);
+    setAuthenticated(true);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await api.logout();
+    setAuthenticated(false);
+  }, []);
+
+  const value = useMemo(
+    () => ({ loading, authenticated, passwordRequired, login, logout, refresh }),
+    [loading, authenticated, passwordRequired, login, logout, refresh],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => useContext(AuthContext);

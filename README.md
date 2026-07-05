@@ -1,52 +1,44 @@
-# ProxyWake v3.0
+# ProxyWake
 
-**ProxyWake** is een compleet Wake-on-LAN platform voor self-hosted omgevingen, met diepe integratie voor **Nginx Proxy Manager**, plus ondersteuning voor Traefik, Caddy en Home Assistant.
+[![Docker Pulls](https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker)](https://hub.docker.com/r/jeffersonmouze/proxywake)
+[![Docker Image Version](https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&label=version)](https://hub.docker.com/r/jeffersonmouze/proxywake)
+[![License: MIT](https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square)](LICENSE)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/docker.yml?style=flat-square&label=build)](https://github.com/jeffreymooiweer/ProxyWake/actions)
+[![Platform](https://img.shields.io/badge/platform-amd64%20%7C%20arm64-blue?style=flat-square)](#docker-hub)
+
+**ProxyWake** wakes sleeping devices on your network when they are accessed through a reverse proxy — built for [Nginx Proxy Manager](https://nginxproxymanager.com/), with a simple web UI to manage devices and generate integration snippets.
+
+> **Docker Hub:** [hub.docker.com/r/jeffersonmouze/proxywake](https://hub.docker.com/r/jeffersonmouze/proxywake)
+
+---
+
+## What it does
+
+1. You register a device (domain, IP, MAC address).
+2. Nginx Proxy Manager sends a background wake request when someone visits that domain.
+3. ProxyWake sends a Wake-on-LAN magic packet and optionally shows a waiting page until the device is online.
+
+That's it — no need to keep servers running 24/7 just because they might be accessed.
 
 ---
 
 ## Features
 
-### Kern
-- Slimme Wake-on-LAN (alleen als offline, cooldown, broadcast)
-- Wachtpagina met auto-redirect (`/waiting?domain=...`)
-- Online/offline status via ping
-- Apparaatgroepen — batch wake
-
-### Integraties
-- **NPM** — mirror-module + optionele error_page wachtpagina
-- **Traefik** — Docker labels voorbeeld
-- **Caddy** — Caddyfile snippet
-- **Home Assistant** — REST switch configuratie
-- Inline NPM-test vanuit de UI
-
-### Automatisering
-- Webhooks (Discord, ntfy, etc.)
-- Geplande wake (cron-achtig per uur/minuut)
-- Export/import JSON
-
-### Beveiliging
-- Bcrypt wachtwoorden
-- API-sleutel met rotatie (vorige sleutel blijft geldig)
-- Rate limiting
-- Auditlog
-- Security headers
-
-### Observability
-- Wake-geschiedenis & statistieken
-- Prometheus metrics op `/api/metrics`
-- Systeemlog + audittrail in UI
-
-### UX
-- Setup-wizard bij eerste start
-- Donker/licht thema
-- PWA (installeerbaar)
-- Netwerkscanner
+- Wake-on-LAN with smart wake (skip if already online, cooldown, broadcast option)
+- Web UI — device management, groups, logs, statistics
+- NPM integration snippets (copy & paste)
+- Also supports Traefik, Caddy, and Home Assistant
+- Waiting page with auto-redirect (`/waiting?domain=...`)
+- Webhooks, scheduled wake, export/import
+- Password protection, API key auth, audit log
 
 ---
 
-## Snel starten
+## Installation
 
-### Optie 1 — Docker Hub (aanbevolen)
+### Docker Hub (recommended)
+
+Pull the image from Docker Hub and run it:
 
 ```bash
 docker run -d \
@@ -54,130 +46,76 @@ docker run -d \
   --restart unless-stopped \
   --cap-add NET_RAW \
   -p 8462:5001 \
-  -e PROXYWAKE_PASSWORD=SterkWachtwoord123 \
+  -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
   jeffersonmouze/proxywake:latest
 ```
 
-Of met Docker Compose:
+Open `http://<server-ip>:8462` — a setup wizard walks you through the initial configuration.
+
+**Docker Compose:**
 
 ```bash
 curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
-PROXYWAKE_PASSWORD=SterkWachtwoord123 docker compose up -d
+PROXYWAKE_PASSWORD=YourSecurePassword docker compose up -d
 ```
 
-Open: `http://<server-ip>:8462`
-
-### Optie 2 — Lokaal bouwen
+### Build locally
 
 ```bash
 git clone https://github.com/jeffreymooiweer/ProxyWake.git
 cd ProxyWake/docker
-cp .env.example .env   # pas wachtwoord aan
+cp .env.example .env   # edit password
 docker compose up -d --build
 ```
-
-De setup-wizard begeleidt je door beveiliging en netwerkconfiguratie.
 
 ---
 
 ## Docker Hub
 
-| Image | Tags |
-|-------|------|
-| [`jeffreymooiweer/proxywake`](https://hub.docker.com/r/jeffreymooiweer/proxywake) | `latest`, `3.0`, `3.0.0` |
-
-Ondersteunde architecturen: **linux/amd64** en **linux/arm64** (Unraid, Raspberry Pi, etc.)
+| | |
+|---|---|
+| **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
+| **Tags** | `latest`, `3.0`, `3.0.0` |
+| **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid
 
-| Veld | Waarde |
-|------|--------|
-| Repository | `jeffreymooiweer/proxywake:latest` |
-| Network | `bridge` |
+| Setting | Value |
+|---------|-------|
+| Repository | `jeffersonmouze/proxywake:latest` |
 | Port | `8462:5001` |
 | Extra Parameters | `--cap-add=NET_RAW` |
-| Variable | `PROXYWAKE_PASSWORD` = jouw wachtwoord |
+| Variable | `PROXYWAKE_PASSWORD` |
 | Path | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
 
 ---
 
-## Omgevingsvariabelen
+## Nginx Proxy Manager
 
-| Variabele | Beschrijving |
-|-----------|--------------|
-| `PROXYWAKE_PASSWORD` | Wachtwoord webinterface |
-| `PROXYWAKE_PASSWORD_HASH` | Bcrypt hash (alternatief) |
-| `PROXYWAKE_API_KEY` | Vaste API-sleutel |
-| `PROXYWAKE_SECRET_KEY` | Flask sessiesleutel |
-| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins |
-| `PROXYWAKE_DATA_DIR` | Data directory |
+After starting ProxyWake:
 
----
+1. Open the **Integration** tab in the UI.
+2. Copy the **global config** into NPM (`server_proxy.conf`).
+3. Add the **per-host snippet** under Advanced for each proxy host.
+4. Test from the UI.
 
-## NPM configureren
-
-1. Tab **Integratie** → kopieer globale config naar `server_proxy.conf`
-2. Per proxy host: plak Advanced snippet
-3. Optioneel: `error_page` toont wachtpagina bij offline backend
-4. Test via **NPM Test** tab
+ProxyWake must be reachable from your NPM container on the local network (use the host IP, not `localhost`).
 
 ---
 
-## Wachtpagina
+## Environment variables
 
-Wanneer een backend offline is, redirect NPM naar:
-
-```
-http://<proxywake-ip>:8462/waiting?domain=jouw.domein.nl
-```
-
-De pagina triggert wake, toont voortgang en redirect naar HTTPS zodra online.
-
----
-
-## Home Assistant
-
-```yaml
-switch:
-  - platform: rest
-    name: "Wake NAS"
-    resource: "http://proxywake:8462/api/devices/1/wake"
-    method: POST
-    headers:
-      X-API-Key: "jouw-api-sleutel"
-```
-
-Of genereer automatisch via **Integratie → Home Assistant**.
+| Variable | Description |
+|----------|-------------|
+| `PROXYWAKE_PASSWORD` | Web UI password (recommended) |
+| `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset) |
+| `PROXYWAKE_SECRET_KEY` | Flask session secret |
+| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
+| `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
 
 ---
 
-## API overzicht
+## License
 
-| Endpoint | Auth | Beschrijving |
-|----------|------|--------------|
-| `GET /api/health` | — | Health check |
-| `GET /api/metrics` | — | Prometheus metrics |
-| `POST /api/setup` | — | Eerste setup |
-| `GET /api/stats` | Sessie | Statistieken |
-| `GET /api/wake-events` | Sessie | Wake-geschiedenis |
-| `GET /api/audit` | Sessie | Auditlog |
-| `POST /api/scan` | Sessie | Netwerkscan |
-| `POST /api/groups/:id/wake` | Sessie/API | Groep wake |
-| `GET /api/public/status/:domain` | — | Publieke status |
-| `POST /api/public/wake/:domain` | — | Publieke wake+wait |
-
-Zie ook eerdere device/npm endpoints.
-
----
-
-## HTTPS & Wake-on-WAN
-
-- **HTTPS**: plaats ProxyWake achter NPM met Let's Encrypt
-- **Wake-on-WAN**: gebruik Tailscale/WireGuard; open geen WOL-poorten naar internet
-
----
-
-## Licentie
-
-MIT
+MIT — see [LICENSE](LICENSE).

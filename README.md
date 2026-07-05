@@ -46,14 +46,59 @@
 
 ## Snel starten
 
+### Optie 1 — Docker Hub (aanbevolen)
+
 ```bash
-cd docker
+docker run -d \
+  --name proxywake \
+  --restart unless-stopped \
+  --cap-add NET_RAW \
+  -p 8462:5001 \
+  -e PROXYWAKE_PASSWORD=SterkWachtwoord123 \
+  -v proxywake_data:/app/backend/data \
+  jeffreymooiweer/proxywake:latest
+```
+
+Of met Docker Compose:
+
+```bash
+curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
 PROXYWAKE_PASSWORD=SterkWachtwoord123 docker compose up -d
 ```
 
 Open: `http://<server-ip>:8462`
 
+### Optie 2 — Lokaal bouwen
+
+```bash
+git clone https://github.com/jeffreymooiweer/ProxyWake.git
+cd ProxyWake/docker
+cp .env.example .env   # pas wachtwoord aan
+docker compose up -d --build
+```
+
 De setup-wizard begeleidt je door beveiliging en netwerkconfiguratie.
+
+---
+
+## Docker Hub
+
+| Image | Tags |
+|-------|------|
+| [`jeffreymooiweer/proxywake`](https://hub.docker.com/r/jeffreymooiweer/proxywake) | `latest`, `3.0`, `3.0.0` |
+
+Ondersteunde architecturen: **linux/amd64** en **linux/arm64** (Unraid, Raspberry Pi, etc.)
+
+### Unraid
+
+| Veld | Waarde |
+|------|--------|
+| Repository | `jeffreymooiweer/proxywake:latest` |
+| Network | `bridge` |
+| Port | `8462:5001` |
+| Extra Parameters | `--cap-add=NET_RAW` |
+| Variable | `PROXYWAKE_PASSWORD` = jouw wachtwoord |
+| Path | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
 
 ---
 

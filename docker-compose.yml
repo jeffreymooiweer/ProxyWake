@@ -1,15 +1,14 @@
 services:
   proxywake:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    image: proxywake:local
+    image: ${PROXYWAKE_IMAGE:-jeffreymooiweer/proxywake:latest}
     container_name: proxywake
     ports:
       - "${PROXYWAKE_PORT:-8462}:5001"
-    env_file:
-      - .env
     environment:
+      PROXYWAKE_PASSWORD: ${PROXYWAKE_PASSWORD:-}
+      PROXYWAKE_API_KEY: ${PROXYWAKE_API_KEY:-}
+      PROXYWAKE_SECRET_KEY: ${PROXYWAKE_SECRET_KEY:-}
+      PROXYWAKE_ALLOWED_ORIGINS: ${PROXYWAKE_ALLOWED_ORIGINS:-}
       PROXYWAKE_DATA_DIR: /app/backend/data
     volumes:
       - proxywake_data:/app/backend/data

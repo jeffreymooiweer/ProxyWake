@@ -19,5 +19,8 @@ backend/password.hash
 # GitHub
 .github/
 
-# Misc
+# Docker local env
+docker/.env
 .env
+
+# Misc

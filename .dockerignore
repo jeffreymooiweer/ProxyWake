@@ -1,15 +1,28 @@
-# Stage 1: Frontend build
+# Dependencies & build output (rebuilt inside container)
 frontend/node_modules
 frontend/build
 
-# Stage 2: Backend
+# Python cache & local data
 backend/__pycache__
-backend/*.pyc
+backend/**/*.pyc
+backend/data
 backend/devices.db
+backend/app.log
+backend/api_keys.json
+backend/password.hash
 
-# Algemene
+# Git & IDE
 .git
 .gitignore
-Dockerfile
-docker-compose.yml
+.github
+
+# Docs & local env (not needed in image)
 README.md
+LICENSE
+*.md
+.env
+.env.*
+
+# Docker compose files (not needed in build context)
+docker-compose.yml
+docker/

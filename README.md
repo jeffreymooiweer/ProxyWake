@@ -1,14 +1,25 @@
 # ProxyWake
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker)](https://hub.docker.com/r/jeffersonmouze/proxywake)
-[![Docker Image Version](https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&label=version)](https://hub.docker.com/r/jeffersonmouze/proxywake)
-[![License: MIT](https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square)](LICENSE)
-[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/docker.yml?style=flat-square&label=build)](https://github.com/jeffreymooiweer/ProxyWake/actions)
-[![Platform](https://img.shields.io/badge/platform-amd64%20%7C%20arm64-blue?style=flat-square)](#docker-hub)
+<p align="center">
+  <img src="docs/assets/banner.png" alt="ProxyWake — Access it. Wake it." width="900" />
+</p>
 
-**ProxyWake** wakes sleeping devices on your network when they are accessed through a reverse proxy — built for [Nginx Proxy Manager](https://nginxproxymanager.com/), with a simple web UI to manage devices and generate integration snippets.
+<p align="center">
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&label=version" alt="Docker Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square" alt="License"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/actions"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/docker.yml?style=flat-square&label=build" alt="Build"></a>
+  <img src="https://img.shields.io/badge/platform-amd64%20%7C%20arm64-blue?style=flat-square" alt="Platform">
+</p>
 
-> **Docker Hub:** [hub.docker.com/r/jeffersonmouze/proxywake](https://hub.docker.com/r/jeffersonmouze/proxywake)
+<p align="center">
+  <strong>Access it. Wake it.</strong><br/>
+  Wake sleeping devices on your network when they are accessed through a reverse proxy.
+</p>
+
+<p align="center">
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><strong>Docker Hub → jeffersonmouze/proxywake</strong></a>
+</p>
 
 ---
 

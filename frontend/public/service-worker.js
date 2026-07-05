@@ -1,8 +1,15 @@
-const CACHE_NAME = 'proxywake-v3';
+const CACHE_NAME = 'proxywake-v4';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(['/', '/index.html', '/manifest.json']))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll([
+      '/',
+      '/index.html',
+      '/manifest.json',
+      '/proxywake.png',
+      '/favicon.ico',
+      '/icon-192.png',
+    ]))
   );
 });
 

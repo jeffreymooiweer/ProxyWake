@@ -9,8 +9,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import AppLogo from '../components/AppLogo';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -44,7 +44,7 @@ const LoginPage = () => {
       <Card sx={{ width: '100%', maxWidth: 440 }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-            <PowerSettingsNewIcon color="primary" sx={{ fontSize: 32 }} />
+            <AppLogo size={48} />
             <Typography variant="h5">ProxyWake</Typography>
           </Box>
           <Typography color="text.secondary" sx={{ mb: 3 }}>

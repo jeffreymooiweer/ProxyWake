@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import AppLogo from '../components/AppLogo';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -59,7 +59,7 @@ const SetupWizard = ({ onComplete }) => {
       <Card sx={{ width: '100%', maxWidth: 720 }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-            <PowerSettingsNewIcon color="primary" sx={{ fontSize: 36 }} />
+            <AppLogo size={48} />
             <Box>
               <Typography variant="h5">Welkom bij ProxyWake</Typography>
               <Typography color="text.secondary">Laten we je installatie in een paar stappen configureren.</Typography>

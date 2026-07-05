@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Card, CardContent, CircularProgress, LinearProgress, Typography } from '@mui/material';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import AppLogo from '../components/AppLogo';
 import { api } from '../api/client';
 
 const WaitingPage = () => {
@@ -66,7 +66,7 @@ const WaitingPage = () => {
     <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
       <Card sx={{ maxWidth: 520, width: '100%' }}>
         <CardContent sx={{ textAlign: 'center', p: 4 }}>
-          <PowerSettingsNewIcon color="secondary" sx={{ fontSize: 56, mb: 2 }} />
+          <AppLogo size={72} sx={{ mx: 'auto', mb: 2, display: 'block' }} />
           <Typography variant="h5" gutterBottom>{status.name || domain}</Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>{message}</Typography>
           {progress < 100 ? <CircularProgress sx={{ mb: 2 }} /> : null}

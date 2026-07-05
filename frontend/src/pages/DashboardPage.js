@@ -12,6 +12,7 @@ import DevicesIcon from '@mui/icons-material/Devices';
 import WifiIcon from '@mui/icons-material/Wifi';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import BoltIcon from '@mui/icons-material/Bolt';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 
 const StatCard = ({ title, value, subtitle, icon, color = 'primary' }) => (
@@ -43,6 +44,7 @@ const StatCard = ({ title, value, subtitle, icon, color = 'primary' }) => (
 );
 
 const DashboardPage = ({ onNavigate }) => {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,9 +67,9 @@ const DashboardPage = ({ onNavigate }) => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Welkom terug</Typography>
+      <Typography variant="h4" gutterBottom>{t('dashboard.title')}</Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Beheer je apparaten en laat ze automatisch ontwaken wanneer iemand je proxy benadert.
+        {t('dashboard.subtitle')}
       </Typography>
 
       {loading && <LinearProgress sx={{ mb: 3 }} />}
@@ -75,27 +77,27 @@ const DashboardPage = ({ onNavigate }) => {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <StatCard
-            title="Apparaten"
+            title={t('dashboard.devices')}
             value={devices.length}
-            subtitle="Totaal geconfigureerd"
+            subtitle={t('dashboard.devicesSub')}
             icon={<DevicesIcon />}
             color="primary"
           />
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard
-            title="Online"
+            title={t('dashboard.online')}
             value={onlineCount}
-            subtitle="Bereikbaar via ping"
+            subtitle={t('dashboard.onlineSub')}
             icon={<WifiIcon />}
             color="success"
           />
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard
-            title="Offline"
+            title={t('dashboard.offline')}
             value={offlineCount}
-            subtitle="Mogelijk in slaapstand"
+            subtitle={t('dashboard.offlineSub')}
             icon={<WifiOffIcon />}
             color="warning"
           />
@@ -106,16 +108,14 @@ const DashboardPage = ({ onNavigate }) => {
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <BoltIcon color="secondary" />
-            <Typography variant="h6">Snel starten</Typography>
+            <Typography variant="h6">{t('dashboard.quickStart')}</Typography>
           </Box>
           <Typography color="text.secondary" paragraph>
-            1. Voeg een apparaat toe met domein, IP en MAC-adres.
-            2. Kopieer de NPM-configuratie onder Integratie.
-            3. Test Wake-on-LAN en controleer het logboek.
+            {t('dashboard.quickStartText')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Chip label="Apparaat toevoegen" onClick={() => onNavigate(1)} clickable color="primary" />
-            <Chip label="NPM instellen" onClick={() => onNavigate(2)} clickable color="secondary" />
+            <Chip label={t('dashboard.addDevice')} onClick={() => onNavigate(1)} clickable color="primary" />
+            <Chip label={t('dashboard.setupNpm')} onClick={() => onNavigate(2)} clickable color="secondary" />
           </Box>
         </CardContent>
       </Card>
@@ -123,7 +123,7 @@ const DashboardPage = ({ onNavigate }) => {
       {devices.length > 0 && (
         <Card sx={{ mt: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Statusoverzicht</Typography>
+            <Typography variant="h6" gutterBottom>{t('dashboard.statusOverview')}</Typography>
             <Grid container spacing={2}>
               {devices.map((device) => (
                 <Grid item xs={12} sm={6} key={device.id}>
@@ -143,7 +143,7 @@ const DashboardPage = ({ onNavigate }) => {
                     </Box>
                     <Chip
                       size="small"
-                      label={device.online ? 'Online' : 'Offline'}
+                      label={device.online ? t('common.online') : t('common.offline')}
                       color={device.online ? 'success' : 'default'}
                     />
                   </Box>

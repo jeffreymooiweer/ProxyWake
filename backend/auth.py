@@ -9,6 +9,7 @@ from config import (
     get_previous_api_key,
     save_admin_password_hash,
 )
+from errors import ERROR_MESSAGES
 
 
 def hash_password(password):
@@ -64,7 +65,7 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if is_authenticated():
             return f(*args, **kwargs)
-        return jsonify({'error': 'Authenticatie vereist.'}), 401
+        return jsonify({'error': ERROR_MESSAGES['AUTH_REQUIRED'], 'error_code': 'AUTH_REQUIRED'}), 401
 
     return decorated
 
@@ -74,7 +75,7 @@ def api_key_required(f):
     def decorated(*args, **kwargs):
         if verify_api_key(get_request_api_key()):
             return f(*args, **kwargs)
-        return jsonify({'error': 'Ongeldige of ontbrekende API-sleutel.'}), 401
+        return jsonify({'error': ERROR_MESSAGES['INVALID_API_KEY'], 'error_code': 'INVALID_API_KEY'}), 401
 
     return decorated
 
@@ -84,6 +85,6 @@ def api_key_or_session_required(f):
     def decorated(*args, **kwargs):
         if is_authenticated() or verify_api_key(get_request_api_key()):
             return f(*args, **kwargs)
-        return jsonify({'error': 'Authenticatie vereist.'}), 401
+        return jsonify({'error': ERROR_MESSAGES['AUTH_REQUIRED'], 'error_code': 'AUTH_REQUIRED'}), 401
 
     return decorated

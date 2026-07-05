@@ -43,7 +43,7 @@ from services import (
     wake_and_wait,
     wake_group,
 )
-from utils import is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac, scan_subnet, subnet_from_ip
+from errors import ERROR_MESSAGES, error_response, message_response
 
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 app.config['SECRET_KEY'] = get_secret_key()
@@ -74,17 +74,17 @@ def validate_device_payload(data, device=None):
     name = (data.get('name') or '').strip() or None
 
     if not domain or not ip or not mac:
-        return None, 'Alle verplichte velden moeten ingevuld zijn.'
+        return None, 'REQUIRED_FIELDS'
     if not is_valid_domain(domain):
-        return None, 'Ongeldige domeinnaam.'
+        return None, 'INVALID_DOMAIN'
     if not is_valid_ip(ip):
-        return None, 'Ongeldig IP-adres.'
+        return None, 'INVALID_IP'
     if not is_valid_mac(mac):
-        return None, 'Ongeldig MAC-adres.'
+        return None, 'INVALID_MAC'
 
     existing = Device.query.filter_by(domain=domain).first()
     if existing and (device is None or existing.id != device.id):
-        return None, 'Dit domein is al gekoppeld aan een ander apparaat.'
+        return None, 'DOMAIN_ALREADY_EXISTS'
 
     group_id = data.get('group_id')
     npm_host_id = data.get('npm_host_id')
@@ -115,6 +115,16 @@ def get_proxywake_base_url():
     if stored:
         return stored.rstrip('/')
     return (request.headers.get('X-ProxyWake-Base-Url') or request.host_url.rstrip('/')).rstrip('/')
+
+
+def json_error(code, status=400, **extra):
+    body, _ = error_response(code, status, **extra)
+    return jsonify(body), status
+
+
+def json_message(code, status=200, **params):
+    body, _ = message_response(code, status, **params)
+    return jsonify(body), status
 
 
 def actor_ip():
@@ -162,6 +172,7 @@ def auth_status():
         'api_key_configured': bool(get_or_create_api_key()),
         'onboarding_completed': is_onboarding_complete(),
         'theme': get_setting('theme', 'dark'),
+        'language': get_setting('language', 'en'),
     })
 
 
@@ -171,29 +182,29 @@ def login():
     if not is_auth_configured():
         session['authenticated'] = True
         session.permanent = True
-        return jsonify({'message': 'Geen wachtwoord geconfigureerd.'}), 200
+        return json_message('NO_PASSWORD_CONFIGURED')
 
     data = request.get_json(silent=True) or {}
     password = data.get('password', '')
     if not password or not _password_matches(password):
-        return jsonify({'error': 'Onjuist wachtwoord.'}), 401
+        return json_error('INVALID_PASSWORD', 401)
 
     session['authenticated'] = True
     session.permanent = True
-    log_audit('login', 'Succesvolle login', actor_ip())
-    return jsonify({'message': 'Succesvol ingelogd.'}), 200
+    log_audit('login', 'Successful login', actor_ip())
+    return json_message('LOGIN_SUCCESS')
 
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
     session.clear()
-    return jsonify({'message': 'Uitgelogd.'}), 200
+    return json_message('LOGOUT_SUCCESS')
 
 
 @app.route('/api/setup', methods=['POST'])
 def setup():
     if is_onboarding_complete() and is_auth_configured():
-        return jsonify({'error': 'Setup is al voltooid.'}), 400
+        return json_error('SETUP_ALREADY_COMPLETE', 400)
 
     data = request.get_json(silent=True) or {}
     password = data.get('password', '').strip()
@@ -205,12 +216,16 @@ def setup():
         set_setting('proxywake_url', proxywake_url)
     if data.get('theme') in ('dark', 'light'):
         set_setting('theme', data['theme'])
+    if data.get('language') in ('en', 'nl', 'de', 'fr'):
+        set_setting('language', data['language'])
 
     set_setting('onboarding_completed', 'true')
     session['authenticated'] = True
     session.permanent = True
-    log_audit('setup_complete', 'Eerste setup voltooid', actor_ip())
-    return jsonify({'message': 'Setup voltooid.', 'api_key': get_or_create_api_key()}), 200
+    log_audit('setup_complete', 'Initial setup completed', actor_ip())
+    body, status = message_response('SETUP_COMPLETE')
+    body['api_key'] = get_or_create_api_key()
+    return jsonify(body), status
 
 
 @app.route('/api/settings')
@@ -223,7 +238,19 @@ def get_settings():
         'password_required': is_auth_configured(),
         'theme': get_setting('theme', 'dark'),
         'onboarding_completed': is_onboarding_complete(),
+        'language': get_setting('language', 'en'),
     })
+
+
+@app.route('/api/settings/language', methods=['PUT'])
+@login_required
+def update_language():
+    data = request.get_json(silent=True) or {}
+    language = data.get('language', 'en')
+    if language not in ('en', 'nl', 'de', 'fr'):
+        return json_error('INVALID_LANGUAGE', 400)
+    set_setting('language', language)
+    return jsonify({'language': language}), 200
 
 
 @app.route('/api/settings/theme', methods=['PUT'])
@@ -232,7 +259,7 @@ def update_theme():
     data = request.get_json(silent=True) or {}
     theme = data.get('theme', 'dark')
     if theme not in ('dark', 'light'):
-        return jsonify({'error': 'Ongeldig thema.'}), 400
+        return json_error('INVALID_THEME', 400)
     set_setting('theme', theme)
     return jsonify({'theme': theme}), 200
 
@@ -243,22 +270,21 @@ def update_password():
     data = request.get_json(silent=True) or {}
     password = data.get('password', '').strip()
     if len(password) < 8:
-        return jsonify({'error': 'Wachtwoord moet minimaal 8 tekens zijn.'}), 400
+        return json_error('PASSWORD_TOO_SHORT', 400)
     set_password(password)
     log_audit('password_changed', None, actor_ip())
-    return jsonify({'message': 'Wachtwoord bijgewerkt.'}), 200
+    return json_message('PASSWORD_UPDATED')
 
 
 @app.route('/api/settings/rotate-api-key', methods=['POST'])
 @login_required
 def rotate_key():
     new_key = rotate_api_key()
-    log_audit('api_key_rotated', 'Nieuwe API-sleutel gegenereerd', actor_ip())
-    return jsonify({
-        'api_key': new_key,
-        'previous_api_key': get_previous_api_key(),
-        'message': 'API-sleutel geroteerd. Vorige sleutel blijft tijdelijk geldig.',
-    }), 200
+    log_audit('api_key_rotated', 'API key rotated', actor_ip())
+    body, status = message_response('API_KEY_ROTATED')
+    body['api_key'] = new_key
+    body['previous_api_key'] = get_previous_api_key()
+    return jsonify(body), status
 
 
 @app.route('/api/devices')
@@ -273,9 +299,9 @@ def list_devices():
 @api_key_or_session_required
 def create_device():
     data = request.get_json(silent=True) or {}
-    payload, error = validate_device_payload(data)
-    if error:
-        return jsonify({'error': error}), 400
+    payload, error_code = validate_device_payload(data)
+    if error_code:
+        return json_error(error_code)
     device = Device(**payload)
     db.session.add(device)
     db.session.commit()
@@ -289,9 +315,9 @@ def modify_device(device_id):
     device = Device.query.get_or_404(device_id)
     if request.method == 'PUT':
         data = request.get_json(silent=True) or {}
-        payload, error = validate_device_payload(data, device=device)
-        if error:
-            return jsonify({'error': error}), 400
+        payload, error_code = validate_device_payload(data, device=device)
+        if error_code:
+            return json_error(error_code)
         for key, value in payload.items():
             setattr(device, key, value)
         db.session.commit()
@@ -302,7 +328,7 @@ def modify_device(device_id):
     db.session.delete(device)
     db.session.commit()
     log_audit('device_deleted', domain, actor_ip())
-    return jsonify({'message': 'Apparaat verwijderd.'}), 200
+    return json_message('DEVICE_DELETED')
 
 
 @app.route('/api/devices/<int:device_id>/wake', methods=['POST'])
@@ -315,7 +341,7 @@ def wake_device(device_id):
         result = smart_wake_device(device, source='manual', force=force)
         return jsonify(result), 200
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 500
+        return json_error('WAKE_FAILED', 500)
 
 
 @app.route('/api/devices/<int:device_id>/status')
@@ -363,7 +389,7 @@ def create_group():
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     if not name:
-        return jsonify({'error': 'Groepsnaam is vereist.'}), 400
+        return json_error('GROUP_NAME_REQUIRED', 400)
     group = DeviceGroup(name=name, color=data.get('color', '#6366f1'))
     db.session.add(group)
     db.session.commit()
@@ -389,7 +415,7 @@ def modify_group(group_id):
         return jsonify(group.to_dict()), 200
     db.session.delete(group)
     db.session.commit()
-    return jsonify({'message': 'Groep verwijderd.'}), 200
+    return json_message('GROUP_DELETED')
 
 
 @app.route('/api/npm-hosts')
@@ -414,7 +440,7 @@ def delete_npm_host(host_id):
     host = NpmHost.query.get_or_404(host_id)
     db.session.delete(host)
     db.session.commit()
-    return jsonify({'message': 'NPM host verwijderd.'}), 200
+    return json_message('NPM_HOST_DELETED')
 
 
 @app.route('/api/wake/by-host', methods=['GET', 'POST'])
@@ -428,15 +454,15 @@ def wake_by_host():
         or ''
     ).split(':')[0].strip().lower()
     if not host:
-        return jsonify({'error': 'Host-header ontbreekt.'}), 400
+        return json_error('HOST_HEADER_MISSING', 400)
     device = Device.query.filter_by(domain=host).first()
     if not device:
-        return jsonify({'error': 'Geen apparaat gevonden voor dit domein.'}), 404
+        return json_error('DEVICE_NOT_FOUND_FOR_DOMAIN', 404)
     try:
         result = smart_wake_device(device, source='npm')
-        return jsonify({'message': f'Wake verwerkt voor {device.domain}', 'device_id': device.id, **result}), 200
+        return jsonify({'message_code': 'WAKE_PROCESSED', 'domain': device.domain, 'device_id': device.id, **result}), 200
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 500
+        return json_error('WAKE_FAILED', 500)
 
 
 @app.route('/api/public/status/<domain>')
@@ -444,7 +470,7 @@ def wake_by_host():
 def public_status(domain):
     device = Device.query.filter_by(domain=domain.lower()).first()
     if not device:
-        return jsonify({'error': 'Apparaat niet gevonden.'}), 404
+        return json_error('DEVICE_NOT_FOUND', 404)
     return jsonify({
         'domain': device.domain,
         'name': device.name or device.domain,
@@ -457,7 +483,7 @@ def public_status(domain):
 def public_wake(domain):
     device = Device.query.filter_by(domain=domain.lower()).first()
     if not device:
-        return jsonify({'error': 'Apparaat niet gevonden.'}), 404
+        return json_error('DEVICE_NOT_FOUND', 404)
     result = wake_and_wait(device, source='public')
     return jsonify(result), 200
 
@@ -542,7 +568,7 @@ def modify_webhook(hook_id):
         return jsonify(hook.to_dict()), 200
     db.session.delete(hook)
     db.session.commit()
-    return jsonify({'message': 'Webhook verwijderd.'}), 200
+    return json_message('WEBHOOK_DELETED')
 
 
 @app.route('/api/schedules')
@@ -573,7 +599,7 @@ def delete_schedule(schedule_id):
     schedule = ScheduledWake.query.get_or_404(schedule_id)
     db.session.delete(schedule)
     db.session.commit()
-    return jsonify({'message': 'Schema verwijderd.'}), 200
+    return json_message('SCHEDULE_DELETED')
 
 
 @app.route('/api/stats')
@@ -636,7 +662,7 @@ def scan_network():
     if not subnet and data.get('ip'):
         subnet = subnet_from_ip(data['ip'])
     if not subnet:
-        return jsonify({'error': 'Subnet of IP is vereist.'}), 400
+        return json_error('SUBNET_REQUIRED', 400)
     hosts = scan_subnet(subnet, max_hosts=int(data.get('max_hosts', 64)))
     return jsonify({'subnet': subnet, 'hosts': hosts})
 
@@ -655,7 +681,7 @@ def get_logs():
 @app.route('/<path:path>')
 def serve(path):
     if path.startswith('api/'):
-        return jsonify({'error': 'Resource niet gevonden.'}), 404
+        return json_error('NOT_FOUND', 404)
     if path and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
@@ -664,13 +690,13 @@ def serve(path):
 @app.errorhandler(404)
 def not_found(_error):
     if request.path.startswith('/api/'):
-        return jsonify({'error': 'Resource niet gevonden.'}), 404
+        return json_error('NOT_FOUND', 404)
     return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.errorhandler(429)
 def rate_limited(_error):
-    return jsonify({'error': 'Te veel verzoeken.'}), 429
+    return json_error('RATE_LIMITED', 429)
 
 
 with app.app_context():

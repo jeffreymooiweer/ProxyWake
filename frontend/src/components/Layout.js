@@ -11,27 +11,24 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import AppLogo from './AppLogo';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import { useTranslation } from 'react-i18next';
+import AppLogo from './AppLogo';
+import LanguageSwitcher from './LanguageSwitcher';
 import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../context/ThemeContext';
-
-const tabLabels = [
-  'Dashboard',
-  'Apparaten',
-  'Groepen',
-  'Integratie',
-  'Automatisering',
-  'Statistieken',
-  'Logboek',
-  'Instellingen',
-];
 
 const Layout = ({ activeTab, onTabChange, children }) => {
   const { logout, passwordRequired } = useAuth();
   const { mode, toggleTheme } = useThemeMode();
+  const { t } = useTranslation();
+
+  const tabs = [
+    'dashboard', 'devices', 'groups', 'integration',
+    'automation', 'statistics', 'logs', 'settings',
+  ];
 
   return (
     <Box sx={{ minHeight: '100vh', pb: 6 }}>
@@ -40,20 +37,21 @@ const Layout = ({ activeTab, onTabChange, children }) => {
           <AppLogo size={36} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6">ProxyWake</Typography>
-            <Typography variant="caption" color="text.secondary">Access it. Wake it.</Typography>
+            <Typography variant="caption" color="text.secondary">{t('common.tagline')}</Typography>
           </Box>
-          <Tooltip title="Thema wisselen">
+          <LanguageSwitcher />
+          <Tooltip title={mode === 'dark' ? t('common.switchToLight') : t('common.switchToDark')}>
             <IconButton color="inherit" onClick={toggleTheme}>
               {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
           </Tooltip>
           {passwordRequired && (
-            <Button color="inherit" startIcon={<LogoutIcon />} onClick={logout}>Uitloggen</Button>
+            <Button color="inherit" startIcon={<LogoutIcon />} onClick={logout}>{t('common.logout')}</Button>
           )}
         </Toolbar>
         <Container maxWidth="lg">
           <Tabs value={activeTab} onChange={(_, value) => onTabChange(value)} variant="scrollable" scrollButtons="auto">
-            {tabLabels.map((label) => <Tab key={label} label={label} />)}
+            {tabs.map((key) => <Tab key={key} label={t(`nav.${key}`)} />)}
           </Tabs>
         </Container>
       </AppBar>

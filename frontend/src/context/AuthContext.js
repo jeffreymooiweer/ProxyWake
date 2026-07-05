@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
+import { changeLanguage } from '../i18n';
 
 const AuthContext = createContext(null);
 
@@ -14,6 +15,9 @@ export const AuthProvider = ({ children }) => {
     setAuthenticated(status.authenticated);
     setPasswordRequired(status.password_required);
     setOnboardingCompleted(status.onboarding_completed);
+    if (status.language) {
+      await changeLanguage(status.language);
+    }
     setLoading(false);
     return status;
   }, []);

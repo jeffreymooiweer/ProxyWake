@@ -11,14 +11,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import AppLogo from '../components/AppLogo';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
-const steps = ['Welkom', 'Beveiliging', 'Netwerk', 'Klaar'];
-
 const SetupWizard = ({ onComplete }) => {
   const { refresh } = useAuth();
+  const { t, i18n } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,13 +28,20 @@ const SetupWizard = ({ onComplete }) => {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const steps = [
+    t('setup.steps.welcome'),
+    t('setup.steps.security'),
+    t('setup.steps.network'),
+    t('setup.steps.done'),
+  ];
+
   const handleFinish = async () => {
     if (password && password !== confirmPassword) {
-      setError('Wachtwoorden komen niet overeen.');
+      setError(t('setup.passwordMismatch'));
       return;
     }
     if (password && password.length < 8) {
-      setError('Wachtwoord moet minimaal 8 tekens zijn.');
+      setError(t('errors.PASSWORD_TOO_SHORT'));
       return;
     }
     setLoading(true);
@@ -43,6 +51,7 @@ const SetupWizard = ({ onComplete }) => {
         password: password || undefined,
         proxywake_url: proxywakeUrl,
         theme: 'dark',
+        language: i18n.language?.split('-')[0] || 'en',
       });
       setApiKey(result.api_key);
       await refresh();
@@ -56,13 +65,16 @@ const SetupWizard = ({ onComplete }) => {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+        <LanguageSwitcher />
+      </Box>
       <Card sx={{ width: '100%', maxWidth: 720 }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <AppLogo size={48} />
             <Box>
-              <Typography variant="h5">Welkom bij ProxyWake</Typography>
-              <Typography color="text.secondary">Laten we je installatie in een paar stappen configureren.</Typography>
+              <Typography variant="h5">{t('setup.welcome')}</Typography>
+              <Typography color="text.secondary">{t('setup.intro')}</Typography>
             </Box>
           </Box>
 
@@ -75,23 +87,22 @@ const SetupWizard = ({ onComplete }) => {
           {activeStep === 0 && (
             <Box>
               <Typography paragraph>
-                ProxyWake maakt Wake-on-LAN eenvoudig in combinatie met Nginx Proxy Manager.
-                Deze wizard helpt je met beveiliging en netwerkconfiguratie.
+                {t('setup.intro')}
               </Typography>
-              <Button variant="contained" onClick={() => setActiveStep(1)}>Start setup</Button>
+              <Button variant="contained" onClick={() => setActiveStep(1)}>{t('setup.start')}</Button>
             </Box>
           )}
 
           {activeStep === 1 && (
             <Box>
               <Typography color="text.secondary" sx={{ mb: 2 }}>
-                Stel een wachtwoord in voor de webinterface (aanbevolen). Laat leeg om later in te stellen.
+                {t('setup.passwordHint')}
               </Typography>
-              <TextField fullWidth type="password" label="Wachtwoord" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} />
-              <TextField fullWidth type="password" label="Bevestig wachtwoord" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} />
+              <TextField fullWidth type="password" label={t('setup.password')} value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} />
+              <TextField fullWidth type="password" label={t('setup.confirmPassword')} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button onClick={() => setActiveStep(0)}>Terug</Button>
-                <Button variant="contained" onClick={() => setActiveStep(2)}>Volgende</Button>
+                <Button onClick={() => setActiveStep(0)}>{t('common.cancel')}</Button>
+                <Button variant="contained" onClick={() => setActiveStep(2)}>{t('common.ok')}</Button>
               </Box>
             </Box>
           )}
@@ -99,13 +110,13 @@ const SetupWizard = ({ onComplete }) => {
           {activeStep === 2 && (
             <Box>
               <Typography color="text.secondary" sx={{ mb: 2 }}>
-                Geef het interne adres op dat NPM kan bereiken (niet localhost).
+                {t('setup.urlHint')}
               </Typography>
-              <TextField fullWidth label="ProxyWake URL" value={proxywakeUrl} onChange={(e) => setProxywakeUrl(e.target.value)} sx={{ mb: 2 }} />
+              <TextField fullWidth label={t('setup.urlLabel')} value={proxywakeUrl} onChange={(e) => setProxywakeUrl(e.target.value)} sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button onClick={() => setActiveStep(1)}>Terug</Button>
+                <Button onClick={() => setActiveStep(1)}>{t('common.cancel')}</Button>
                 <Button variant="contained" onClick={handleFinish} disabled={loading}>
-                  {loading ? 'Bezig...' : 'Setup voltooien'}
+                  {loading ? t('setup.finishing') : t('setup.finish')}
                 </Button>
               </Box>
             </Box>
@@ -113,13 +124,13 @@ const SetupWizard = ({ onComplete }) => {
 
           {activeStep === 3 && (
             <Box>
-              <Alert severity="success" sx={{ mb: 2 }}>Setup voltooid! Je kunt nu apparaten toevoegen.</Alert>
+              <Alert severity="success" sx={{ mb: 2 }}>{t('setup.doneTitle')}</Alert>
               {apiKey && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  Je API-sleutel: <strong>{apiKey}</strong>
+                  {t('setup.apiKeyLabel')} <strong>{apiKey}</strong>
                 </Alert>
               )}
-              <Button variant="contained" onClick={onComplete}>Naar dashboard</Button>
+              <Button variant="contained" onClick={onComplete}>{t('setup.toDashboard')}</Button>
             </Box>
           )}
         </CardContent>

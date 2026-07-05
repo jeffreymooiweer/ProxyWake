@@ -13,10 +13,13 @@ import {
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useThemeMode } from '../context/ThemeContext';
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const [settings, setSettings] = useState(null);
   const [password, setPassword] = useState('');
@@ -36,7 +39,7 @@ const SettingsPage = () => {
     link.href = url;
     link.download = 'proxywake-export.json';
     link.click();
-    show('Export gedownload.');
+    show(t('settings.exportDone'));
   };
 
   const handleImport = async (event) => {
@@ -45,22 +48,26 @@ const SettingsPage = () => {
     const text = await file.text();
     const data = JSON.parse(text);
     const result = await api.importDevices(data.devices || data, true);
-    show(`${result.imported} apparaten geïmporteerd.`);
+    show(t('settings.importDone', { count: result.imported }));
   };
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Instellingen</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>Beveiliging, thema, export en geavanceerde opties.</Typography>
+      <Typography variant="h4" gutterBottom>{t('settings.title')}</Typography>
+      <Typography color="text.secondary" sx={{ mb: 3 }}>{t('settings.subtitle')}</Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Thema</Typography>
+              <Typography variant="h6" gutterBottom>{t('settings.themeSection')}</Typography>
               <Button variant="outlined" startIcon={mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />} onClick={toggleTheme}>
-                Schakel naar {mode === 'dark' ? 'licht' : 'donker'} thema
+                {mode === 'dark' ? t('common.switchToLight') : t('common.switchToDark')}
               </Button>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>{t('common.language')}</Typography>
+                <LanguageSwitcher fullWidth />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -68,10 +75,10 @@ const SettingsPage = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>API-sleutel</Typography>
+              <Typography variant="h6" gutterBottom>{t('settings.apiKeySection')}</Typography>
               <TextField fullWidth value={settings?.api_key || ''} InputProps={{ readOnly: true }} sx={{ mb: 2 }} />
               <Button variant="outlined" startIcon={<VpnKeyIcon />} onClick={() => api.rotateApiKey().then((result) => { setSettings({ ...settings, api_key: result.api_key }); show(result.message); })}>
-                Roteer API-sleutel
+                {t('settings.rotateKey')}
               </Button>
             </CardContent>
           </Card>
@@ -80,9 +87,9 @@ const SettingsPage = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Wachtwoord wijzigen</Typography>
-              <TextField fullWidth type="password" label="Nieuw wachtwoord" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} />
-              <Button variant="contained" onClick={() => api.updatePassword(password).then(() => show('Wachtwoord bijgewerkt.'))}>Opslaan</Button>
+              <Typography variant="h6" gutterBottom>{t('settings.passwordSection')}</Typography>
+              <TextField fullWidth type="password" label={t('settings.newPassword')} value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 2 }} />
+              <Button variant="contained" onClick={() => api.updatePassword(password).then(() => show(t('messages.PASSWORD_UPDATED')))}>{t('common.save')}</Button>
             </CardContent>
           </Card>
         </Grid>
@@ -90,11 +97,11 @@ const SettingsPage = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Export / Import</Typography>
+              <Typography variant="h6" gutterBottom>{t('settings.exportSection')}</Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                <Button variant="outlined" onClick={handleExport}>Exporteer JSON</Button>
+                <Button variant="outlined" onClick={handleExport}>{t('settings.exportJson')}</Button>
                 <Button variant="outlined" component="label">
-                  Importeer JSON
+                  {t('settings.importJson')}
                   <input hidden type="file" accept="application/json" onChange={handleImport} />
                 </Button>
               </Box>
@@ -105,12 +112,12 @@ const SettingsPage = () => {
         <Grid item xs={12}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Observability</Typography>
+              <Typography variant="h6" gutterBottom>{t('settings.observability')}</Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Prometheus metrics: <code>/api/metrics</code> — Health check: <code>/api/health</code>
+                {t('settings.observabilityText')}
               </Typography>
               <Alert severity="info">
-                Wake-on-WAN: gebruik Tailscale/WireGuard i.p.v. open poorten. HTTPS: stel een NPM reverse proxy in op ProxyWake zelf.
+                {t('settings.securityHint')}
               </Alert>
             </CardContent>
           </Card>

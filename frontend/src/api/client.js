@@ -1,3 +1,6 @@
+import i18n from '../i18n';
+import { translateApiPayload } from '../utils/translateApi';
+
 const API_BASE = '';
 
 async function request(path, options = {}) {
@@ -5,6 +8,7 @@ async function request(path, options = {}) {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': i18n.language || 'en',
       ...(options.headers || {}),
     },
     ...options,
@@ -12,9 +16,9 @@ async function request(path, options = {}) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || 'Er is iets misgegaan.');
+    translateApiPayload(data);
   }
-  return data;
+  return translateApiPayload(data);
 }
 
 export const api = {
@@ -24,6 +28,7 @@ export const api = {
   setup: (payload) => request('/api/setup', { method: 'POST', body: JSON.stringify(payload) }),
   getSettings: () => request('/api/settings'),
   updateTheme: (theme) => request('/api/settings/theme', { method: 'PUT', body: JSON.stringify({ theme }) }),
+  updateLanguage: (language) => request('/api/settings/language', { method: 'PUT', body: JSON.stringify({ language }) }),
   updatePassword: (password) => request('/api/settings/password', { method: 'PUT', body: JSON.stringify({ password }) }),
   rotateApiKey: () => request('/api/settings/rotate-api-key', { method: 'POST' }),
   getDevices: (withStatus = true) => request(`/api/devices?status=${withStatus}`),

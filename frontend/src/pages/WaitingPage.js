@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Card, CardContent, CircularProgress, LinearProgress, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import AppLogo from '../components/AppLogo';
 import { api } from '../api/client';
 
 const WaitingPage = () => {
+  const { t } = useTranslation();
   const params = new URLSearchParams(window.location.search);
   const domain = params.get('domain') || '';
   const [status, setStatus] = useState({ online: false, name: domain });
   const [progress, setProgress] = useState(0);
-  const [message, setMessage] = useState('Apparaat wordt opgestart...');
+  const [message, setMessage] = useState(t('waiting.starting'));
 
   useEffect(() => {
     if (!domain) return undefined;
@@ -27,7 +29,7 @@ const WaitingPage = () => {
         if (!active) return;
         setStatus(data);
         if (data.online) {
-          setMessage('Apparaat is online! Doorsturen...');
+          setMessage(t('waiting.onlineRedirect'));
           setProgress(100);
           setTimeout(() => {
             window.location.href = `https://${domain}`;
@@ -35,10 +37,10 @@ const WaitingPage = () => {
         } else {
           ticks += 1;
           setProgress(Math.min(95, ticks * 5));
-          setMessage(`Wachten op ${data.name || domain}... (${ticks * 3}s)`);
+          setMessage(t('waiting.waitingFor', { name: data.name || domain, seconds: ticks * 3 }));
         }
       } catch {
-        setMessage('Kon status niet ophalen. Opnieuw proberen...');
+        setMessage(t('waiting.statusError'));
       }
     };
 
@@ -55,7 +57,7 @@ const WaitingPage = () => {
       <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
         <Card sx={{ maxWidth: 480, width: '100%' }}>
           <CardContent>
-            <Typography>Geen domein opgegeven. Gebruik: /waiting?domain=jouw.domein.nl</Typography>
+            <Typography>{t('waiting.noDomain')}</Typography>
           </CardContent>
         </Card>
       </Box>

@@ -15,9 +15,11 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 
 const GroupsPage = () => {
+  const { t } = useTranslation();
   const [groups, setGroups] = useState([]);
   const [name, setName] = useState('');
   const [color, setColor] = useState('#6366f1');
@@ -39,15 +41,15 @@ const GroupsPage = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Groepen</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>Groepeer apparaten en maak ze tegelijk wakker.</Typography>
+      <Typography variant="h4" gutterBottom>{t('groups.title')}</Typography>
+      <Typography color="text.secondary" sx={{ mb: 3 }}>{t('groups.subtitle')}</Typography>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box component="form" onSubmit={handleCreate} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField label="Groepsnaam" value={name} onChange={(e) => setName(e.target.value)} required sx={{ flex: 1, minWidth: 200 }} />
-            <TextField label="Kleur" type="color" value={color} onChange={(e) => setColor(e.target.value)} sx={{ width: 100 }} />
-            <Button type="submit" variant="contained" startIcon={<AddIcon />} sx={{ height: 56 }}>Toevoegen</Button>
+            <TextField label={t('groups.name')} value={name} onChange={(e) => setName(e.target.value)} required sx={{ flex: 1, minWidth: 200 }} />
+            <TextField label={t('groups.color')} type="color" value={color} onChange={(e) => setColor(e.target.value)} sx={{ width: 100 }} />
+            <Button type="submit" variant="contained" startIcon={<AddIcon />} sx={{ height: 56 }}>{t('groups.add')}</Button>
           </Box>
         </CardContent>
       </Card>
@@ -61,7 +63,7 @@ const GroupsPage = () => {
                   <Chip label={group.name} sx={{ bgcolor: group.color, color: '#fff' }} />
                 </Box>
                 <Box>
-                  <IconButton color="success" onClick={() => api.wakeGroup(group.id).then(() => setNotification({ open: true, message: 'Groep wake gestart', severity: 'success' }))}>
+                  <IconButton color="success" onClick={() => api.wakeGroup(group.id).then(() => setNotification({ open: true, message: t('groups.wakeStarted'), severity: 'success' }))}>
                     <PowerSettingsNewIcon />
                   </IconButton>
                   <IconButton color="error" onClick={() => api.deleteGroup(group.id).then(load)}>

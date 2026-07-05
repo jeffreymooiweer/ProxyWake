@@ -15,9 +15,11 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 
 const LogsPage = () => {
+  const { t, i18n } = useTranslation();
   const [tab, setTab] = useState(0);
   const [logs, setLogs] = useState([]);
   const [audit, setAudit] = useState([]);
@@ -44,15 +46,15 @@ const LogsPage = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
         <Box>
-          <Typography variant="h4" gutterBottom>Logboek</Typography>
-          <Typography color="text.secondary">Systeemlogs en audittrail.</Typography>
+          <Typography variant="h4" gutterBottom>{t('logs.title')}</Typography>
+          <Typography color="text.secondary">{t('logs.subtitle')}</Typography>
         </Box>
-        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={load}>Vernieuwen</Button>
+        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={load}>{t('common.refresh')}</Button>
       </Box>
 
       <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 2 }}>
-        <Tab label="Systeem" />
-        <Tab label="Audit" />
+        <Tab label={t('logs.system')} />
+        <Tab label={t('logs.audit')} />
       </Tabs>
 
       {loading && <LinearProgress sx={{ mb: 2 }} />}
@@ -61,7 +63,7 @@ const LogsPage = () => {
         <Card>
           <CardContent>
             <Box component="pre" sx={{ m: 0, minHeight: 360, maxHeight: 560, overflow: 'auto', p: 2, borderRadius: 3, bgcolor: 'rgba(15, 23, 42, 0.9)', fontSize: '0.82rem', whiteSpace: 'pre-wrap' }}>
-              {logs.length > 0 ? logs.join('\n') : 'Nog geen logregels.'}
+              {logs.length > 0 ? logs.join('\n') : t('logs.empty')}
             </Box>
           </CardContent>
         </Card>
@@ -71,16 +73,16 @@ const LogsPage = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Tijd</TableCell>
-                  <TableCell>Actie</TableCell>
-                  <TableCell>Details</TableCell>
-                  <TableCell>IP</TableCell>
+                  <TableCell>{t('logs.auditTime')}</TableCell>
+                  <TableCell>{t('logs.auditAction')}</TableCell>
+                  <TableCell>{t('logs.auditDetails')}</TableCell>
+                  <TableCell>{t('logs.auditIp')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {audit.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell>{new Date(entry.created_at).toLocaleString('nl-NL')}</TableCell>
+                    <TableCell>{new Date(entry.created_at).toLocaleString(i18n.language)}</TableCell>
                     <TableCell>{entry.action}</TableCell>
                     <TableCell>{entry.details}</TableCell>
                     <TableCell>{entry.actor_ip}</TableCell>

@@ -99,8 +99,10 @@ def smart_wake_device(device, source='manual', force=False):
 
     if online and not force:
         record_wake_event(device, source, success=True, skipped=True)
+        name = device.name or device.domain
         return {
-            'message': f'{device.name or device.domain} is al online.',
+            'message_code': 'DEVICE_ALREADY_ONLINE',
+            'name': name,
             'skipped': True,
             'online': True,
         }
@@ -108,8 +110,10 @@ def smart_wake_device(device, source='manual', force=False):
     if device.last_wake_at and not force:
         elapsed = (now - device.last_wake_at.replace(tzinfo=timezone.utc)).total_seconds()
         if elapsed < device.wake_cooldown_seconds:
+            seconds = int(device.wake_cooldown_seconds - elapsed)
             return {
-                'message': f'Cooldown actief. Wacht nog {int(device.wake_cooldown_seconds - elapsed)} seconden.',
+                'message_code': 'DEVICE_COOLDOWN',
+                'seconds': seconds,
                 'skipped': True,
                 'online': online,
             }
@@ -118,10 +122,12 @@ def smart_wake_device(device, source='manual', force=False):
         _send_packets(device)
         device.last_wake_at = now
         db.session.commit()
-        logging.info('Magic Packet verzonden naar %s (%s) via %s', device.domain, device.ip, source)
+        logging.info('Magic packet sent to %s (%s) via %s', device.domain, device.ip, source)
         record_wake_event(device, source, success=True, skipped=False)
+        name = device.name or device.domain
         return {
-            'message': f'Magic Packet verzonden naar {device.name or device.domain}',
+            'message_code': 'WAKE_SENT',
+            'name': name,
             'skipped': False,
             'online': online,
         }
@@ -134,7 +140,7 @@ def smart_wake_device(device, source='manual', force=False):
 def wake_and_wait(device, source='public', max_wait=120):
     if check_host_online(device.ip):
         record_wake_event(device, source, success=True, skipped=True)
-        return {'online': True, 'waited_ms': 0, 'message': 'Apparaat is al online.', 'skipped': True}
+        return {'online': True, 'waited_ms': 0, 'message_code': 'ALREADY_ONLINE', 'skipped': True}
 
     result = smart_wake_device(device, source=source)
     if check_host_online(device.ip):
@@ -146,7 +152,7 @@ def wake_and_wait(device, source='public', max_wait=120):
         return {'online': True, 'waited_ms': waited_ms, **result}
 
     send_webhooks('wake_failed', {'device_id': device.id, 'domain': device.domain, 'error': 'timeout'})
-    return {'online': False, 'waited_ms': max_wait * 1000, 'message': 'Timeout bij opstarten.', **result}
+    return {'online': False, 'waited_ms': max_wait * 1000, 'message_code': 'WAKE_TIMEOUT', **result}
 
 
 def wake_group(group_id, source='group'):

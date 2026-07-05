@@ -45,6 +45,49 @@ That's it — no need to keep servers running 24/7 just because they might be ac
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake Dashboard" width="900" />
+  <br />
+  <sub><strong>Dashboard</strong> — device overview, status cards and quick start</sub>
+</p>
+
+<table align="center">
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/assets/screenshots/devices.png" alt="Device management" width="440" />
+      <br />
+      <sub><strong>Devices</strong> — link domains to IP/MAC addresses</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/assets/screenshots/integration.png" alt="NPM integration" width="440" />
+      <br />
+      <sub><strong>Integration</strong> — copy &amp; paste NPM, Traefik and Caddy configs</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/assets/screenshots/statistics.png" alt="Statistics" width="440" />
+      <br />
+      <sub><strong>Statistics</strong> — wake history and per-device metrics</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <img src="docs/assets/screenshots/settings.png" alt="Settings" width="440" />
+      <br />
+      <sub><strong>Settings</strong> — theme, API key, export and security</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/assets/screenshots/waiting.png" alt="Waiting page" width="520" />
+  <br />
+  <sub><strong>Waiting page</strong> — shown to visitors while a sleeping device wakes up</sub>
+</p>
+
+---
+
 ## Installation
 
 ### Docker Hub (recommended)

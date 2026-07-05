@@ -56,7 +56,7 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=SterkWachtwoord123 \
   -v proxywake_data:/app/backend/data \
-  jeffreymooiweer/proxywake:latest
+  jeffersonmouze/proxywake:latest
 ```
 
 Of met Docker Compose:

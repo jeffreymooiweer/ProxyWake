@@ -1,6 +1,6 @@
 services:
   proxywake:
-    image: ${PROXYWAKE_IMAGE:-jeffreymooiweer/proxywake:latest}
+    image: ${PROXYWAKE_IMAGE:-jeffersonmouze/proxywake:latest}
     container_name: proxywake
     ports:
       - "${PROXYWAKE_PORT:-8462}:5001"

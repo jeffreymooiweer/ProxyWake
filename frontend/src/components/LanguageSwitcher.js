@@ -17,7 +17,7 @@ const LanguageSwitcher = ({ size = 'small', fullWidth = false }) => {
   };
 
   return (
-    <FormControl size={size} fullWidth={fullWidth} sx={{ minWidth: fullWidth ? undefined : 120 }}>
+    <FormControl size={size} fullWidth={fullWidth} sx={{ minWidth: fullWidth ? undefined : 148 }}>
       <Select
         value={i18n.language?.split('-')[0] || 'en'}
         onChange={(event) => handleChange(event.target.value)}
@@ -25,7 +25,7 @@ const LanguageSwitcher = ({ size = 'small', fullWidth = false }) => {
         sx={{ color: 'inherit', '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(148,163,184,0.3)' } }}
       >
         {supportedLanguages.map((lang) => (
-          <MenuItem key={lang.code} value={lang.code}>{lang.label}</MenuItem>
+          <MenuItem key={lang.code} value={lang.code}>{lang.native}</MenuItem>
         ))}
       </Select>
     </FormControl>

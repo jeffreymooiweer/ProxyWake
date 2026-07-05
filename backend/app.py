@@ -19,7 +19,7 @@ from auth import (
     login_required,
     set_password,
 )
-from config import DATA_DIR, LOG_FILE, get_allowed_origins, get_or_create_api_key, get_previous_api_key, get_secret_key, rotate_api_key
+from config import DATA_DIR, LOG_FILE, get_allowed_origins, get_or_create_api_key, get_previous_api_key, get_secret_key, is_supported_language, rotate_api_key
 from integrations import (
     build_caddy_config,
     build_home_assistant_config,
@@ -216,7 +216,7 @@ def setup():
         set_setting('proxywake_url', proxywake_url)
     if data.get('theme') in ('dark', 'light'):
         set_setting('theme', data['theme'])
-    if data.get('language') in ('en', 'nl', 'de', 'fr'):
+    if data.get('language') and is_supported_language(data['language']):
         set_setting('language', data['language'])
 
     set_setting('onboarding_completed', 'true')
@@ -247,7 +247,7 @@ def get_settings():
 def update_language():
     data = request.get_json(silent=True) or {}
     language = data.get('language', 'en')
-    if language not in ('en', 'nl', 'de', 'fr'):
+    if not is_supported_language(language):
         return json_error('INVALID_LANGUAGE', 400)
     set_setting('language', language)
     return jsonify({'language': language}), 200

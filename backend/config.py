@@ -87,3 +87,13 @@ def get_allowed_origins():
     if origins:
         return [origin.strip() for origin in origins.split(',') if origin.strip()]
     return None
+
+
+SUPPORTED_LANGUAGES = (
+    'en', 'nl', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sv',
+    'ja', 'zh', 'ko', 'ru', 'tr', 'uk',
+)
+
+
+def is_supported_language(language):
+    return language in SUPPORTED_LANGUAGES

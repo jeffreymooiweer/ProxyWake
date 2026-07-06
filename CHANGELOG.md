@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unraid Community Applications template inside the repository
+- Unraid template validation script and test
+- Unraid installation documentation
+
 ## [4.2.2] - 2026-07-06
 
 ### Added

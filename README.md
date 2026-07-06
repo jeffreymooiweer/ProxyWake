@@ -147,15 +147,19 @@ docker compose up -d --build
 
 ### Unraid
 
-| Setting | Value |
-|---------|-------|
-| Repository | `jeffersonmouze/proxywake:4.2.2` (or `:latest`) |
-| Port | `8462:5001` |
-| Extra Parameters | `--cap-add=NET_RAW` |
-| Variable | `PROXYWAKE_PASSWORD` |
-| Path | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
+ProxyWake includes an Unraid Community Applications template in [unraid/proxywake.xml](unraid/proxywake.xml).
 
-See [docs/unraid.md](docs/unraid.md) for details.
+Install via **Apps** once published, or test as a private template:
+
+```bash
+mkdir -p /boot/config/plugins/community.applications/private/proxywake
+# copy unraid/proxywake.xml to:
+# /boot/config/plugins/community.applications/private/proxywake/proxywake.xml
+```
+
+Then open **Apps → Private Apps** and install ProxyWake.
+
+Full instructions: [unraid/README.md](unraid/README.md) · [docs/unraid.md](docs/unraid.md)
 
 ---
 

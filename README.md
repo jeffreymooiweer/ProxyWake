@@ -110,12 +110,12 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2.1
+  jeffersonmouze/proxywake:4.2.2
 ```
 
 Open `http://<server-ip>:8462` — a setup wizard walks you through the initial configuration.
 
-Pin a specific release with `:4.2.1`, the minor line with `:4.2`, or use `:latest`.
+Pin a specific release with `:4.2.2`, the minor line with `:4.2`, or use `:latest`.
 
 **Docker Compose:**
 
@@ -142,14 +142,14 @@ docker compose up -d --build
 | | |
 |---|---|
 | **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `4.2`, `4.2.1` (current) — older: `4.2.0`, `4.1`, `4.0` |
+| **Tags** | `latest`, `4.2`, `4.2.2` (current) — older: `4.2.1`, `4.2.0`, `4.1`, `4.0` |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid
 
 | Setting | Value |
 |---------|-------|
-| Repository | `jeffersonmouze/proxywake:4.2.1` (or `:latest`) |
+| Repository | `jeffersonmouze/proxywake:4.2.2` (or `:latest`) |
 | Port | `8462:5001` |
 | Extra Parameters | `--cap-add=NET_RAW` |
 | Variable | `PROXYWAKE_PASSWORD` |
@@ -203,7 +203,7 @@ Full reference: [docs/configuration.md](docs/configuration.md)
 | API & OpenAPI | [docs/api.md](docs/api.md) |
 | Security | [docs/security.md](docs/security.md) |
 | Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
-| Changelog | [CHANGELOG.md](CHANGELOG.md) — **v4.2.1** |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) — **v4.2.2** |
 | Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Security policy | [SECURITY.md](SECURITY.md) |
 

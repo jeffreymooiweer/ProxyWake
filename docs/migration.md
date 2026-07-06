@@ -73,7 +73,7 @@ Not officially supported. Restore from a backup taken on the target version if n
 **Pin version:**
 
 ```yaml
-image: jeffersonmouze/proxywake:4.2.1
+image: jeffersonmouze/proxywake:4.2.2
 ```
 
 ## Common mistakes

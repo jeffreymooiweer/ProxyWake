@@ -30,10 +30,10 @@ Upload `docs/assets/banner.svg` (export as 1280×640 PNG) or a dashboard screens
 
 | Setting | Recommendation |
 |---------|----------------|
-| Tag format | `v4.2.1` (semver with `v` prefix) |
-| Title | `ProxyWake v4.2.1` |
+| Tag format | `v4.2.2` (semver with `v` prefix) |
+| Title | `ProxyWake v4.2.2` |
 | Body | Copy from [CHANGELOG.md](../CHANGELOG.md) section |
-| Assets | Attach `docker pull jeffersonmouze/proxywake:4.2.1` instructions |
+| Assets | Attach `docker pull jeffersonmouze/proxywake:4.2.2` instructions |
 
 ## Labels
 

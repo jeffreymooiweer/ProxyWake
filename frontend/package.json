@@ -1,6 +1,6 @@
 {
   "name": "proxywake-frontend",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.4",

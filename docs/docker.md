@@ -24,7 +24,7 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2.1
+  jeffersonmouze/proxywake:4.2.2
 ```
 
 Pin `:4.2` for the minor line or `:latest` for the newest build.
@@ -51,7 +51,7 @@ docker compose up -d --build
 | Property | Value |
 |----------|-------|
 | Image | `jeffersonmouze/proxywake` |
-| Tags | `latest`, `4.2`, `4.2.1` (see [CHANGELOG](../CHANGELOG.md)) |
+| Tags | `latest`, `4.2`, `4.2.2` (see [CHANGELOG](../CHANGELOG.md)) |
 | Architectures | `linux/amd64`, `linux/arm64` |
 | Base | `python:3.11-slim` + Node 20 build stage |
 | User | Non-root `proxywake` (UID 1000) |
@@ -84,7 +84,7 @@ The container runs `gunicorn` via [entrypoint.sh](../backend/entrypoint.sh). Doc
 **Custom image tag:**
 
 ```bash
-PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.1 docker compose up -d
+PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.2 docker compose up -d
 ```
 
 **View logs:**

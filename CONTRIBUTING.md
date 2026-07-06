@@ -56,7 +56,7 @@ cd frontend && npm ci && npm run build
 
 ## Code Style
 
-- **Python:** Follow existing patterns in `backend/`. Keep routes thin; business logic belongs in `services/`.
+- **Python:** Follow existing patterns in `backend/`. Routes live in `routes/`, business logic in `services/`, shared helpers in `utils/`. Keep routes thin.
 - **JavaScript:** React functional components, MUI for UI, `react-i18next` for all user-facing strings.
 - **Commits:** Small, logical changesets with clear messages.
 - **API:** Maintain backwards compatibility. Do not break existing endpoints without deprecation.

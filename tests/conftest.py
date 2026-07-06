@@ -15,7 +15,8 @@ SESSION_DATA_DIR = tempfile.mkdtemp(prefix='proxywake-pytest-')
 os.environ['PROXYWAKE_DATA_DIR'] = SESSION_DATA_DIR
 os.environ['PROXYWAKE_SECRET_KEY'] = 'pytest-secret-key-do-not-use-in-production'
 
-from app import app, limiter  # noqa: E402
+from app import app  # noqa: E402
+from extensions import limiter  # noqa: E402
 from config import PASSWORD_HASH_FILE  # noqa: E402
 from models import (  # noqa: E402
     AppSetting,

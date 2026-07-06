@@ -2,7 +2,8 @@
 
 import pytest
 
-from utils import is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac, subnet_from_ip
+from utils.validators import is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac
+from utils.network import subnet_from_ip
 
 
 @pytest.mark.parametrize(

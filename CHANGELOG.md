@@ -7,15 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [4.2.3] - 2026-07-06
 
-- Unraid Community Applications template inside the repository
-- Unraid template validation script and test
-- Unraid installation documentation
+### Fixed
 
-### Changed
-
-- Documentation streamlined for installers — less duplication, clearer docs index, maintainer-only notes moved out of user guides
+- Docker entrypoint fixes appdata volume permissions on Unraid and similar hosts (`unable to open database file` on first start)
 
 ## [4.2.2] - 2026-07-06
 
@@ -225,7 +221,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...main
+[4.2.3]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...v4.2.3
 [4.2.2]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...v4.2.0

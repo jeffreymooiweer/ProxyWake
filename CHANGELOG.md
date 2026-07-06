@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backend tests import version from `version.py` instead of hardcoding
 - CI: pytest coverage report; version consistency check in backend workflow
 - Docker workflow dispatch description and default-branch tags aligned to 4.2.1
+- `PROXYWAKE_SESSION_COOKIE_SECURE` for HTTPS-only session cookies
+- Tests: groups, public routes, write-scope matrix, config helpers
 
 ### Fixed
 

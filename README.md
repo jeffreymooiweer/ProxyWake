@@ -184,6 +184,7 @@ ProxyWake integrates with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and *
 | `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset); supports scopes via Settings |
 | `PROXYWAKE_SECRET_KEY` | Flask session secret and credential encryption key |
 | `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
+| `PROXYWAKE_SESSION_COOKIE_SECURE` | Set `true` when UI is HTTPS-only |
 | `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
 
 Full reference: [docs/configuration.md](docs/configuration.md)

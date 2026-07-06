@@ -112,6 +112,16 @@ def get_allowed_origins():
     return None
 
 
+def session_cookie_secure():
+    """Whether Flask session cookies require HTTPS (set PROXYWAKE_SESSION_COOKIE_SECURE=true behind TLS)."""
+    value = os.environ.get('PROXYWAKE_SESSION_COOKIE_SECURE', '').strip().lower()
+    if value in ('1', 'true', 'yes', 'on'):
+        return True
+    if value in ('0', 'false', 'no', 'off'):
+        return False
+    return False
+
+
 SUPPORTED_LANGUAGES = (
     'en', 'nl', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sv',
     'ja', 'zh', 'ko', 'ru', 'tr', 'uk',

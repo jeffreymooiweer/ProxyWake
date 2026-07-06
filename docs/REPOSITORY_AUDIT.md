@@ -60,10 +60,10 @@ No breaking Docker changes in this sprint.
 
 ## Tests
 
-- **62 tests**, all passing
+- **77 tests**, all passing
 - Coverage: ~65% backend (pytest-cov in CI)
 - OpenAPI parity test present
-- Gaps (deferred): dedicated tests for groups, public routes edge cases, write-scope matrix
+- Added: groups, public routes, write-scope, config helpers
 
 ## Dependencies
 

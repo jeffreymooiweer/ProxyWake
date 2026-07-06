@@ -19,6 +19,7 @@ Reference for all supported configuration options when deploying ProxyWake.
 | `PROXYWAKE_API_KEY` | No | Auto-generated | Fixed API key for reverse-proxy wake requests. Scopes configurable in Settings. |
 | `PROXYWAKE_SECRET_KEY` | No | Random per start | Flask session secret and credential encryption key. Set a fixed value for stable sessions across restarts. |
 | `PROXYWAKE_ALLOWED_ORIGINS` | No | `*` | Comma-separated CORS origins for browser API access. |
+| `PROXYWAKE_SESSION_COOKIE_SECURE` | No | `false` | Set to `true` when ProxyWake is served only over HTTPS (session cookies require TLS). |
 | `PROXYWAKE_DATA_DIR` | No | `/app/backend/data` | SQLite database, logs, API keys, and backups. |
 
 ### Example `.env`

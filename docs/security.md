@@ -47,6 +47,7 @@ Review these when deploying on untrusted networks. See [SECURITY.md](../SECURITY
 ## CORS and headers
 
 - Set `PROXYWAKE_ALLOWED_ORIGINS` when the UI is served from a specific origin.
+- Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` when the UI is **only** accessed via HTTPS (reverse proxy with TLS). Leave unset for plain HTTP on trusted LANs.
 - Place ProxyWake behind a reverse proxy that sets `X-Forwarded-Proto` for HTTPS.
 
 ## Backup and restore

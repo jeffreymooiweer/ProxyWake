@@ -72,59 +72,42 @@ def update_dockerfile(path: Path, version: str) -> bool:
 def update_docker_workflow(path: Path, version: str) -> bool:
     text = path.read_text(encoding='utf-8')
     mm = major_minor(version)
-    changed = False
+    original = text
 
-    new_text, count = re.subn(
+    text, _ = re.subn(
         r"description: 'Extra Docker tag \(e\.g\. [^']+\)'",
         f"description: 'Extra Docker tag (e.g. {version})'",
         text,
         count=1,
     )
-    if count:
-        changed = changed or new_text != text
-        text = new_text
 
-    pattern = re.compile(
-        r'type=raw,value=(\d+\.\d+(?:\.\d+)?),enable=\{\{is_default_branch\}\}'
+    # Remove stale default-branch semver tags (keep `latest`).
+    text = re.sub(
+        r'\n\s+type=raw,value=\d+\.\d+(?:\.\d+)?,enable=\{\{is_default_branch\}\}',
+        '',
+        text,
     )
-    replacements = {mm: None, version: None}
-    for match in pattern.finditer(text):
-        replacements[match.group(1)] = match.group(0)
 
-    for tag, old_line in list(replacements.items()):
-        if tag in (mm, version):
-            continue
-        if old_line is None:
-            continue
-        if tag == mm and replacements[mm] is None:
-            text = text.replace(old_line, f'type=raw,value={mm},enable={{{{is_default_branch}}}}', 1)
-            changed = True
-        elif tag == version and replacements[version] is None:
-            text = text.replace(old_line, f'type=raw,value={version},enable={{{{is_default_branch}}}}', 1)
-            changed = True
-
-    # Ensure both minor and full semver tags exist on default branch
-    tags_block = 'type=raw,value=latest,enable={{is_default_branch}}'
+    latest_line = 'type=raw,value=latest,enable={{is_default_branch}}'
     minor_line = f'type=raw,value={mm},enable={{{{is_default_branch}}}}'
     full_line = f'type=raw,value={version},enable={{{{is_default_branch}}}}'
+
     if minor_line not in text:
         text = text.replace(
-            tags_block,
-            f'{tags_block}\n            {minor_line}',
+            latest_line,
+            f'{latest_line}\n            {minor_line}',
             1,
         )
-        changed = True
     if full_line not in text:
         text = text.replace(
             minor_line,
             f'{minor_line}\n            {full_line}',
             1,
         )
-        changed = True
 
-    if changed:
+    if text != original:
         path.write_text(text, encoding='utf-8')
-    return changed
+    return text != original
 
 
 def main() -> int:

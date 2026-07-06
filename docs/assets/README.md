@@ -2,15 +2,17 @@
 
 ## Icon
 
-`icon.png` is the canonical ProxyWake app icon (favicon, UI logo, PWA manifest).
+`icon.png` is the source file for favicons and PWA icons.
 
-Regenerate all frontend icon sizes after updating the source file:
+`proxywake.png` is the **app logo** used in the UI (header, login, setup wizard, waiting page).
+
+Regenerate all frontend assets after updating the source file:
 
 ```bash
 python3 scripts/generate_app_icons.py
 ```
 
-This updates `frontend/public/` (`favicon.ico`, `icon.png`, `icon-16.png` … `icon-512.png`, `apple-touch-icon.png`, `proxywake.png`).
+This updates `frontend/public/` (`proxywake.png`, `favicon.ico`, `icon.png`, `icon-16.png` … `icon-512.png`, `apple-touch-icon.png`).
 
 ## Banner
 

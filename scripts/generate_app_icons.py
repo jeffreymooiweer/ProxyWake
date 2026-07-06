@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import struct
-import zlib
 from pathlib import Path
 
 from PIL import Image
@@ -12,6 +10,9 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'docs' / 'assets' / 'icon.png'
 OUTPUT_DIR = ROOT / 'frontend' / 'public'
+
+# UI logo (header, login, waiting page) — higher resolution for crisp display
+LOGO_SIZE = 512
 
 SIZES = {
     'icon-16.png': 16,
@@ -21,10 +22,9 @@ SIZES = {
     'icon-192.png': 192,
     'apple-touch-icon.png': 180,
     'icon-512.png': 512,
-    'icon-192.png': 192,
     'icon.png': 192,
-    'proxywake.png': 192,
     'favicon.png': 32,
+    'proxywake.png': LOGO_SIZE,
 }
 
 

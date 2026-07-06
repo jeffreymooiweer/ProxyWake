@@ -69,6 +69,13 @@ python3 scripts/sync_version.py
 python3 scripts/check_version_consistency.py
 ```
 
+After updating `docs/assets/icon.png`:
+
+```bash
+pip install Pillow
+python3 scripts/generate_app_icons.py
+```
+
 This updates `frontend/package.json`, `Dockerfile` OCI labels, and Docker workflow tags.
 
 ## i18n

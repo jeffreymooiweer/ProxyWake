@@ -7,8 +7,8 @@ self.addEventListener('install', (event) => {
       '/index.html',
       '/manifest.json',
       '/proxywake.png',
+      '/icon.png',
       '/favicon.ico',
-      '/icon-192.png',
     ]))
   );
 });

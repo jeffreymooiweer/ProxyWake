@@ -10,7 +10,7 @@ const AppLogo = ({ size = 32, sx = {} }) => (
       width: size,
       height: size,
       borderRadius: 2,
-      objectFit: 'cover',
+      objectFit: 'contain',
       ...sx,
     }}
   />

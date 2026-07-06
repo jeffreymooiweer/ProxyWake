@@ -2,20 +2,7 @@
 
 Get ProxyWake running and wake your first device.
 
-## Purpose
-
-Install ProxyWake, register a device, and trigger Wake-on-LAN when a reverse proxy receives traffic for that domain.
-
-## Requirements
-
-- Docker (recommended) or Python 3.11+ and Node.js 20+
-- A device with Wake-on-LAN enabled (BIOS + NIC)
-- Network access from the ProxyWake container to the target subnet
-- `NET_RAW` capability when using Docker (for magic packets)
-
-## Step-by-step
-
-### 1. Run ProxyWake
+## 1. Run ProxyWake
 
 ```bash
 docker run -d \
@@ -25,38 +12,20 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2.2
+  jeffersonmouze/proxywake:latest
 ```
-
-Use `:latest` for the newest build on Docker Hub, or pin `:4.2` for the current minor line.
 
 Open `http://<server-ip>:8462` and complete the setup wizard.
 
-### 2. Add a device
+**Docker Compose:** see [Docker](docker.md).
+
+**Requirements:** Docker, Wake-on-LAN enabled on the target device, and `NET_RAW` for magic packets.
+
+## 2. Add a device
 
 1. Go to **Devices** → **Add device**.
-2. Enter a friendly name, domain (as used in your reverse proxy), IP address, and MAC address.
-3. Save the device.
-
-### 3. Configure your reverse proxy
-
-1. Open the **Integration** tab.
-2. Copy the **global NPM config** and **per-host snippet** (or Traefik/Caddy equivalent).
-3. Ensure ProxyWake is reachable from your proxy container using the **host LAN IP**, not `localhost`.
-
-See [Reverse Proxy](reverse-proxy.md) and [Nginx Proxy Manager](examples/nginx-proxy-manager.md).
-
-### 4. Test
-
-1. Shut down or suspend the target device.
-2. Visit the proxied domain in a browser.
-3. Confirm the waiting page appears and the device wakes.
-
-Use **Integration → Test NPM wake** in the UI for a quick sanity check.
-
-## Examples
-
-**Minimal device:**
+2. Enter name, domain (as used in your reverse proxy), IP address, and MAC address.
+3. Save.
 
 | Field | Example |
 |-------|---------|
@@ -65,23 +34,31 @@ Use **Integration → Test NPM wake** in the UI for a quick sanity check.
 | IP | `192.168.1.50` |
 | MAC | `AA:BB:CC:DD:EE:01` |
 
-**Docker Compose:**
+## 3. Configure your reverse proxy
 
-```bash
-curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
-PROXYWAKE_PASSWORD=YourSecurePassword docker compose up -d
-```
+1. Open the **Integration** tab.
+2. Copy the **global** and **per-host** snippets for your proxy.
+3. Set the ProxyWake URL to an address your proxy can reach — usually `http://<host-lan-ip>:8462`.
+
+Guides: [Reverse Proxy](reverse-proxy.md) · [Nginx Proxy Manager](examples/nginx-proxy-manager.md)
+
+## 4. Test
+
+1. Power off or suspend the target device.
+2. Visit the proxied domain in a browser.
+3. Confirm the waiting page appears and the device wakes.
+
+Use **Integration → Test NPM wake** for a quick sanity check.
 
 ## Common mistakes
 
-- Using `localhost` in NPM instead of the Docker host IP — the NPM container cannot reach the host via `localhost`.
-- Forgetting `--cap-add NET_RAW` — WOL magic packets may fail silently.
-- Wrong MAC address (Wi-Fi vs Ethernet) — wake packets must target the interface that supports WOL.
-- Domain mismatch — the domain in ProxyWake must match the proxy host name exactly.
+- Using `localhost` in NPM — the NPM container cannot reach the host via `localhost`.
+- Forgetting `--cap-add NET_RAW` — WOL may fail silently.
+- Wrong MAC address (Wi-Fi vs Ethernet).
+- Domain mismatch — the domain in ProxyWake must match the proxy hostname exactly.
 
-## Related pages
+## See also
 
 - [Docker](docker.md)
 - [Configuration](configuration.md)
-- [Reverse Proxy](reverse-proxy.md)
 - [Troubleshooting](troubleshooting.md)

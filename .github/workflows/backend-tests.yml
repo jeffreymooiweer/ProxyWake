@@ -8,6 +8,7 @@ on:
       - 'tests/**'
       - 'pytest.ini'
       - 'scripts/**'
+      - 'unraid/**'
       - '.github/workflows/backend-tests.yml'
   pull_request:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - 'tests/**'
       - 'pytest.ini'
       - 'scripts/**'
+      - 'unraid/**'
       - '.github/workflows/backend-tests.yml'
 
 jobs:
@@ -43,3 +45,6 @@ jobs:
 
       - name: Check version consistency
         run: python3 scripts/check_version_consistency.py
+
+      - name: Validate Unraid template
+        run: python3 scripts/validate_unraid_template.py

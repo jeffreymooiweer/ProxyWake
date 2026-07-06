@@ -1,20 +1,10 @@
 # Docker
 
-Run ProxyWake in Docker with production-ready defaults.
+Deploy ProxyWake as a container with persistent data and Wake-on-LAN support.
 
-## Purpose
+For a first install, start with [Quick Start](quick-start.md).
 
-Deploy ProxyWake as a container with correct capabilities, volumes, and health checks.
-
-## Requirements
-
-- Docker 20+ or Docker Compose v2
-- Port `8462` (host) → `5001` (container) unless customized
-- `NET_RAW` capability for Wake-on-LAN
-
-## Step-by-step
-
-### Docker Hub (recommended)
+## Docker run
 
 ```bash
 docker run -d \
@@ -24,20 +14,50 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2.2
+  jeffersonmouze/proxywake:latest
 ```
 
-Pin `:4.2` for the minor line or `:latest` for the newest build.
+Pin a release with `:4.2.2` or the minor line with `:4.2`.
 
-### Docker Compose (root)
+## Docker Compose
 
 ```bash
 curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
-cp .env.example .env   # optional: edit variables
+curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/.env.example
+cp .env.example .env   # edit PROXYWAKE_PASSWORD
 docker compose up -d
 ```
 
-### Local build
+## Image
+
+| Property | Value |
+|----------|-------|
+| Image | `jeffersonmouze/proxywake` on [Docker Hub](https://hub.docker.com/r/jeffersonmouze/proxywake) |
+| Tags | `latest`, `4.2`, `4.2.2` |
+| Architectures | `linux/amd64`, `linux/arm64` |
+| Container port | `5001` (default host mapping `8462`) |
+| User | Non-root `proxywake` (UID 1000) |
+| Health check | `GET /api/health` every 30s |
+
+`NET_RAW` is required for Wake-on-LAN.
+
+## Data volume
+
+| Container path | Contents |
+|----------------|----------|
+| `/app/backend/data` | SQLite database, logs, API keys, settings |
+
+Back up this directory before upgrades. See [Migration](migration.md).
+
+## Environment variables
+
+See [Configuration](configuration.md). Minimum for production:
+
+```bash
+PROXYWAKE_PASSWORD=strong-password
+```
+
+## Local build (contributors)
 
 ```bash
 git clone https://github.com/jeffreymooiweer/ProxyWake.git
@@ -46,62 +66,21 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-## Image details
-
-| Property | Value |
-|----------|-------|
-| Image | `jeffersonmouze/proxywake` |
-| Tags | `latest`, `4.2`, `4.2.2` (see [CHANGELOG](../CHANGELOG.md)) |
-| Architectures | `linux/amd64`, `linux/arm64` |
-| Base | `python:3.11-slim` + Node 20 build stage |
-| User | Non-root `proxywake` (UID 1000) |
-| Health check | `GET /api/health` every 30s |
-
-The multi-stage [Dockerfile](../Dockerfile) builds the React frontend, installs Python dependencies, and bundles `ipmitool`, `openssh-client`, and `sshpass` for SSH and IPMI wake methods.
-
-## Volumes
-
-| Container path | Purpose |
-|----------------|---------|
-| `/app/backend/data` | SQLite DB, logs, API keys, settings |
-
-Back up this directory before upgrades. See [Migration](migration.md).
-
-## Environment
-
-See [Configuration](configuration.md). Minimum production setup:
-
-```bash
-PROXYWAKE_PASSWORD=strong-password
-```
-
-## Signal handling
-
-The container runs `gunicorn` via [entrypoint.sh](../backend/entrypoint.sh). Docker `SIGTERM` stops workers gracefully.
-
-## Examples
-
-**Custom image tag:**
-
-```bash
-PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.2 docker compose up -d
-```
-
-**View logs:**
+## Useful commands
 
 ```bash
 docker logs -f proxywake
+PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.2 docker compose up -d
 ```
 
 ## Common mistakes
 
 - Missing `NET_RAW` — WOL fails.
-- Binding only to `127.0.0.1` on the host while NPM runs in another container.
-- Expecting SSH/IPMI wake without network route from container to target BMC/SSH host.
+- Binding only to `127.0.0.1` while the reverse proxy runs in another container.
+- Expecting SSH/IPMI wake without network access from the container to the target.
 
-## Related pages
+## See also
 
 - [Unraid](unraid.md)
-- [Quick Start](quick-start.md)
 - [Configuration](configuration.md)
 - [Troubleshooting](troubleshooting.md)

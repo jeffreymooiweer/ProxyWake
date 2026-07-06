@@ -130,7 +130,7 @@ docker compose up -d --build
 | | |
 |---|---|
 | **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `3.0`, `3.0.0` |
+| **Tags** | `latest`, `3.1`, `3.1.0` |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid
@@ -167,6 +167,14 @@ ProxyWake must be reachable from your NPM container on the local network (use th
 | `PROXYWAKE_SECRET_KEY` | Flask session secret |
 | `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
 | `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
+
+---
+
+## Documentation
+
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
 ---
 

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Extra Docker tag (bijv. 3.0.0)'
+        description: 'Extra Docker tag (e.g. 3.1.0)'
         required: false
         default: 'latest'
 
@@ -45,8 +45,8 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=3.0,enable={{is_default_branch}}
-            type=raw,value=3.0.0,enable={{is_default_branch}}
+            type=raw,value=3.1,enable={{is_default_branch}}
+            type=raw,value=3.1.0,enable={{is_default_branch}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=

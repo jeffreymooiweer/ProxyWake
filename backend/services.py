@@ -8,6 +8,7 @@ from wakeonlan import send_magic_packet
 
 from models import AppSetting, AuditLog, Device, WakeEvent, Webhook, db
 from utils import check_host_online, wait_for_host
+from version import __version__
 
 
 def get_setting(key, default=None):
@@ -45,7 +46,7 @@ def send_webhooks(event_name, payload):
                 hook.url,
                 json={'event': event_name, **payload},
                 timeout=5,
-                headers={'Content-Type': 'application/json', 'User-Agent': 'ProxyWake/3.0'},
+                headers={'Content-Type': 'application/json', 'User-Agent': f'ProxyWake/{__version__}'},
             )
         except requests.RequestException as exc:
             logging.error('Webhook %s mislukt: %s', hook.name, exc)

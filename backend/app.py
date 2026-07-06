@@ -44,6 +44,8 @@ from services import (
     wake_group,
 )
 from errors import ERROR_MESSAGES, error_response, message_response
+from utils import is_valid_domain, is_valid_ip, is_valid_mac, normalize_mac, scan_subnet, subnet_from_ip
+from version import __version__
 
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 app.config['SECRET_KEY'] = get_secret_key()
@@ -142,7 +144,7 @@ def add_security_headers(response):
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'service': 'ProxyWake', 'version': '3.0'})
+    return jsonify({'status': 'ok', 'service': 'ProxyWake', 'version': __version__})
 
 
 @app.route('/api/metrics')

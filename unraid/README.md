@@ -102,7 +102,7 @@ Important:
 | WOL / ping fails | Extra Parameters must include `--cap-add=NET_RAW` |
 | NPM cannot reach ProxyWake | Use Unraid host IP, not `localhost` from NPM |
 | Sessions reset after restart | Set a fixed `PROXYWAKE_SECRET_KEY` |
-| Permission errors on appdata | Container runs as UID 1000; ensure appdata folder is writable |
+| Permission errors on appdata | Container runs as UID 1000; run `chown -R 1000:1000 /mnt/user/appdata/proxywake` or use image `4.2.3+` |
 | WebUI not loading | Confirm host port maps to container `5001` and the container is healthy |
 
 ## Links

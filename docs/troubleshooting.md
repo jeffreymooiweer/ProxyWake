@@ -2,6 +2,22 @@
 
 Common problems and how to fix them.
 
+## Permission errors on Unraid (unable to open database file)
+
+**Symptoms:** Container crashes on start with `sqlite3.OperationalError: unable to open database file`.
+
+**Cause:** The appdata folder is not writable by the container user (UID 1000).
+
+**Fix (immediate, without updating the image):**
+
+```bash
+chown -R 1000:1000 /mnt/user/appdata/proxywake
+```
+
+Then restart the container.
+
+**Fix (image 4.2.3+):** The entrypoint automatically fixes appdata ownership on startup when running as root.
+
 ## Wake does not work
 
 **Checks:**

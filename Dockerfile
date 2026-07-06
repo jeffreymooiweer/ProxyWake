@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.title="ProxyWake" \
       org.opencontainers.image.description="Wake-on-LAN platform for Nginx Proxy Manager" \
       org.opencontainers.image.source="https://github.com/jeffreymooiweer/ProxyWake" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.version="4.2.2"
+      org.opencontainers.image.version="4.2.3"
 
 WORKDIR /app
 
@@ -52,6 +52,5 @@ EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -fsS http://127.0.0.1:5001/api/health || exit 1
 
-USER proxywake
-
+# Entrypoint starts as root to fix appdata volume permissions, then runs gunicorn as proxywake.
 CMD ["/app/backend/entrypoint.sh"]

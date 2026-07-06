@@ -23,7 +23,7 @@ def test_verified_wake_job_completes_online(client):
 
     with patch('services.wake_service.check_device_online', return_value=False):
         with patch('services.wake_service.wait_for_device', return_value=5000):
-            with patch('services.wake_service._send_packets'):
+            with patch('services.wake_service.execute_wake_action'):
                 run_verified_wake(device, job_id, source='manual')
 
     job = get_wake_job(job_id)

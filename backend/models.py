@@ -53,9 +53,21 @@ class Device(db.Model):
     wake_count = db.Column(db.Integer, default=0)
     wake_success_count = db.Column(db.Integer, default=0)
     wake_failure_count = db.Column(db.Integer, default=0)
+    wake_method = db.Column(db.String(16), default='wol')
+    wol_port = db.Column(db.Integer, default=9)
+    ssh_host = db.Column(db.String(255), nullable=True)
+    ssh_port = db.Column(db.Integer, default=22)
+    ssh_username = db.Column(db.String(120), nullable=True)
+    ssh_command = db.Column(db.String(500), default='exit')
+    webhook_url = db.Column(db.String(500), nullable=True)
+    webhook_method = db.Column(db.String(16), default='POST')
+    webhook_headers = db.Column(db.Text, nullable=True)
+    webhook_body = db.Column(db.Text, nullable=True)
+    homeassistant_webhook_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self, include_status=False, online=None):
+        from services.dependency_service import dependencies_to_dict
         from services.status_service import check_device_online
 
         payload = {
@@ -81,11 +93,34 @@ class Device(db.Model):
             'wake_count': self.wake_count or 0,
             'wake_success_count': self.wake_success_count or 0,
             'wake_failure_count': self.wake_failure_count or 0,
+            'wake_method': self.wake_method or 'wol',
+            'wol_port': self.wol_port or 9,
+            'ssh_host': self.ssh_host,
+            'ssh_port': self.ssh_port or 22,
+            'ssh_username': self.ssh_username,
+            'ssh_command': self.ssh_command or 'exit',
+            'webhook_url': self._public_webhook_url(),
+            'webhook_method': self.webhook_method or 'POST',
+            'webhook_headers': self.webhook_headers,
+            'webhook_body': self.webhook_body,
+            'homeassistant_webhook_url': self._public_webhook_url(self.homeassistant_webhook_url),
+            'ssh_credentials_configured': self._ssh_credentials_configured(),
+            'dependencies': dependencies_to_dict(self.id) if self.id else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
         if include_status:
             payload['online'] = online if online is not None else check_device_online(self)
         return payload
+
+    def _public_webhook_url(self, url=None):
+        from utils.masking import mask_url
+
+        return mask_url(url or self.webhook_url or '')
+
+    def _ssh_credentials_configured(self):
+        from services.credential_service import credentials_configured
+
+        return credentials_configured(self.id)
 
 
 class WakeEvent(db.Model):
@@ -97,6 +132,7 @@ class WakeEvent(db.Model):
     online_after_ms = db.Column(db.Integer, nullable=True)
     duration_ms = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(32), nullable=True)
+    wake_method = db.Column(db.String(16), nullable=True)
     error = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     device = db.relationship('Device', backref='wake_events')
@@ -113,6 +149,7 @@ class WakeEvent(db.Model):
             'online_after_ms': self.online_after_ms,
             'duration_ms': self.duration_ms,
             'status': self.status,
+            'wake_method': self.wake_method,
             'error': self.error,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
@@ -168,6 +205,25 @@ class ScheduledWake(db.Model):
             'device_name': self.device.name if self.device else None,
             'hour': self.hour,
             'minute': self.minute,
-            'days': [int(day) for day in self.days.split(',') if day != ''],
             'enabled': self.enabled,
         }
+
+
+class DeviceCredential(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
+    key = db.Column(db.String(64), nullable=False)
+    encrypted_value = db.Column(db.Text, nullable=False)
+    device = db.relationship('Device', backref=db.backref('credential_rows', lazy=True, cascade='all, delete-orphan'))
+
+    __table_args__ = (db.UniqueConstraint('device_id', 'key', name='uq_device_credential'),)
+
+
+class DeviceDependency(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
+    depends_on_device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
+    device = db.relationship('Device', foreign_keys=[device_id], backref=db.backref('dependency_rows', lazy=True, cascade='all, delete-orphan'))
+    depends_on = db.relationship('Device', foreign_keys=[depends_on_device_id])
+
+    __table_args__ = (db.UniqueConstraint('device_id', 'depends_on_device_id', name='uq_device_dependency'),)

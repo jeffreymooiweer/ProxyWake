@@ -11,8 +11,8 @@ from services.settings_service import (
     log_audit,
     set_setting,
 )
+from services.wake_executor import execute_wake_action
 from services.wake_service import (
-    _send_packets,
     smart_wake_device,
     wake_and_wait,
     wake_group,
@@ -30,10 +30,10 @@ __all__ = [
     'record_wake_event',
     'send_webhooks',
     'set_setting',
+    'execute_wake_action',
     'smart_wake_device',
     'start_scheduler',
     'wake_and_wait',
     'wake_group',
     'wait_for_host',
-    '_send_packets',
 ]

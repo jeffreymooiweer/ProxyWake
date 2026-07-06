@@ -24,11 +24,11 @@ def offline_device(client):
 
 
 @patch('services.wake_service.check_device_online', return_value=False)
-@patch('services.wake_service._send_packets')
-def test_wake_sends_packet_when_offline(mock_send, mock_online, offline_device):
+@patch('services.wake_service.execute_wake_action')
+def test_wake_sends_packet_when_offline(mock_wake, mock_online, offline_device):
     result = smart_wake_device(offline_device, source='manual')
 
-    mock_send.assert_called_once_with(offline_device)
+    mock_wake.assert_called_once_with(offline_device)
     assert result['message_code'] == 'WAKE_SENT'
     assert result['skipped'] is False
 
@@ -39,44 +39,44 @@ def test_wake_sends_packet_when_offline(mock_send, mock_online, offline_device):
 
 
 @patch('services.wake_service.check_device_online', return_value=True)
-@patch('services.wake_service._send_packets')
-def test_wake_skips_when_already_online(mock_send, mock_online, offline_device):
+@patch('services.wake_service.execute_wake_action')
+def test_wake_skips_when_already_online(mock_wake, mock_online, offline_device):
     result = smart_wake_device(offline_device, source='manual')
 
-    mock_send.assert_not_called()
+    mock_wake.assert_not_called()
     assert result['message_code'] == 'DEVICE_ALREADY_ONLINE'
     assert result['skipped'] is True
 
 
 @patch('services.wake_service.check_device_online', return_value=False)
-@patch('services.wake_service._send_packets')
-def test_wake_respects_cooldown(mock_send, mock_online, offline_device):
+@patch('services.wake_service.execute_wake_action')
+def test_wake_respects_cooldown(mock_wake, mock_online, offline_device):
     offline_device.last_wake_at = datetime.now(timezone.utc)
     db.session.commit()
 
     result = smart_wake_device(offline_device, source='manual')
 
-    mock_send.assert_not_called()
+    mock_wake.assert_not_called()
     assert result['message_code'] == 'DEVICE_COOLDOWN'
     assert 'seconds' in result
 
 
 @patch('services.wake_service.check_device_online', return_value=False)
-@patch('services.wake_service._send_packets')
-def test_wake_force_bypasses_cooldown(mock_send, mock_online, offline_device):
+@patch('services.wake_service.execute_wake_action')
+def test_wake_force_bypasses_cooldown(mock_wake, mock_online, offline_device):
     offline_device.last_wake_at = datetime.now(timezone.utc)
     db.session.commit()
 
     result = smart_wake_device(offline_device, source='manual', force=True)
 
-    mock_send.assert_called_once()
+    mock_wake.assert_called_once()
     assert result['message_code'] == 'WAKE_SENT'
 
 
 @patch('services.wake_service.check_device_online', return_value=False)
-@patch('services.wake_service._send_packets')
-def test_wake_device_api_endpoint(mock_send, mock_online, client, sample_device):
+@patch('services.wake_service.execute_wake_action')
+def test_wake_device_api_endpoint(mock_wake, mock_online, client, sample_device):
     response = client.post(f'/api/devices/{sample_device["id"]}/wake')
     assert response.status_code == 200
     assert response.get_json()['message_code'] == 'WAKE_SENT'
-    mock_send.assert_called_once()
+    mock_wake.assert_called_once()

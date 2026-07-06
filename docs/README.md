@@ -10,7 +10,7 @@ Install ProxyWake, connect your reverse proxy, and wake sleeping devices on dema
 |-------|-------------|
 | [Quick Start](quick-start.md) | Run ProxyWake and wake your first device |
 | [Docker](docker.md) | Compose, volumes, capabilities, and image details |
-| [Unraid](unraid.md) | Unraid Docker settings |
+| [Unraid](unraid.md) | Community Applications template and manual Docker |
 | [Configuration](configuration.md) | Environment variables and UI settings |
 
 ## Reverse proxy setup

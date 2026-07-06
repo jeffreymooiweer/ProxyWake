@@ -52,7 +52,7 @@ Open `http://<server-ip>:8462` and follow the setup wizard.
 | Install option | Guide |
 |----------------|-------|
 | Docker Compose | [docs/docker.md](docs/docker.md) |
-| Unraid | [docs/unraid.md](docs/unraid.md) |
+| Unraid | [docs/unraid.md](docs/unraid.md) — CA template in [unraid/](unraid/) |
 | Environment variables | [docs/configuration.md](docs/configuration.md) |
 
 Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.2`, `4.2.2` · amd64 & arm64

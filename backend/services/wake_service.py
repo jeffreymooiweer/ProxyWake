@@ -1,36 +1,20 @@
 import logging
 from datetime import datetime, timezone
 
-from wakeonlan import send_magic_packet
-
 from models import db
+from services.dependency_service import get_wake_order
 from services.notification_service import record_wake_event, send_webhooks
 from services.status_service import check_device_online, wait_for_device
+from services.wake_executor import WakeMethodError, execute_wake_action
 from services.wake_job_service import update_wake_job
 
 __all__ = [
-    '_broadcast_for_ip',
-    '_send_packets',
+    'execute_wake_action',
     'run_verified_wake',
     'smart_wake_device',
     'wake_and_wait',
     'wake_group',
 ]
-
-
-def _broadcast_for_ip(ip):
-    parts = ip.split('.')
-    if len(parts) == 4:
-        return f'{parts[0]}.{parts[1]}.{parts[2]}.255'
-    return '255.255.255.255'
-
-
-def _send_packets(device):
-    send_magic_packet(device.mac, ip_address=device.ip)
-    if device.use_broadcast:
-        broadcast = device.broadcast_ip or _broadcast_for_ip(device.ip)
-        if broadcast:
-            send_magic_packet(device.mac, ip_address=broadcast)
 
 
 def _update_wake_stats(device, success, duration_seconds=None):
@@ -44,6 +28,38 @@ def _update_wake_stats(device, success, duration_seconds=None):
     if duration_seconds is not None:
         device.last_wake_duration_seconds = duration_seconds
     db.session.commit()
+
+
+def _perform_wake_action(device, source):
+    try:
+        execute_wake_action(device)
+        return None
+    except WakeMethodError as exc:
+        logging.error('Wake mislukt voor %s (%s): %s', device.domain, exc.code, exc)
+        record_wake_event(device, source, success=False, error=str(exc), status='failed')
+        return exc.code
+
+
+def _wake_chain_if_needed(target_device, source, job_id=None, force=False):
+    order = get_wake_order(target_device.id)
+    for device in order[:-1]:
+        if check_device_online(device) and not force:
+            continue
+        if job_id:
+            update_wake_job(
+                job_id,
+                status='waiting',
+                message_code='WAKE_DEPENDENCY',
+                name=device.name or device.domain,
+                dependency_name=device.name or device.domain,
+            )
+        error_code = _perform_wake_action(device, f'{source}:dependency')
+        if error_code:
+            return error_code
+        waited_ms = wait_for_device(device)
+        if waited_ms is None:
+            return 'DEPENDENCY_WAKE_FAILED'
+    return None
 
 
 def smart_wake_device(device, source='manual', force=False):
@@ -73,24 +89,39 @@ def smart_wake_device(device, source='manual', force=False):
                 'status': 'cooldown',
             }
 
-    try:
-        _send_packets(device)
-        device.last_wake_at = now
-        db.session.commit()
-        logging.info('Magic packet sent to %s (%s) via %s', device.domain, device.ip, source)
-        record_wake_event(device, source, success=True, skipped=False, status='sent')
-        name = device.name or device.domain
+    dependency_error = _wake_chain_if_needed(device, source, force=force)
+    if dependency_error:
         return {
-            'message_code': 'WAKE_SENT',
-            'name': name,
+            'message_code': dependency_error,
+            'name': device.name or device.domain,
             'skipped': False,
             'online': online,
-            'status': 'sent',
+            'status': 'failed',
         }
-    except Exception as exc:
-        logging.error('Wake mislukt voor %s: %s', device.domain, exc)
-        record_wake_event(device, source, success=False, error=str(exc), status='failed')
-        raise
+
+    error_code = _perform_wake_action(device, source)
+    if error_code:
+        return {
+            'message_code': error_code,
+            'name': device.name or device.domain,
+            'skipped': False,
+            'online': online,
+            'status': 'failed',
+        }
+
+    device.last_wake_at = now
+    db.session.commit()
+    logging.info('Wake action sent to %s (%s) via %s using %s', device.domain, device.ip, source, device.wake_method or 'wol')
+    record_wake_event(device, source, success=True, skipped=False, status='sent', wake_method=device.wake_method)
+    name = device.name or device.domain
+    return {
+        'message_code': 'WAKE_SENT',
+        'name': name,
+        'skipped': False,
+        'online': online,
+        'status': 'sent',
+        'wake_method': device.wake_method or 'wol',
+    }
 
 
 def run_verified_wake(device, job_id, source='manual', force=False):
@@ -98,13 +129,7 @@ def run_verified_wake(device, job_id, source='manual', force=False):
 
     if check_device_online(device) and not force:
         record_wake_event(device, source, success=True, skipped=True, status='skipped')
-        update_wake_job(
-            job_id,
-            status='skipped',
-            message_code='DEVICE_ALREADY_ONLINE',
-            online=True,
-            waited_ms=0,
-        )
+        update_wake_job(job_id, status='skipped', message_code='DEVICE_ALREADY_ONLINE', online=True, waited_ms=0)
         return
 
     now = datetime.now(timezone.utc)
@@ -121,50 +146,42 @@ def run_verified_wake(device, job_id, source='manual', force=False):
             )
             return
 
-    update_wake_job(job_id, status='sending_packet', message_code='WAKE_SENDING')
-    try:
-        _send_packets(device)
-        device.last_wake_at = datetime.now(timezone.utc)
-        db.session.commit()
-    except Exception as exc:
-        record_wake_event(device, source, success=False, error=str(exc), status='failed')
+    dependency_error = _wake_chain_if_needed(device, source, job_id=job_id, force=force)
+    if dependency_error:
         _update_wake_stats(device, success=False)
-        update_wake_job(job_id, status='failed', message_code='WAKE_FAILED', error=str(exc))
+        update_wake_job(job_id, status='failed', message_code=dependency_error)
         return
 
+    update_wake_job(job_id, status='sending_packet', message_code='WAKE_SENDING', name=device.name or device.domain)
+    error_code = _perform_wake_action(device, source)
+    if error_code:
+        _update_wake_stats(device, success=False)
+        update_wake_job(job_id, status='failed', message_code=error_code)
+        return
+
+    device.last_wake_at = datetime.now(timezone.utc)
+    db.session.commit()
+
     if check_device_online(device):
-        record_wake_event(device, source, success=True, skipped=False, status='online', duration_ms=0)
+        record_wake_event(device, source, success=True, skipped=False, status='online', duration_ms=0, wake_method=device.wake_method)
         _update_wake_stats(device, success=True, duration_seconds=0)
         update_wake_job(job_id, status='online', message_code='WAKE_ONLINE', online=True, waited_ms=0, name=device.name or device.domain, seconds=0)
         return
 
-    update_wake_job(job_id, status='waiting', message_code='WAKE_WAITING')
+    update_wake_job(job_id, status='waiting', message_code='WAKE_WAITING', name=device.name or device.domain)
     waited_ms = wait_for_device(device)
     if waited_ms is not None:
         duration_seconds = int(waited_ms / 1000)
-        record_wake_event(
-            device,
-            source,
-            success=True,
-            online_after_ms=waited_ms,
-            status='online',
-            duration_ms=waited_ms,
-        )
+        record_wake_event(device, source, success=True, online_after_ms=waited_ms, status='online', duration_ms=waited_ms, wake_method=device.wake_method)
         _update_wake_stats(device, success=True, duration_seconds=duration_seconds)
         update_wake_job(job_id, status='online', message_code='WAKE_ONLINE', online=True, waited_ms=waited_ms, name=device.name or device.domain, seconds=duration_seconds)
         return
 
     timeout = device.wake_timeout_seconds or 120
     send_webhooks('wake_failed', {'device_id': device.id, 'domain': device.domain, 'error': 'timeout'})
-    record_wake_event(device, source, success=False, error='timeout', status='failed', duration_ms=timeout * 1000)
+    record_wake_event(device, source, success=False, error='timeout', status='failed', duration_ms=timeout * 1000, wake_method=device.wake_method)
     _update_wake_stats(device, success=False, duration_seconds=timeout)
-    update_wake_job(
-        job_id,
-        status='failed',
-        message_code='WAKE_TIMEOUT',
-        online=False,
-        waited_ms=timeout * 1000,
-    )
+    update_wake_job(job_id, status='failed', message_code='WAKE_TIMEOUT', online=False, waited_ms=timeout * 1000)
 
 
 def wake_and_wait(device, source='public', max_wait=None):
@@ -172,34 +189,28 @@ def wake_and_wait(device, source='public', max_wait=None):
         record_wake_event(device, source, success=True, skipped=True, status='skipped')
         return {'online': True, 'waited_ms': 0, 'message_code': 'ALREADY_ONLINE', 'skipped': True, 'status': 'skipped'}
 
+    dependency_error = _wake_chain_if_needed(device, source)
+    if dependency_error:
+        return {'online': False, 'message_code': dependency_error, 'status': 'failed'}
+
     result = smart_wake_device(device, source=source)
+    if result.get('message_code') in ('DEPENDENCY_WAKE_FAILED', 'SSH_CREDENTIALS_MISSING', 'WEBHOOK_URL_MISSING'):
+        return {'online': False, 'status': 'failed', **result}
+
     if check_device_online(device):
         return {'online': True, 'waited_ms': 0, 'status': 'online', **result}
 
     waited_ms = wait_for_device(device, max_wait=max_wait)
     if waited_ms is not None:
-        record_wake_event(
-            device,
-            source,
-            success=True,
-            online_after_ms=waited_ms,
-            status='online',
-            duration_ms=waited_ms,
-        )
+        record_wake_event(device, source, success=True, online_after_ms=waited_ms, status='online', duration_ms=waited_ms, wake_method=device.wake_method)
         _update_wake_stats(device, success=True, duration_seconds=int(waited_ms / 1000))
         return {'online': True, 'waited_ms': waited_ms, 'status': 'online', **result}
 
     timeout = max_wait if max_wait is not None else (device.wake_timeout_seconds or 120)
     send_webhooks('wake_failed', {'device_id': device.id, 'domain': device.domain, 'error': 'timeout'})
-    record_wake_event(device, source, success=False, error='timeout', status='failed', duration_ms=timeout * 1000)
+    record_wake_event(device, source, success=False, error='timeout', status='failed', duration_ms=timeout * 1000, wake_method=device.wake_method)
     _update_wake_stats(device, success=False, duration_seconds=timeout)
-    return {
-        'online': False,
-        'waited_ms': timeout * 1000,
-        'message_code': 'WAKE_TIMEOUT',
-        'status': 'failed',
-        **result,
-    }
+    return {'online': False, 'waited_ms': timeout * 1000, 'message_code': 'WAKE_TIMEOUT', 'status': 'failed', **result}
 
 
 def wake_group(group_id, source='group'):
@@ -210,6 +221,8 @@ def wake_group(group_id, source='group'):
     for device in devices:
         try:
             results.append({'device_id': device.id, **smart_wake_device(device, source=source)})
+        except WakeMethodError as exc:
+            results.append({'device_id': device.id, 'error': str(exc), 'message_code': exc.code})
         except Exception as exc:
             results.append({'device_id': device.id, 'error': str(exc)})
     return results

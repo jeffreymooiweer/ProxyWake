@@ -1,6 +1,7 @@
 import re
 
 from models import Device
+from services.wake_executor import VALID_WAKE_METHODS
 
 VALID_CHECK_TYPES = ('ping', 'tcp', 'http')
 
@@ -87,6 +88,9 @@ def validate_device_payload(data, device=None):
     status_check_url = (data.get('status_check_url') or '').strip() or None
     wake_timeout_seconds = int(data.get('wake_timeout_seconds', 120))
     wake_poll_interval_seconds = int(data.get('wake_poll_interval_seconds', 3))
+    wake_method = (data.get('wake_method') or 'wol').strip().lower()
+    if wake_method not in VALID_WAKE_METHODS:
+        return None, 'INVALID_WAKE_METHOD'
 
     return {
         'domain': domain,
@@ -104,4 +108,15 @@ def validate_device_payload(data, device=None):
         'status_check_url': status_check_url,
         'wake_timeout_seconds': wake_timeout_seconds,
         'wake_poll_interval_seconds': wake_poll_interval_seconds,
+        'wake_method': wake_method,
+        'wol_port': int(data.get('wol_port', 9)),
+        'ssh_host': (data.get('ssh_host') or '').strip() or None,
+        'ssh_port': int(data.get('ssh_port', 22)),
+        'ssh_username': (data.get('ssh_username') or '').strip() or None,
+        'ssh_command': (data.get('ssh_command') or 'exit').strip() or 'exit',
+        'webhook_url': (data.get('webhook_url') or '').strip() or None,
+        'webhook_method': (data.get('webhook_method') or 'POST').upper(),
+        'webhook_headers': data.get('webhook_headers'),
+        'webhook_body': data.get('webhook_body'),
+        'homeassistant_webhook_url': (data.get('homeassistant_webhook_url') or '').strip() or None,
     }, None

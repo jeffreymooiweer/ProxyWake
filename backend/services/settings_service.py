@@ -57,6 +57,17 @@ def import_devices(data_list, merge=True):
             'status_check_url': item.get('status_check_url'),
             'wake_timeout_seconds': item.get('wake_timeout_seconds', 120),
             'wake_poll_interval_seconds': item.get('wake_poll_interval_seconds', 3),
+            'wake_method': item.get('wake_method', 'wol'),
+            'wol_port': item.get('wol_port', 9),
+            'ssh_host': item.get('ssh_host'),
+            'ssh_port': item.get('ssh_port', 22),
+            'ssh_username': item.get('ssh_username'),
+            'ssh_command': item.get('ssh_command', 'exit'),
+            'webhook_url': item.get('webhook_url'),
+            'webhook_method': item.get('webhook_method', 'POST'),
+            'webhook_headers': item.get('webhook_headers'),
+            'webhook_body': item.get('webhook_body'),
+            'homeassistant_webhook_url': item.get('homeassistant_webhook_url'),
         }
         if existing:
             for key, value in payload.items():

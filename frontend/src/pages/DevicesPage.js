@@ -38,7 +38,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 
-const emptyForm = { name: '', domain: '', ip: '', mac: '', group_id: '', use_broadcast: false, wake_cooldown_seconds: 30 };
+const emptyForm = { name: '', domain: '', ip: '', mac: '', group_id: '', use_broadcast: false, wake_cooldown_seconds: 30, wake_method: 'wol' };
+
+const WAKE_METHODS = ['wol', 'ssh', 'webhook', 'home_assistant', 'ipmi'];
 
 const DevicesPage = () => {
   const { t } = useTranslation();
@@ -52,6 +54,8 @@ const DevicesPage = () => {
   const [scanResults, setScanResults] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [wakeJobs, setWakeJobs] = useState({});
+  const [dependencyIds, setDependencyIds] = useState([]);
+  const [credentialForm, setCredentialForm] = useState({ ssh_password: '', ssh_private_key: '' });
 
   const loadDevices = async () => {
     const [data, groupData] = await Promise.all([api.getDevices(true), api.getGroups()]);
@@ -83,16 +87,33 @@ const DevicesPage = () => {
     }
   };
 
-  const openEdit = (device) => {
+  const openEdit = async (device) => {
     setEditing(device);
+    setCredentialForm({ ssh_password: '', ssh_private_key: '' });
+    try {
+      const deps = await api.getDeviceDependencies(device.id);
+      setDependencyIds((deps.dependencies || []).map((item) => item.id));
+    } catch {
+      setDependencyIds((device.dependencies || []).map((item) => item.id));
+    }
     setDialogOpen(true);
   };
 
   const handleUpdate = async () => {
     try {
-      await api.updateDevice(editing.id, editing);
+      const { dependencies, ssh_credentials_configured, ...payload } = editing;
+      await api.updateDevice(editing.id, payload);
+      await api.updateDeviceDependencies(editing.id, dependencyIds);
+      const credentials = {};
+      if (credentialForm.ssh_password) credentials.ssh_password = credentialForm.ssh_password;
+      if (credentialForm.ssh_private_key) credentials.ssh_private_key = credentialForm.ssh_private_key;
+      if (Object.keys(credentials).length > 0) {
+        await api.updateDeviceCredentials(editing.id, credentials);
+      }
       setDialogOpen(false);
       setEditing(null);
+      setDependencyIds([]);
+      setCredentialForm({ ssh_password: '', ssh_private_key: '' });
       await loadDevices();
       showMessage(t('devices.updated'));
     } catch (err) {
@@ -258,6 +279,7 @@ const DevicesPage = () => {
                 <TableCell>{t('devices.domain')}</TableCell>
                 <TableCell>{t('devices.ip')}</TableCell>
                 <TableCell>{t('devices.mac')}</TableCell>
+                <TableCell>{t('devices.wakeMethod')}</TableCell>
                 <TableCell>{t('statistics.status')}</TableCell>
                 <TableCell align="right">{t('common.edit')}</TableCell>
               </TableRow>
@@ -265,7 +287,7 @@ const DevicesPage = () => {
             <TableBody>
               {devices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography color="text.secondary" sx={{ py: 4 }}>
                       {t('devices.empty')}
                     </Typography>
@@ -286,6 +308,14 @@ const DevicesPage = () => {
                           </IconButton>
                         </Tooltip>
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip size="small" label={t(`devices.wakeMethods.${device.wake_method || 'wol'}`)} variant="outlined" />
+                      {(device.dependencies || []).length > 0 && (
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          {t('devices.dependencyCount', { count: device.dependencies.length })}
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 100 }}>
@@ -334,7 +364,7 @@ const DevicesPage = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>{t('devices.editTitle')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -411,6 +441,76 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, wake_timeout_seconds: Number(e.target.value) })}
               />
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>{t('devices.wakeMethod')}</InputLabel>
+                <Select
+                  value={editing?.wake_method || 'wol'}
+                  label={t('devices.wakeMethod')}
+                  onChange={(e) => setEditing({ ...editing, wake_method: e.target.value })}
+                >
+                  {WAKE_METHODS.map((method) => (
+                    <MenuItem key={method} value={method}>{t(`devices.wakeMethods.${method}`)}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>{t('devices.dependencies')}</InputLabel>
+                <Select
+                  multiple
+                  value={dependencyIds}
+                  label={t('devices.dependencies')}
+                  onChange={(e) => setDependencyIds(e.target.value)}
+                  renderValue={(selected) => devices.filter((d) => selected.includes(d.id) && d.id !== editing?.id).map((d) => d.name).join(', ')}
+                >
+                  {devices.filter((d) => d.id !== editing?.id).map((device) => (
+                    <MenuItem key={device.id} value={device.id}>{device.name} ({device.domain})</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            {(editing?.wake_method || 'wol') === 'ssh' && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label={t('devices.sshHost')} value={editing?.ssh_host || ''} onChange={(e) => setEditing({ ...editing, ssh_host: e.target.value })} />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField fullWidth type="number" label={t('devices.sshPort')} value={editing?.ssh_port ?? 22} onChange={(e) => setEditing({ ...editing, ssh_port: Number(e.target.value) })} />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField fullWidth label={t('devices.sshUsername')} value={editing?.ssh_username || ''} onChange={(e) => setEditing({ ...editing, ssh_username: e.target.value })} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth label={t('devices.sshCommand')} value={editing?.ssh_command || 'exit'} onChange={(e) => setEditing({ ...editing, ssh_command: e.target.value })} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth type="password" label={t('devices.sshPassword')} value={credentialForm.ssh_password} onChange={(e) => setCredentialForm({ ...credentialForm, ssh_password: e.target.value })} helperText={editing?.ssh_credentials_configured ? t('devices.credentialsConfigured') : ''} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth multiline minRows={2} label={t('devices.sshPrivateKey')} value={credentialForm.ssh_private_key} onChange={(e) => setCredentialForm({ ...credentialForm, ssh_private_key: e.target.value })} />
+                </Grid>
+              </>
+            )}
+            {(editing?.wake_method || 'wol') === 'webhook' && (
+              <>
+                <Grid item xs={12}>
+                  <TextField fullWidth label={t('devices.webhookUrl')} value={editing?.webhook_url || ''} onChange={(e) => setEditing({ ...editing, webhook_url: e.target.value })} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label={t('devices.webhookMethod')} value={editing?.webhook_method || 'POST'} onChange={(e) => setEditing({ ...editing, webhook_method: e.target.value })} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth multiline minRows={2} label={t('devices.webhookBody')} value={editing?.webhook_body || ''} onChange={(e) => setEditing({ ...editing, webhook_body: e.target.value })} />
+                </Grid>
+              </>
+            )}
+            {(editing?.wake_method || 'wol') === 'home_assistant' && (
+              <Grid item xs={12}>
+                <TextField fullWidth label={t('devices.haWebhookUrl')} value={editing?.homeassistant_webhook_url || ''} onChange={(e) => setEditing({ ...editing, homeassistant_webhook_url: e.target.value })} />
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>

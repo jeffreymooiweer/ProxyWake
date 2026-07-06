@@ -1,6 +1,6 @@
 from sqlalchemy import inspect, text
 
-SCHEMA_VERSION = '3.3'
+SCHEMA_VERSION = '3.4'
 
 DEVICE_MIGRATIONS = {
     'group_id': 'INTEGER',
@@ -20,11 +20,23 @@ DEVICE_MIGRATIONS = {
     'wake_count': 'INTEGER DEFAULT 0',
     'wake_success_count': 'INTEGER DEFAULT 0',
     'wake_failure_count': 'INTEGER DEFAULT 0',
+    'wake_method': "VARCHAR(16) DEFAULT 'wol'",
+    'wol_port': 'INTEGER DEFAULT 9',
+    'ssh_host': 'VARCHAR(255)',
+    'ssh_port': 'INTEGER DEFAULT 22',
+    'ssh_username': 'VARCHAR(120)',
+    'ssh_command': "VARCHAR(500) DEFAULT 'exit'",
+    'webhook_url': 'VARCHAR(500)',
+    'webhook_method': "VARCHAR(16) DEFAULT 'POST'",
+    'webhook_headers': 'TEXT',
+    'webhook_body': 'TEXT',
+    'homeassistant_webhook_url': 'VARCHAR(500)',
 }
 
 WAKE_EVENT_MIGRATIONS = {
     'duration_ms': 'INTEGER',
     'status': 'VARCHAR(32)',
+    'wake_method': 'VARCHAR(16)',
 }
 
 

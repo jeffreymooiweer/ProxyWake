@@ -22,6 +22,8 @@ from models import (  # noqa: E402
     AppSetting,
     AuditLog,
     Device,
+    DeviceCredential,
+    DeviceDependency,
     DeviceGroup,
     NpmHost,
     ScheduledWake,
@@ -48,7 +50,18 @@ def client():
 
 
 def _clear_database():
-    for model in (WakeEvent, ScheduledWake, Webhook, AuditLog, Device, DeviceGroup, NpmHost, AppSetting):
+    for model in (
+        WakeEvent,
+        ScheduledWake,
+        Webhook,
+        AuditLog,
+        DeviceDependency,
+        DeviceCredential,
+        Device,
+        DeviceGroup,
+        NpmHost,
+        AppSetting,
+    ):
         model.query.delete()
     db.session.commit()
     if PASSWORD_HASH_FILE.exists():

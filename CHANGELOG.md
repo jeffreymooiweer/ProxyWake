@@ -9,10 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v4.0.0
 
-- Multiple wake methods (WOL, SSH, webhook, Home Assistant)
-- Device dependencies and adaptive wake intelligence
 - OpenAPI documentation and API scopes
 - Enhanced logging, backups, and notifications
+- IPMI wake support
+
+## [3.4.0] - 2026-07-06
+
+### Added
+
+- Multiple wake methods per device: WOL, SSH, webhook, Home Assistant (IPMI reserved)
+- Encrypted device credentials (Fernet) for SSH password/private key
+- Device dependencies with circular-dependency detection
+- Dependency chain wake: dependencies are woken and verified before the target device
+- API endpoints: `PUT/GET /api/devices/:id/dependencies`, `PUT /api/devices/:id/credentials`
+- Frontend wake method selector, dependency multi-select, and SSH credential fields
+
+### Changed
+
+- Wake execution refactored into `wake_executor` service
+- `WakeEvent` records `wake_method`
+- Schema version bumped to `3.4`
 
 ## [3.3.0] - 2026-07-06
 

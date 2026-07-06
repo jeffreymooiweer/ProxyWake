@@ -19,6 +19,17 @@ ERROR_MESSAGES = {
     'RATE_LIMITED': 'Too many requests. Please try again later.',
     'WAKE_FAILED': 'Failed to send magic packet.',
     'INVALID_STATUS_CHECK_TYPE': 'Invalid status check type. Use ping, tcp, or http.',
+    'INVALID_WAKE_METHOD': 'Invalid wake method.',
+    'DEPENDENCY_CYCLE': 'Circular device dependency detected.',
+    'DEPENDENCY_WAKE_FAILED': 'A required dependency did not come online.',
+    'SSH_CREDENTIALS_MISSING': 'SSH credentials are not configured.',
+    'WEBHOOK_URL_MISSING': 'Webhook URL is not configured.',
+    'HA_WEBHOOK_MISSING': 'Home Assistant webhook URL is not configured.',
+    'IPMI_NOT_SUPPORTED': 'IPMI wake is not supported yet.',
+    'SSH_WAKE_FAILED': 'SSH wake command failed.',
+    'WEBHOOK_WAKE_FAILED': 'Webhook wake request failed.',
+    'HA_WAKE_FAILED': 'Home Assistant wake request failed.',
+    'INVALID_WEBHOOK_HEADERS': 'Webhook headers must be valid JSON.',
     'INTERNAL_ERROR': 'Internal server error.',
     'GENERIC': 'Something went wrong.',
 }
@@ -44,6 +55,7 @@ MESSAGE_CODES = {
     'WAKE_SENDING': 'Sending wake packet to {{name}}...',
     'WAKE_WAITING': 'Waiting for {{name}} to come online...',
     'WAKE_ONLINE': '{{name}} is online after {{seconds}}s.',
+    'WAKE_DEPENDENCY': 'Waking dependency: {{dependency_name}}...',
     'ALREADY_ONLINE': 'Device is already online.',
 }
 

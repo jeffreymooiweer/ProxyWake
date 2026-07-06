@@ -7,7 +7,14 @@ from flask import Blueprint, current_app, jsonify, request
 from auth import api_key_or_session_required, login_required
 from extensions import limiter
 from models import Device, db
+from services.credential_service import save_credentials
+from services.dependency_service import (
+    DependencyCycleError,
+    dependencies_to_dict,
+    set_device_dependencies,
+)
 from services.settings_service import export_devices, import_devices, log_audit
+from services.wake_executor import WakeMethodError
 from services.wake_job_service import create_wake_job, get_wake_job, start_verified_wake
 from services.wake_service import smart_wake_device
 from utils.http import actor_ip, json_error, json_message
@@ -76,8 +83,40 @@ def wake_device(device_id):
     try:
         result = smart_wake_device(device, source='manual', force=force)
         return jsonify(result), 200
+    except WakeMethodError as exc:
+        return json_error(exc.code, 500)
     except Exception:
         return json_error('WAKE_FAILED', 500)
+
+
+@bp.route('/api/devices/<int:device_id>/dependencies')
+@api_key_or_session_required
+def get_device_dependencies(device_id):
+    Device.query.get_or_404(device_id)
+    return jsonify({'dependencies': dependencies_to_dict(device_id)})
+
+
+@bp.route('/api/devices/<int:device_id>/dependencies', methods=['PUT'])
+@login_required
+def update_device_dependencies(device_id):
+    Device.query.get_or_404(device_id)
+    data = request.get_json(silent=True) or {}
+    try:
+        depends_on = set_device_dependencies(device_id, data.get('depends_on', []))
+    except DependencyCycleError:
+        return json_error('DEPENDENCY_CYCLE', 400)
+    log_audit('device_dependencies_updated', str(depends_on), actor_ip())
+    return jsonify({'depends_on': depends_on, 'dependencies': dependencies_to_dict(device_id)})
+
+
+@bp.route('/api/devices/<int:device_id>/credentials', methods=['PUT'])
+@login_required
+def update_device_credentials(device_id):
+    Device.query.get_or_404(device_id)
+    data = request.get_json(silent=True) or {}
+    save_credentials(device_id, data.get('credentials', {}))
+    log_audit('device_credentials_updated', str(device_id), actor_ip())
+    return jsonify({'saved': True}), 200
 
 
 @bp.route('/api/wake/jobs/<job_id>')

@@ -35,13 +35,18 @@ That's it — no need to keep servers running 24/7 just because they might be ac
 
 ## Features
 
-- Wake-on-LAN with smart wake (skip if already online, cooldown, broadcast option)
-- Web UI — device management, groups, logs, statistics
-- NPM integration snippets (copy & paste)
-- Also supports Traefik, Caddy, and Home Assistant
+- Wake-on-LAN with smart wake (skip if online, cooldown, broadcast)
+- **Verified wake** with ping/TCP/HTTP status checks and job polling
+- **Multiple wake methods:** WOL, SSH, webhook, Home Assistant
+- **Device dependencies** — wake chain with circular-detection
+- **Adaptive wake timeout** based on historical boot times
+- Web UI — devices, groups, logs, statistics, settings
+- NPM / Traefik / Caddy / Home Assistant integration snippets
 - Waiting page with auto-redirect (`/waiting?domain=...`)
-- Webhooks, scheduled wake, export/import
-- Password protection, API key auth, audit log
+- Webhooks, scheduled wake, export/import, **full backup/restore**
+- **OpenAPI docs** at `/api/docs` with scoped API keys
+- **Slack & Telegram** notifications on wake events
+- Password protection, API key auth, audit log, rotating logs
 
 ---
 
@@ -130,7 +135,7 @@ docker compose up -d --build
 | | |
 |---|---|
 | **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `3.1`, `3.1.0` |
+| **Tags** | `latest`, `4.0`, `4.0.0` |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid
@@ -163,8 +168,8 @@ ProxyWake must be reachable from your NPM container on the local network (use th
 | Variable | Description |
 |----------|-------------|
 | `PROXYWAKE_PASSWORD` | Web UI password (recommended) |
-| `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset) |
-| `PROXYWAKE_SECRET_KEY` | Flask session secret |
+| `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset); supports scopes via Settings |
+| `PROXYWAKE_SECRET_KEY` | Flask session secret and credential encryption key |
 | `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
 | `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
 
@@ -172,7 +177,8 @@ ProxyWake must be reachable from your NPM container on the local network (use th
 
 ## Documentation
 
-- [Changelog](CHANGELOG.md)
+- [Changelog](CHANGELOG.md) — v4.0.0 release notes
+- [API documentation](/api/docs) — OpenAPI / Swagger UI (when running)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 

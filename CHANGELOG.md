@@ -7,10 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v4.0.0
+## [4.0.0] - 2026-07-06
 
-- IPMI wake support
-- Adaptive wake intelligence
+Major release — consolidates Golf A through E into a production-ready v4 baseline.
+
+### Added (since 3.0.0)
+
+- **Golf A (3.1.0):** pytest suite, CI, CHANGELOG, SECURITY.md, version centralization
+- **Golf B (3.2.0):** modular backend (`routes/`, `services/`, `utils/`), `create_app()` factory
+- **Golf C (3.3.0):** wake verification (ping/TCP/HTTP), job polling API, wake statistics
+- **Golf D (3.4.0):** multiple wake methods (WOL, SSH, webhook, Home Assistant), encrypted credentials, device dependencies
+- **Golf E (3.5.0):** OpenAPI docs, API scopes, full backup/restore, rotating logs, Slack/Telegram notifications
+- **Adaptive wake timeout:** extends wait time based on historical boot duration per device
+
+### Changed
+
+- Schema version bumped to `4.0`
+- Docker image tags: `latest`, `4.0`, `4.0.0`
+
+### Known limitations
+
+- IPMI wake remains a placeholder for a future minor release
 
 ## [3.5.0] - 2026-07-06
 

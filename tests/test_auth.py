@@ -4,6 +4,7 @@ import pytest
 
 from auth import hash_password, verify_api_key
 from config import get_or_create_api_key, save_admin_password_hash
+from version import __version__
 
 
 def test_health_endpoint_is_public(client):
@@ -11,7 +12,7 @@ def test_health_endpoint_is_public(client):
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == 'ok'
-    assert data['version'] == '4.2.0'
+    assert data['version'] == __version__
 
 
 def test_devices_require_auth_when_password_set(client, monkeypatch):

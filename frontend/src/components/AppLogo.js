@@ -4,13 +4,13 @@ import { Box } from '@mui/material';
 const AppLogo = ({ size = 32, sx = {} }) => (
   <Box
     component="img"
-    src="/proxywake.png"
+    src="/icon.png"
     alt="ProxyWake"
     sx={{
       width: size,
       height: size,
       borderRadius: 2,
-      objectFit: 'cover',
+      objectFit: 'contain',
       ...sx,
     }}
   />

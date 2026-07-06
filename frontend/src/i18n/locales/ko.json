@@ -59,7 +59,20 @@
     "RATE_LIMITED": "요청이 너무 많습니다. 나중에 다시 시도하세요.",
     "WAKE_FAILED": "매직 패킷 전송에 실패했습니다.",
     "INTERNAL_ERROR": "내부 서버 오류.",
-    "GENERIC": "문제가 발생했습니다."
+    "GENERIC": "문제가 발생했습니다.",
+    "INVALID_STATUS_CHECK_TYPE": "Invalid status check type. Use ping, tcp, or http.",
+    "INVALID_WAKE_METHOD": "Invalid wake method.",
+    "DEPENDENCY_CYCLE": "Circular device dependency detected.",
+    "DEPENDENCY_WAKE_FAILED": "A required dependency did not come online.",
+    "SSH_CREDENTIALS_MISSING": "SSH credentials are not configured.",
+    "WEBHOOK_URL_MISSING": "Webhook URL is not configured.",
+    "HA_WEBHOOK_MISSING": "Home Assistant webhook URL is not configured.",
+    "IPMI_CREDENTIALS_MISSING": "IPMI password is not configured.",
+    "IPMI_WAKE_FAILED": "IPMI chassis power on command failed.",
+    "SSH_PASS_UNAVAILABLE": "sshpass is required for SSH password authentication.",
+    "INSUFFICIENT_API_SCOPE": "API key does not have the required scope.",
+    "INVALID_BACKUP": "Invalid backup file.",
+    "INVALID_LOG_LEVEL": "Invalid log level."
   },
   "messages": {
     "NO_PASSWORD_CONFIGURED": "비밀번호가 설정되지 않았습니다. 세션이 시작되었습니다.",
@@ -79,7 +92,11 @@
     "WAKE_SKIPPED_ONLINE": "{{name}}은(는) 이미 온라인입니다.",
     "WAKE_PROCESSED": "{{domain}}에 대한 깨우기가 처리되었습니다.",
     "WAKE_TIMEOUT": "장치 시작 대기 시간이 초과되었습니다.",
-    "ALREADY_ONLINE": "장치가 이미 온라인입니다."
+    "ALREADY_ONLINE": "장치가 이미 온라인입니다.",
+    "WAKE_SENDING": "Sending wake packet to {{name}}...",
+    "WAKE_WAITING": "Waiting for {{name}} to come online...",
+    "WAKE_ONLINE": "{{name}} is online after {{seconds}}s.",
+    "WAKE_DEPENDENCY": "Waking dependency: {{dependency_name}}..."
   },
   "login": {
     "title": "ProxyWake",
@@ -153,7 +170,52 @@
     "scannerTitle": "네트워크 스캐너",
     "subnet": "서브넷",
     "startScan": "스캔 시작",
-    "useIp": "IP 사용"
+    "useIp": "IP 사용",
+    "statusCheckType": "Status check",
+    "statusCheckPort": "Check port",
+    "statusCheckUrl": "Health check URL",
+    "wakeTimeout": "Wake timeout (s)",
+    "wakeMethod": "Wake method",
+    "dependencies": "Dependencies (wake first)",
+    "dependencyCount": "{{count}} dependencies",
+    "sshHost": "SSH host",
+    "sshPort": "SSH port",
+    "sshUsername": "SSH username",
+    "sshCommand": "SSH command",
+    "sshPassword": "SSH password",
+    "sshPrivateKey": "SSH private key",
+    "credentialsConfigured": "Credentials already saved (leave blank to keep)",
+    "webhookUrl": "Webhook URL",
+    "webhookMethod": "HTTP method",
+    "webhookBody": "Request body",
+    "haWebhookUrl": "Home Assistant webhook URL",
+    "wakeMethods": {
+      "wol": "Wake-on-LAN",
+      "ssh": "SSH command",
+      "webhook": "Webhook",
+      "home_assistant": "Home Assistant",
+      "ipmi": "IPMI"
+    },
+    "ipmiHost": "BMC / IPMI host",
+    "ipmiPort": "IPMI port",
+    "ipmiUsername": "IPMI username",
+    "ipmiPassword": "IPMI password",
+    "lastWake": "Last wake: {{seconds}}s",
+    "statusCheck": {
+      "ping": "ICMP ping",
+      "tcp": "TCP port",
+      "http": "HTTP URL"
+    },
+    "wakeStatus": {
+      "starting": "Starting wake...",
+      "checking": "Checking status...",
+      "sending_packet": "Sending wake packet",
+      "waiting": "Waiting for device",
+      "online": "Device online",
+      "failed": "Wake failed",
+      "skipped": "Already online",
+      "cooldown": "Cooldown active"
+    }
   },
   "groups": {
     "title": "그룹",
@@ -227,7 +289,8 @@
     "auditTime": "시간",
     "auditAction": "작업",
     "auditDetails": "세부 정보",
-    "auditIp": "IP"
+    "auditIp": "IP",
+    "search": "Search logs"
   },
   "settings": {
     "title": "설정",
@@ -246,7 +309,30 @@
     "importDone": "{{count}}개 장치를 가져왔습니다.",
     "observability": "관측 가능성",
     "observabilityText": "Prometheus 메트릭: /api/metrics — 상태 확인: /api/health",
-    "securityHint": "Wake-on-WAN: 포트를 열기보다 Tailscale/WireGuard를 사용하세요. HTTPS: ProxyWake을 NPM과 Let's Encrypt 뒤에 배치하세요."
+    "securityHint": "Wake-on-WAN: 포트를 열기보다 Tailscale/WireGuard를 사용하세요. HTTPS: ProxyWake을 NPM과 Let's Encrypt 뒤에 배치하세요.",
+    "fullBackup": "Full backup",
+    "fullRestore": "Restore backup",
+    "fullBackupDone": "Full backup downloaded.",
+    "fullRestoreDone": "{{devices}} devices restored from backup.",
+    "apiScopesSection": "API key scopes",
+    "apiScopes": {
+      "read": "Read devices and status",
+      "write": "Create and update devices",
+      "wake": "Trigger wake actions",
+      "admin": "Full API access"
+    },
+    "scopesUpdated": "API scopes updated: {{scopes}}",
+    "openApiDocs": "Open API documentation",
+    "notificationsSection": "Notification channels",
+    "slackEnabled": "Slack notifications",
+    "slackWebhook": "Slack webhook URL",
+    "telegramEnabled": "Telegram notifications",
+    "telegramToken": "Telegram bot token",
+    "telegramChatId": "Telegram chat ID",
+    "notificationsUpdated": "Notification settings saved.",
+    "loggingSection": "Logging",
+    "logLevel": "Log level",
+    "logLevelUpdated": "Log level updated."
   },
   "waiting": {
     "noDomain": "도메인이 지정되지 않았습니다. 사용법: /waiting?domain=your.domain.com",

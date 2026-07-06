@@ -1,7 +1,7 @@
 # ProxyWake
 
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="ProxyWake — Access it. Wake it." width="900" />
+  <img src="docs/assets/banner.png" alt="ProxyWake — Access it. Wake it." width="900" />
 </p>
 
 <p align="center">

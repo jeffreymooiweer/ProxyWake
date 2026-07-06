@@ -65,7 +65,9 @@
     "SSH_CREDENTIALS_MISSING": "SSH credentials are not configured.",
     "WEBHOOK_URL_MISSING": "Webhook URL is not configured.",
     "HA_WEBHOOK_MISSING": "Home Assistant webhook URL is not configured.",
-    "IPMI_NOT_SUPPORTED": "IPMI wake is not supported yet.",
+    "IPMI_CREDENTIALS_MISSING": "IPMI password is not configured.",
+    "IPMI_WAKE_FAILED": "IPMI chassis power on command failed.",
+    "SSH_PASS_UNAVAILABLE": "sshpass is required for SSH password authentication.",
     "INSUFFICIENT_API_SCOPE": "API key does not have the required scope.",
     "INVALID_BACKUP": "Invalid backup file.",
     "INVALID_LOG_LEVEL": "Invalid log level.",
@@ -192,8 +194,12 @@
       "ssh": "SSH command",
       "webhook": "Webhook",
       "home_assistant": "Home Assistant",
-      "ipmi": "IPMI (coming soon)"
+      "ipmi": "IPMI"
     },
+    "ipmiHost": "BMC / IPMI host",
+    "ipmiPort": "IPMI port",
+    "ipmiUsername": "IPMI username",
+    "ipmiPassword": "IPMI password",
     "lastWake": "Last wake: {{seconds}}s",
     "statusCheck": {
       "ping": "ICMP ping",

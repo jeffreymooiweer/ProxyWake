@@ -99,6 +99,9 @@ def import_devices(data_list, merge=True):
             'webhook_headers': item.get('webhook_headers'),
             'webhook_body': item.get('webhook_body'),
             'homeassistant_webhook_url': item.get('homeassistant_webhook_url'),
+            'ipmi_host': item.get('ipmi_host'),
+            'ipmi_port': item.get('ipmi_port', 623),
+            'ipmi_username': item.get('ipmi_username'),
         }
         if existing:
             for key, value in payload.items():

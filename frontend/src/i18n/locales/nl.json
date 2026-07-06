@@ -65,7 +65,9 @@
     "SSH_CREDENTIALS_MISSING": "SSH-referenties zijn niet geconfigureerd.",
     "WEBHOOK_URL_MISSING": "Webhook-URL is niet geconfigureerd.",
     "HA_WEBHOOK_MISSING": "Home Assistant webhook-URL is niet geconfigureerd.",
-    "IPMI_NOT_SUPPORTED": "IPMI-wake wordt nog niet ondersteund.",
+    "IPMI_CREDENTIALS_MISSING": "IPMI-wachtwoord is niet geconfigureerd.",
+    "IPMI_WAKE_FAILED": "IPMI chassis power on mislukt.",
+    "SSH_PASS_UNAVAILABLE": "sshpass is vereist voor SSH-wachtwoordauthenticatie.",
     "INSUFFICIENT_API_SCOPE": "API-sleutel heeft niet de vereiste scope.",
     "INVALID_BACKUP": "Ongeldig backupbestand.",
     "INVALID_LOG_LEVEL": "Ongeldig logniveau.",
@@ -192,8 +194,12 @@
       "ssh": "SSH-commando",
       "webhook": "Webhook",
       "home_assistant": "Home Assistant",
-      "ipmi": "IPMI (binnenkort)"
+      "ipmi": "IPMI"
     },
+    "ipmiHost": "BMC / IPMI-host",
+    "ipmiPort": "IPMI-poort",
+    "ipmiUsername": "IPMI-gebruikersnaam",
+    "ipmiPassword": "IPMI-wachtwoord",
     "lastWake": "Laatste wake: {{seconds}}s",
     "statusCheck": {
       "ping": "ICMP ping",

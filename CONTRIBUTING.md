@@ -83,7 +83,7 @@ cd frontend && npm ci && npm run build
 
 ## Roadmap
 
-See [CHANGELOG.md](CHANGELOG.md) for planned v4.0.0 features. Contributions aligned with the roadmap are especially welcome.
+See [CHANGELOG.md](CHANGELOG.md) for release history and the [Unreleased] section for upcoming work. Contributions aligned with the roadmap are especially welcome.
 
 ## License
 

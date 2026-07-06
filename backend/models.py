@@ -64,6 +64,9 @@ class Device(db.Model):
     webhook_headers = db.Column(db.Text, nullable=True)
     webhook_body = db.Column(db.Text, nullable=True)
     homeassistant_webhook_url = db.Column(db.String(500), nullable=True)
+    ipmi_host = db.Column(db.String(255), nullable=True)
+    ipmi_port = db.Column(db.Integer, default=623)
+    ipmi_username = db.Column(db.String(120), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self, include_status=False, online=None):
@@ -104,7 +107,11 @@ class Device(db.Model):
             'webhook_headers': self.webhook_headers,
             'webhook_body': self.webhook_body,
             'homeassistant_webhook_url': self._public_webhook_url(self.homeassistant_webhook_url),
+            'ipmi_host': self.ipmi_host,
+            'ipmi_port': self.ipmi_port or 623,
+            'ipmi_username': self.ipmi_username,
             'ssh_credentials_configured': self._ssh_credentials_configured(),
+            'ipmi_credentials_configured': self._ipmi_credentials_configured(),
             'dependencies': dependencies_to_dict(self.id) if self.id else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
@@ -120,7 +127,12 @@ class Device(db.Model):
     def _ssh_credentials_configured(self):
         from services.credential_service import credentials_configured
 
-        return credentials_configured(self.id)
+        return credentials_configured(self.id, keys=('ssh_password', 'ssh_private_key'))
+
+    def _ipmi_credentials_configured(self):
+        from services.credential_service import credentials_configured
+
+        return credentials_configured(self.id, keys=('ipmi_password',))
 
 
 class WakeEvent(db.Model):

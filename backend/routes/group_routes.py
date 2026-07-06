@@ -9,7 +9,7 @@ bp = Blueprint('groups', __name__)
 
 
 @bp.route('/api/groups')
-@api_key_or_session_required
+@api_key_or_session_required('read')
 def list_groups():
     return jsonify([group.to_dict() for group in DeviceGroup.query.all()])
 
@@ -28,7 +28,7 @@ def create_group():
 
 
 @bp.route('/api/groups/<int:group_id>/wake', methods=['POST'])
-@api_key_or_session_required
+@api_key_or_session_required('wake')
 def wake_group_route(group_id):
     DeviceGroup.query.get_or_404(group_id)
     return jsonify({'results': wake_group(group_id)}), 200

@@ -55,7 +55,7 @@ const DevicesPage = () => {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [wakeJobs, setWakeJobs] = useState({});
   const [dependencyIds, setDependencyIds] = useState([]);
-  const [credentialForm, setCredentialForm] = useState({ ssh_password: '', ssh_private_key: '' });
+  const [credentialForm, setCredentialForm] = useState({ ssh_password: '', ssh_private_key: '', ipmi_password: '' });
 
   const loadDevices = async () => {
     const [data, groupData] = await Promise.all([api.getDevices(true), api.getGroups()]);
@@ -89,7 +89,7 @@ const DevicesPage = () => {
 
   const openEdit = async (device) => {
     setEditing(device);
-    setCredentialForm({ ssh_password: '', ssh_private_key: '' });
+    setCredentialForm({ ssh_password: '', ssh_private_key: '', ipmi_password: '' });
     try {
       const deps = await api.getDeviceDependencies(device.id);
       setDependencyIds((deps.dependencies || []).map((item) => item.id));
@@ -107,13 +107,14 @@ const DevicesPage = () => {
       const credentials = {};
       if (credentialForm.ssh_password) credentials.ssh_password = credentialForm.ssh_password;
       if (credentialForm.ssh_private_key) credentials.ssh_private_key = credentialForm.ssh_private_key;
+      if (credentialForm.ipmi_password) credentials.ipmi_password = credentialForm.ipmi_password;
       if (Object.keys(credentials).length > 0) {
         await api.updateDeviceCredentials(editing.id, credentials);
       }
       setDialogOpen(false);
       setEditing(null);
       setDependencyIds([]);
-      setCredentialForm({ ssh_password: '', ssh_private_key: '' });
+      setCredentialForm({ ssh_password: '', ssh_private_key: '', ipmi_password: '' });
       await loadDevices();
       showMessage(t('devices.updated'));
     } catch (err) {
@@ -510,6 +511,22 @@ const DevicesPage = () => {
               <Grid item xs={12}>
                 <TextField fullWidth label={t('devices.haWebhookUrl')} value={editing?.homeassistant_webhook_url || ''} onChange={(e) => setEditing({ ...editing, homeassistant_webhook_url: e.target.value })} />
               </Grid>
+            )}
+            {(editing?.wake_method || 'wol') === 'ipmi' && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label={t('devices.ipmiHost')} value={editing?.ipmi_host || ''} onChange={(e) => setEditing({ ...editing, ipmi_host: e.target.value })} placeholder={editing?.ip || ''} />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField fullWidth type="number" label={t('devices.ipmiPort')} value={editing?.ipmi_port ?? 623} onChange={(e) => setEditing({ ...editing, ipmi_port: Number(e.target.value) })} />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField fullWidth label={t('devices.ipmiUsername')} value={editing?.ipmi_username || ''} onChange={(e) => setEditing({ ...editing, ipmi_username: e.target.value })} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth type="password" label={t('devices.ipmiPassword')} value={credentialForm.ipmi_password} onChange={(e) => setCredentialForm({ ...credentialForm, ipmi_password: e.target.value })} helperText={editing?.ipmi_credentials_configured ? t('devices.credentialsConfigured') : ''} />
+                </Grid>
+              </>
             )}
           </Grid>
         </DialogContent>

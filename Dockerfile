@@ -18,12 +18,17 @@ LABEL org.opencontainers.image.title="ProxyWake" \
       org.opencontainers.image.description="Wake-on-LAN platform for Nginx Proxy Manager" \
       org.opencontainers.image.source="https://github.com/jeffreymooiweer/ProxyWake" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.version="4.0.0"
+      org.opencontainers.image.version="4.1.0"
 
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends iputils-ping curl \
+    && apt-get install -y --no-install-recommends \
+        iputils-ping \
+        curl \
+        openssh-client \
+        sshpass \
+        ipmitool \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 1000 proxywake \
     && useradd --uid 1000 --gid proxywake --shell /bin/sh --create-home proxywake

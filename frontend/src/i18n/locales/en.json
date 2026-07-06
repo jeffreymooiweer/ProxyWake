@@ -66,6 +66,9 @@
     "WEBHOOK_URL_MISSING": "Webhook URL is not configured.",
     "HA_WEBHOOK_MISSING": "Home Assistant webhook URL is not configured.",
     "IPMI_NOT_SUPPORTED": "IPMI wake is not supported yet.",
+    "INSUFFICIENT_API_SCOPE": "API key does not have the required scope.",
+    "INVALID_BACKUP": "Invalid backup file.",
+    "INVALID_LOG_LEVEL": "Invalid log level.",
     "INTERNAL_ERROR": "Internal server error.",
     "GENERIC": "Something went wrong."
   },
@@ -280,7 +283,8 @@
     "auditTime": "Time",
     "auditAction": "Action",
     "auditDetails": "Details",
-    "auditIp": "IP"
+    "auditIp": "IP",
+    "search": "Search logs"
   },
   "settings": {
     "title": "Settings",
@@ -297,6 +301,29 @@
     "importJson": "Import JSON",
     "exportDone": "Export downloaded.",
     "importDone": "{{count}} devices imported.",
+    "fullBackup": "Full backup",
+    "fullRestore": "Restore backup",
+    "fullBackupDone": "Full backup downloaded.",
+    "fullRestoreDone": "{{devices}} devices restored from backup.",
+    "apiScopesSection": "API key scopes",
+    "apiScopes": {
+      "read": "Read devices and status",
+      "write": "Create and update devices",
+      "wake": "Trigger wake actions",
+      "admin": "Full API access"
+    },
+    "scopesUpdated": "API scopes updated: {{scopes}}",
+    "openApiDocs": "Open API documentation",
+    "notificationsSection": "Notification channels",
+    "slackEnabled": "Slack notifications",
+    "slackWebhook": "Slack webhook URL",
+    "telegramEnabled": "Telegram notifications",
+    "telegramToken": "Telegram bot token",
+    "telegramChatId": "Telegram chat ID",
+    "notificationsUpdated": "Notification settings saved.",
+    "loggingSection": "Logging",
+    "logLevel": "Log level",
+    "logLevelUpdated": "Log level updated.",
     "observability": "Observability",
     "observabilityText": "Prometheus metrics: /api/metrics — Health check: /api/health",
     "securityHint": "Wake-on-WAN: use Tailscale/WireGuard instead of opening ports. HTTPS: put ProxyWake behind NPM with Let's Encrypt."

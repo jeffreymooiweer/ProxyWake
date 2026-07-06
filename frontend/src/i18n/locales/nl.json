@@ -66,6 +66,9 @@
     "WEBHOOK_URL_MISSING": "Webhook-URL is niet geconfigureerd.",
     "HA_WEBHOOK_MISSING": "Home Assistant webhook-URL is niet geconfigureerd.",
     "IPMI_NOT_SUPPORTED": "IPMI-wake wordt nog niet ondersteund.",
+    "INSUFFICIENT_API_SCOPE": "API-sleutel heeft niet de vereiste scope.",
+    "INVALID_BACKUP": "Ongeldig backupbestand.",
+    "INVALID_LOG_LEVEL": "Ongeldig logniveau.",
     "INTERNAL_ERROR": "Interne serverfout.",
     "GENERIC": "Er is iets misgegaan."
   },
@@ -280,7 +283,8 @@
     "auditTime": "Tijd",
     "auditAction": "Actie",
     "auditDetails": "Details",
-    "auditIp": "IP"
+    "auditIp": "IP",
+    "search": "Logboek doorzoeken"
   },
   "settings": {
     "title": "Instellingen",
@@ -297,6 +301,29 @@
     "importJson": "JSON importeren",
     "exportDone": "Export gedownload.",
     "importDone": "{{count}} apparaten geïmporteerd.",
+    "fullBackup": "Volledige backup",
+    "fullRestore": "Backup herstellen",
+    "fullBackupDone": "Volledige backup gedownload.",
+    "fullRestoreDone": "{{devices}} apparaten hersteld uit backup.",
+    "apiScopesSection": "API-sleutel scopes",
+    "apiScopes": {
+      "read": "Apparaten en status lezen",
+      "write": "Apparaten aanmaken en bijwerken",
+      "wake": "Wake-acties starten",
+      "admin": "Volledige API-toegang"
+    },
+    "scopesUpdated": "API-scopes bijgewerkt: {{scopes}}",
+    "openApiDocs": "Open API-documentatie",
+    "notificationsSection": "Notificatiekanalen",
+    "slackEnabled": "Slack-notificaties",
+    "slackWebhook": "Slack webhook-URL",
+    "telegramEnabled": "Telegram-notificaties",
+    "telegramToken": "Telegram bot-token",
+    "telegramChatId": "Telegram chat-ID",
+    "notificationsUpdated": "Notificatie-instellingen opgeslagen.",
+    "loggingSection": "Logging",
+    "logLevel": "Logniveau",
+    "logLevelUpdated": "Logniveau bijgewerkt.",
     "observability": "Observability",
     "observabilityText": "Prometheus-metrics: /api/metrics — Health check: /api/health",
     "securityHint": "Wake-on-WAN: gebruik Tailscale/WireGuard in plaats van poorten open te zetten. HTTPS: plaats ProxyWake achter NPM met Let's Encrypt."

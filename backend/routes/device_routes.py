@@ -24,7 +24,7 @@ bp = Blueprint('devices', __name__)
 
 
 @bp.route('/api/devices')
-@api_key_or_session_required
+@api_key_or_session_required('read')
 def list_devices():
     include_status = request.args.get('status', 'false').lower() == 'true'
     devices = Device.query.order_by(Device.domain.asc()).all()
@@ -32,7 +32,7 @@ def list_devices():
 
 
 @bp.route('/api/devices', methods=['POST'])
-@api_key_or_session_required
+@api_key_or_session_required('write')
 def create_device():
     data = request.get_json(silent=True) or {}
     payload, error_code = validate_device_payload(data)
@@ -46,7 +46,7 @@ def create_device():
 
 
 @bp.route('/api/devices/<int:device_id>', methods=['PUT', 'DELETE'])
-@api_key_or_session_required
+@api_key_or_session_required('write')
 def modify_device(device_id):
     device = Device.query.get_or_404(device_id)
     if request.method == 'PUT':
@@ -68,7 +68,7 @@ def modify_device(device_id):
 
 
 @bp.route('/api/devices/<int:device_id>/wake', methods=['POST'])
-@api_key_or_session_required
+@api_key_or_session_required('wake')
 @limiter.limit('30 per minute')
 def wake_device(device_id):
     device = Device.query.get_or_404(device_id)
@@ -90,7 +90,7 @@ def wake_device(device_id):
 
 
 @bp.route('/api/devices/<int:device_id>/dependencies')
-@api_key_or_session_required
+@api_key_or_session_required('read')
 def get_device_dependencies(device_id):
     Device.query.get_or_404(device_id)
     return jsonify({'dependencies': dependencies_to_dict(device_id)})
@@ -120,7 +120,7 @@ def update_device_credentials(device_id):
 
 
 @bp.route('/api/wake/jobs/<job_id>')
-@api_key_or_session_required
+@api_key_or_session_required('read')
 def wake_job_status(job_id):
     job = get_wake_job(job_id)
     if not job:
@@ -129,7 +129,7 @@ def wake_job_status(job_id):
 
 
 @bp.route('/api/devices/<int:device_id>/status')
-@api_key_or_session_required
+@api_key_or_session_required('read')
 def device_status(device_id):
     device = Device.query.get_or_404(device_id)
     return jsonify(device.to_dict(include_status=True))

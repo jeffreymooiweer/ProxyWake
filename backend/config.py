@@ -19,10 +19,13 @@ def get_secret_key():
     return secrets.token_hex(32)
 
 
+VALID_API_SCOPES = ('read', 'write', 'wake', 'admin')
+
+
 def _load_api_keys():
     env_key = os.environ.get('PROXYWAKE_API_KEY', '').strip()
     if env_key:
-        return {'current': env_key, 'previous': None}
+        return {'current': env_key, 'previous': None, 'scopes': list(VALID_API_SCOPES)}
 
     if API_KEY_FILE.exists():
         try:
@@ -30,18 +33,22 @@ def _load_api_keys():
             return {
                 'current': data.get('current', ''),
                 'previous': data.get('previous'),
+                'scopes': data.get('scopes'),
             }
         except (json.JSONDecodeError, OSError):
             pass
 
     new_key = secrets.token_urlsafe(32)
     _save_api_keys(new_key, None)
-    return {'current': new_key, 'previous': None}
+    return {'current': new_key, 'previous': None, 'scopes': None}
 
 
-def _save_api_keys(current, previous):
+def _save_api_keys(current, previous, scopes=None):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    API_KEY_FILE.write_text(json.dumps({'current': current, 'previous': previous}))
+    payload = {'current': current, 'previous': previous}
+    if scopes is not None:
+        payload['scopes'] = list(scopes)
+    API_KEY_FILE.write_text(json.dumps(payload))
     API_KEY_FILE.chmod(0o600)
 
 
@@ -56,8 +63,24 @@ def get_previous_api_key():
 def rotate_api_key():
     keys = _load_api_keys()
     new_key = secrets.token_urlsafe(32)
-    _save_api_keys(new_key, keys['current'])
+    _save_api_keys(new_key, keys['current'], scopes=keys.get('scopes'))
     return new_key
+
+
+def get_api_key_scopes():
+    scopes = _load_api_keys().get('scopes')
+    if not scopes:
+        return list(VALID_API_SCOPES)
+    return [scope for scope in scopes if scope in VALID_API_SCOPES] or list(VALID_API_SCOPES)
+
+
+def set_api_key_scopes(scopes):
+    keys = _load_api_keys()
+    cleaned = [scope for scope in (scopes or []) if scope in VALID_API_SCOPES]
+    if not cleaned:
+        cleaned = list(VALID_API_SCOPES)
+    _save_api_keys(keys['current'], keys['previous'], scopes=cleaned)
+    return cleaned
 
 
 def get_admin_password_hash():

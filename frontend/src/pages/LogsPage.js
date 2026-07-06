@@ -4,7 +4,11 @@ import {
   Button,
   Card,
   CardContent,
+  FormControl,
+  InputLabel,
   LinearProgress,
+  MenuItem,
+  Select,
   Tab,
   Tabs,
   Table,
@@ -12,6 +16,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -22,14 +27,21 @@ const LogsPage = () => {
   const { t, i18n } = useTranslation();
   const [tab, setTab] = useState(0);
   const [logs, setLogs] = useState([]);
+  const [entries, setEntries] = useState([]);
   const [audit, setAudit] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [level, setLevel] = useState('');
+  const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
     try {
-      const [logData, auditData] = await Promise.all([api.getLogs(200), api.getAuditLogs(100)]);
+      const [logData, auditData] = await Promise.all([
+        api.getLogs(200, level, search),
+        api.getAuditLogs(100),
+      ]);
       setLogs(logData.logs || []);
+      setEntries(logData.entries || []);
       setAudit(auditData);
     } finally {
       setLoading(false);
@@ -40,7 +52,7 @@ const LogsPage = () => {
     load().catch(() => setLoading(false));
     const interval = setInterval(load, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [level, search]);
 
   return (
     <Box>
@@ -62,8 +74,24 @@ const LogsPage = () => {
       {tab === 0 ? (
         <Card>
           <CardContent>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+              <FormControl sx={{ minWidth: 160 }}>
+                <InputLabel>{t('settings.logLevel')}</InputLabel>
+                <Select value={level} label={t('settings.logLevel')} onChange={(e) => setLevel(e.target.value)}>
+                  <MenuItem value="">{t('common.none')}</MenuItem>
+                  {['DEBUG', 'INFO', 'WARNING', 'ERROR'].map((item) => (
+                    <MenuItem key={item} value={item}>{item}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField label={t('logs.search')} value={search} onChange={(e) => setSearch(e.target.value)} />
+            </Box>
             <Box component="pre" sx={{ m: 0, minHeight: 360, maxHeight: 560, overflow: 'auto', p: 2, borderRadius: 3, bgcolor: 'rgba(15, 23, 42, 0.9)', fontSize: '0.82rem', whiteSpace: 'pre-wrap' }}>
-              {logs.length > 0 ? logs.join('\n') : t('logs.empty')}
+              {entries.length > 0
+                ? entries.map((entry) => `[${entry.level}] ${entry.message}`).join('\n')
+                : logs.length > 0
+                  ? logs.join('\n')
+                  : t('logs.empty')}
             </Box>
           </CardContent>
         </Card>

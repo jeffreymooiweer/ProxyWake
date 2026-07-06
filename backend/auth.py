@@ -4,7 +4,9 @@ from functools import wraps
 from flask import jsonify, request, session
 
 from config import (
+    VALID_API_SCOPES,
     get_admin_password_hash,
+    get_api_key_scopes,
     get_or_create_api_key,
     get_previous_api_key,
     save_admin_password_hash,
@@ -49,6 +51,15 @@ def verify_api_key(provided_key):
     return False
 
 
+def api_key_has_scopes(required_scopes):
+    if not required_scopes:
+        return True
+    granted = get_api_key_scopes()
+    if 'admin' in granted:
+        return True
+    return any(scope in granted for scope in required_scopes)
+
+
 def get_request_api_key():
     auth_header = request.headers.get('Authorization', '')
     if auth_header.lower().startswith('bearer '):
@@ -80,11 +91,27 @@ def api_key_required(f):
     return decorated
 
 
-def api_key_or_session_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if is_authenticated() or verify_api_key(get_request_api_key()):
-            return f(*args, **kwargs)
-        return jsonify({'error': ERROR_MESSAGES['AUTH_REQUIRED'], 'error_code': 'AUTH_REQUIRED'}), 401
+def api_key_or_session_required(*required_scopes):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            api_key = get_request_api_key()
+            if api_key:
+                if not verify_api_key(api_key):
+                    return jsonify({'error': ERROR_MESSAGES['INVALID_API_KEY'], 'error_code': 'INVALID_API_KEY'}), 401
+                if required_scopes and not api_key_has_scopes(required_scopes):
+                    return jsonify({
+                        'error': ERROR_MESSAGES['INSUFFICIENT_API_SCOPE'],
+                        'error_code': 'INSUFFICIENT_API_SCOPE',
+                        'required_scopes': list(required_scopes),
+                    }), 403
+                return f(*args, **kwargs)
+            if is_authenticated():
+                return f(*args, **kwargs)
+            return jsonify({'error': ERROR_MESSAGES['AUTH_REQUIRED'], 'error_code': 'AUTH_REQUIRED'}), 401
 
-    return decorated
+        return decorated
+
+    if len(required_scopes) == 1 and callable(required_scopes[0]):
+        return decorator(required_scopes[0])
+    return decorator

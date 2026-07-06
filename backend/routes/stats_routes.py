@@ -8,6 +8,7 @@ from config import LOG_FILE
 from extensions import limiter
 from models import AuditLog, Device, WakeEvent, db
 from utils.http import json_error
+from utils.logging_config import filter_log_lines
 from utils.network import scan_subnet, subnet_from_ip
 
 bp = Blueprint('stats', __name__)
@@ -82,7 +83,11 @@ def scan_network():
 @login_required
 def get_logs():
     lines = min(int(request.args.get('lines', 100)), 500)
+    level = request.args.get('level')
+    search = request.args.get('search')
     if not LOG_FILE.exists():
-        return jsonify({'logs': []}), 200
+        return jsonify({'logs': [], 'entries': []}), 200
     content = LOG_FILE.read_text(encoding='utf-8', errors='replace').splitlines()
-    return jsonify({'logs': content[-lines:]})
+    tail = content[-lines:]
+    entries = filter_log_lines(tail, level=level, search=search)
+    return jsonify({'logs': [entry['raw'] for entry in entries], 'entries': entries})

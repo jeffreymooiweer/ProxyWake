@@ -1,0 +1,1 @@
+"""OpenAPI specification for ProxyWake."""

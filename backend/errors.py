@@ -30,6 +30,9 @@ ERROR_MESSAGES = {
     'WEBHOOK_WAKE_FAILED': 'Webhook wake request failed.',
     'HA_WAKE_FAILED': 'Home Assistant wake request failed.',
     'INVALID_WEBHOOK_HEADERS': 'Webhook headers must be valid JSON.',
+    'INSUFFICIENT_API_SCOPE': 'API key does not have the required scope.',
+    'INVALID_BACKUP': 'Invalid backup file.',
+    'INVALID_LOG_LEVEL': 'Invalid log level.',
     'INTERNAL_ERROR': 'Internal server error.',
     'GENERIC': 'Something went wrong.',
 }

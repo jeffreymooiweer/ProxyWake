@@ -1,6 +1,6 @@
 from sqlalchemy import inspect, text
 
-SCHEMA_VERSION = '3.4'
+SCHEMA_VERSION = '3.5'
 
 DEVICE_MIGRATIONS = {
     'group_id': 'INTEGER',

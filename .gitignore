@@ -6,6 +6,9 @@ frontend/build/
 
 # Python
 backend/__pycache__/
+.pytest_cache/
+htmlcov/
+.coverage
 backend/devices.db
 backend/app.log
 backend/data/
@@ -15,9 +18,6 @@ backend/password.hash
 # Docker
 *.pyc
 *.log
-
-# GitHub
-.github/
 
 # Docker local env
 docker/.env

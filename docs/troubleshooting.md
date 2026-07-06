@@ -1,96 +1,63 @@
 # Troubleshooting
 
-Common ProxyWake problems and how to fix them.
-
-## Purpose
-
-Diagnose wake failures, connectivity issues, and configuration errors.
-
-## Requirements
-
-- Access to ProxyWake logs (Settings → Logs or `docker logs proxywake`)
-- Basic network knowledge (IP, MAC, subnets)
+Common problems and how to fix them.
 
 ## Wake does not work
-
-**Symptoms:** Device stays offline after proxy access.
 
 **Checks:**
 
 1. WOL enabled in BIOS and on the correct NIC (usually Ethernet).
-2. MAC address matches the interface that supports WOL.
+2. MAC address matches the WOL-capable interface.
 3. Docker has `--cap-add NET_RAW`.
 4. ProxyWake and target device share a broadcast domain (same VLAN/subnet).
-5. Review **Logs** for wake errors (SSH, IPMI, webhook).
+5. Review **Logs** for errors.
 
-**Try:** Manual wake from **Devices** → Wake button.
+**Try:** Manual wake from **Devices** → Wake.
 
 ## NPM cannot reach ProxyWake
 
-**Symptoms:** Integration test fails; no wake on access.
-
 **Checks:**
 
-1. ProxyWake URL uses **host LAN IP**, not `localhost`.
-2. Port `8462` (or custom) is open on the host firewall.
-3. NPM container can ping the host IP.
+1. ProxyWake URL uses the **host LAN IP**, not `localhost`.
+2. Host port (default `8462`) is open on the firewall.
+3. NPM container can reach the host IP.
 
-See [Reverse Proxy](reverse-proxy.md).
+See [Reverse Proxy](reverse-proxy.md) and [Nginx Proxy Manager](examples/nginx-proxy-manager.md).
 
 ## Waiting page stuck
-
-**Symptoms:** Visitor sees waiting page indefinitely.
 
 **Checks:**
 
 1. Device IP and verification method (ping/TCP/HTTP) are correct.
-2. Adaptive timeout — slow boots may need higher timeout in device settings.
-3. `GET /api/public/status/<domain>` returns expected state (browser dev tools).
+2. Increase timeout in device settings for slow boots.
+3. Check `GET /api/public/status/<domain>` in browser dev tools.
 
 ## Authentication errors
 
-**Symptoms:** `401 AUTH_REQUIRED` from API or NPM.
-
 **Checks:**
 
-1. `X-API-Key` matches Settings → API key.
+1. `X-API-Key` matches **Settings → API key**.
 2. API key has `wake` scope for background wake.
-3. Session expired — re-login to the UI.
+3. Re-login if the session expired.
 
-## Encrypted credentials invalid after restart
-
-**Symptoms:** SSH/IPMI wake fails after container recreate.
+## Credentials invalid after restart
 
 **Cause:** `PROXYWAKE_SECRET_KEY` changed.
 
 **Fix:** Set a fixed `PROXYWAKE_SECRET_KEY` or re-save device credentials.
 
-## Database / migration issues
+## Errors after upgrade
 
-**Symptoms:** Errors on startup after upgrade.
+Back up `PROXYWAKE_DATA_DIR` and see [Migration](migration.md).
 
-**Fix:** See [Migration](migration.md). Back up `PROXYWAKE_DATA_DIR` first.
-
-## Examples
-
-**Health check:**
+## Quick checks
 
 ```bash
 curl -s http://192.168.1.10:8462/api/health | jq
-```
-
-**Docker logs:**
-
-```bash
 docker logs --tail 100 proxywake
 ```
 
-## Common mistakes
-
-- Debugging WOL across routers without directed broadcast or relay.
-- Testing with Wi-Fi MAC while WOL is on Ethernet only.
-
-## Related pages
+## See also
 
 - [Quick Start](quick-start.md)
 - [Configuration](configuration.md)

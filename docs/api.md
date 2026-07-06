@@ -1,17 +1,8 @@
 # API Reference
 
-ProxyWake exposes a REST API under `/api/*` with OpenAPI documentation.
+ProxyWake exposes a REST API under `/api/*`.
 
-## Purpose
-
-Describe authentication, scopes, and how to explore the full API surface.
-
-## Requirements
-
-- Running ProxyWake instance
-- API key and/or session cookie for protected routes
-
-## Interactive documentation
+## Interactive docs
 
 When ProxyWake is running:
 
@@ -20,12 +11,10 @@ When ProxyWake is running:
 | Swagger UI | `/api/docs` |
 | OpenAPI JSON | `/api/openapi.json` |
 
-The OpenAPI spec version matches `backend/version.py` (currently **4.2.2**).
-
 ## Authentication
 
-| Method | Header / mechanism |
-|--------|-------------------|
+| Method | Mechanism |
+|--------|-----------|
 | Session | Cookie after `POST /api/auth/login` |
 | API key | `X-API-Key: <key>` |
 
@@ -33,58 +22,39 @@ API keys support scopes: `read`, `write`, `wake`, `admin`. Configure in **Settin
 
 ## Public endpoints
 
-These do not require authentication (see [Security](security.md)):
-
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/api/health` | GET | Health check and version |
-| `/api/metrics` | GET | Prometheus-style metrics |
-| `/api/public/status/<domain>` | GET | Waiting page status |
-| `/api/public/wake/<domain>` | POST | Waiting page wake trigger |
+| `/api/metrics` | GET | Aggregate counters |
+| `/api/public/status/<domain>` | GET | Device online status |
+| `/api/public/wake/<domain>` | POST | Trigger wake (rate limited) |
 
-Public wake/status routes are rate limited.
+See [Security](security.md) for exposure guidance.
 
-## Common API workflows
+## Common API tasks
 
-**List devices (API key):**
-
-```bash
-curl -s -H "X-API-Key: $KEY" http://localhost:8462/api/devices | jq
-```
-
-**Wake a device:**
+**Health check:**
 
 ```bash
-curl -s -X POST -H "X-API-Key: $KEY" \
-  http://localhost:8462/api/devices/1/wake
+curl -s http://host:8462/api/health
 ```
 
-**Backup (admin scope):**
+**Wake with API key:**
 
 ```bash
-curl -s -H "X-API-Key: $KEY" http://localhost:8462/api/backup -o backup.json
+curl -X POST -H "X-API-Key: $KEY" http://host:8462/api/wake/<device-id>
 ```
 
-## Examples
+**Backup:**
 
-NPM background wake (simplified — use UI-generated snippet):
-
-```nginx
-location = /proxywake-wake {
-    internal;
-    proxy_pass http://192.168.1.10:8462/api/public/wake/$host;
-    proxy_set_header X-API-Key "your-api-key";
-}
+```bash
+curl -H "X-API-Key: $KEY" http://host:8462/api/backup -o proxywake-backup.json
 ```
 
-## Common mistakes
+For the full route list, use `/api/docs`.
 
-- Using session-only endpoints from NPM without an API key.
-- Missing `admin` scope for backup/restore.
-- Assuming passwords or credential secrets appear in API responses — they do not.
+## See also
 
-## Related pages
-
-- [Configuration](configuration.md) — API key env vars
+- [Configuration](configuration.md)
 - [Security](security.md)
-- [Development](development.md) — running tests including OpenAPI parity
+- [Migration](migration.md)

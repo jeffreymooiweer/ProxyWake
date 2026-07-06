@@ -1,40 +1,39 @@
-# ProxyWake Documentation
+# ProxyWake documentation
 
-Welcome to the ProxyWake documentation. ProxyWake wakes sleeping devices on your network when they are accessed through a reverse proxy.
+Install ProxyWake, connect your reverse proxy, and wake sleeping devices on demand.
 
-**Current version:** 4.2.2 (see [CHANGELOG](../CHANGELOG.md) and [release notes](releases/v4.2.2.md))
+**New here?** Follow the [Quick Start](quick-start.md) guide.
 
-## Getting started
-
-| Guide | Description |
-|-------|-------------|
-| [Quick Start](quick-start.md) | Install and wake your first device in minutes |
-| [Docker](docker.md) | Docker Hub, Compose, volumes, and health checks |
-| [Unraid](unraid.md) | Unraid Community Applications template settings |
-| [Configuration](configuration.md) | Environment variables and settings reference |
-
-## Integrations
+## Install
 
 | Guide | Description |
 |-------|-------------|
-| [Reverse Proxy](reverse-proxy.md) | Overview of proxy integration patterns |
-| [Nginx Proxy Manager](examples/nginx-proxy-manager.md) | NPM global config and per-host snippets |
+| [Quick Start](quick-start.md) | Run ProxyWake and wake your first device |
+| [Docker](docker.md) | Compose, volumes, capabilities, and image details |
+| [Unraid](unraid.md) | Unraid Docker settings |
+| [Configuration](configuration.md) | Environment variables and UI settings |
+
+## Reverse proxy setup
+
+| Guide | Description |
+|-------|-------------|
+| [Reverse Proxy](reverse-proxy.md) | How wake-on-access works |
+| [Nginx Proxy Manager](examples/nginx-proxy-manager.md) | NPM snippets |
 | [Traefik](examples/traefik.md) | Middleware and labels |
 | [Caddy](examples/caddy.md) | Caddyfile snippets |
-| [Home Assistant](examples/home-assistant.md) | Automation and webhook wake |
+| [Home Assistant](examples/home-assistant.md) | Automation and webhooks |
 
-## Operations
+## Help
 
 | Guide | Description |
 |-------|-------------|
-| [API](api.md) | REST API, scopes, and OpenAPI |
-| [Security](security.md) | Hardening, public endpoints, and secrets |
 | [Troubleshooting](troubleshooting.md) | Common problems and fixes |
-| [Migration](migration.md) | Upgrading between major versions |
-| [Development](development.md) | Local setup, tests, and contributing |
+| [Security](security.md) | Passwords, API keys, and exposure |
+| [Migration](migration.md) | Upgrading between versions |
+| [API](api.md) | REST API and OpenAPI (`/api/docs`) |
 
-## Repository
+## Project
 
-- [Contributing](../CONTRIBUTING.md)
-- [Security policy](../SECURITY.md)
 - [Changelog](../CHANGELOG.md)
+- [Contributing](../CONTRIBUTING.md) — development setup and pull requests
+- [Security policy](../SECURITY.md)

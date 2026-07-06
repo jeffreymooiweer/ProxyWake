@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation streamlined for installers — less duplication, clearer docs index, maintainer-only notes moved out of user guides
+
 ## [4.2.2] - 2026-07-06
 
 ### Added

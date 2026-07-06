@@ -1,27 +1,14 @@
 # Home Assistant
 
-Wake devices via Home Assistant automations and ProxyWake webhooks.
+Wake devices via Home Assistant automations and the ProxyWake API.
 
-## Purpose
-
-Combine ProxyWake wake methods (including Home Assistant integration) with automations.
-
-## Requirements
-
-- Home Assistant with network access to target devices
-- ProxyWake device configured with **Home Assistant** wake method (if using HA as executor)
-
-## Step-by-step
-
-### Option A: ProxyWake → Home Assistant wake
+## Option A: ProxyWake calls Home Assistant
 
 1. Edit device → Wake method: **Home Assistant**.
-2. Enter HA URL and long-lived access token (stored encrypted).
-3. Configure HA entity or service to power on the device.
+2. Enter HA URL and long-lived access token.
+3. Configure the HA entity or service to power on the device.
 
-### Option B: Home Assistant → ProxyWake API
-
-1. Create a REST command or webhook automation calling:
+## Option B: Home Assistant calls ProxyWake
 
 ```yaml
 rest_command:
@@ -32,33 +19,14 @@ rest_command:
       X-API-Key: "your-api-key"
 ```
 
-2. Trigger on button press, schedule, or external event.
-
-### Integration tab
-
-Copy the **Home Assistant** snippet from **Integration** for UI-generated examples.
-
-## Examples
-
-**Automation on calendar or presence:**
-
-```yaml
-automation:
-  - alias: Wake NAS before backup
-    trigger:
-      - platform: time
-        at: "02:55:00"
-    action:
-      - service: rest_command.proxywake_wake_nas
-```
+Trigger from a button, schedule, or automation. Copy additional examples from **Integration → Home Assistant** in the UI.
 
 ## Common mistakes
 
 - HA URL uses `localhost` from inside a container — use host IP or `homeassistant.local`.
 - API key missing `wake` scope.
 
-## Related pages
+## See also
 
 - [API](../api.md)
-- [Configuration](../configuration.md)
 - [Reverse Proxy](../reverse-proxy.md)

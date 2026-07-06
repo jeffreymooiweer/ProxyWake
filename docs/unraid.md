@@ -1,56 +1,43 @@
 # Unraid
 
-Deploy ProxyWake on Unraid using Docker.
+Run ProxyWake on Unraid with persistent appdata and Wake-on-LAN support.
 
-## Purpose
-
-Run ProxyWake as an Unraid Docker container with persistent appdata and Wake-on-LAN support.
-
-## Requirements
-
-- Unraid 6.x with Docker enabled
-- Available host port (default `8462`)
-- Device on the same LAN as Unraid with WOL enabled
-
-## Step-by-step
+## Container settings
 
 1. Open **Docker** in the Unraid web UI.
-2. Search for `jeffersonmouze/proxywake` or add a custom template.
-3. Configure the container:
+2. Add container from `jeffersonmouze/proxywake` (`:latest` or a pinned tag such as `:4.2.2`).
+3. Use these settings:
 
 | Setting | Value |
 |---------|-------|
-| **Repository** | `jeffersonmouze/proxywake:4.2.2` (or `:latest`) |
-| **Network Type** | Bridge (default) |
+| **Network** | Bridge |
 | **Port** | `8462:5001` |
 | **Extra Parameters** | `--cap-add=NET_RAW` |
-| **Variable** | `PROXYWAKE_PASSWORD` = your secure password |
+| **Variable** | `PROXYWAKE_PASSWORD` = your password (optional — setup wizard if empty) |
+| **Variable** | `PROXYWAKE_SECRET_KEY` = long random string (recommended) |
 | **Path** | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
 
-4. Apply and start the container.
-5. Open `http://<unraid-ip>:8462` and complete setup.
-6. Configure NPM or another reverse proxy using the **Integration** tab.
+4. Start the container and open `http://<unraid-ip>:8462`.
+5. Configure your reverse proxy via the **Integration** tab.
 
-## Examples
+## NPM on Unraid
 
-**Optional fixed API key:**
+In Integration, set the ProxyWake URL to something NPM can reach — usually:
 
-| Variable | Value |
-|----------|-------|
-| `PROXYWAKE_API_KEY` | Long random string (match in NPM config) |
+```
+http://<unraid-lan-ip>:8462
+```
 
-**Reachability from NPM on Unraid:**
-
-Use the Unraid host IP (e.g. `192.168.1.10:8462`) in Integration → ProxyWake URL, not `localhost`.
+Do not use `localhost` from inside the NPM container.
 
 ## Common mistakes
 
-- Omitting `--cap-add=NET_RAW` in Extra Parameters.
-- Storing data on the cache pool without backup — include `appdata/proxywake` in backups.
-- Using `localhost` from NPM container — use the host IP.
+- Omitting `--cap-add=NET_RAW`.
+- Mapping appdata to `/app/data` instead of `/app/backend/data`.
+- Forgetting to back up `/mnt/user/appdata/proxywake`.
 
-## Related pages
+## See also
 
-- [Docker](docker.md)
 - [Nginx Proxy Manager](examples/nginx-proxy-manager.md)
 - [Configuration](configuration.md)
+- [Docker](docker.md)

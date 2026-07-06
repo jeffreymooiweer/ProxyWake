@@ -1,16 +1,6 @@
 # Reverse Proxy Integration
 
-How ProxyWake fits into reverse-proxy wake-on-access workflows.
-
-## Purpose
-
-Explain the request flow when a visitor accesses a sleeping device through a reverse proxy, and how ProxyWake is triggered in the background.
-
-## Requirements
-
-- ProxyWake reachable from the reverse proxy on your LAN
-- Device registered with matching domain name
-- API key with `wake` scope (default for NPM snippets)
+How ProxyWake fits into wake-on-access workflows with Nginx Proxy Manager, Traefik, Caddy, and Home Assistant.
 
 ## How it works
 
@@ -29,20 +19,22 @@ sequenceDiagram
     User->>Proxy: Retry / redirect to service
 ```
 
-1. User visits a proxied domain.
-2. The proxy fires a **non-blocking** wake request to ProxyWake.
-3. ProxyWake sends the configured wake method and optionally shows a waiting page.
-4. When the device is online, traffic flows to the upstream service.
+1. A visitor opens a proxied domain.
+2. The proxy sends a **non-blocking** wake request to ProxyWake.
+3. ProxyWake wakes the device and may show a waiting page.
+4. When the device is online, traffic reaches the upstream service.
 
-## Step-by-step
+## Setup
 
 1. Deploy ProxyWake ([Quick Start](quick-start.md)).
 2. Register each device with the **exact** proxy hostname.
-3. Copy integration snippets from the **Integration** tab.
+3. Copy snippets from the **Integration** tab.
 4. Apply global + per-host configuration in your proxy.
 5. Test with the device powered off.
 
-## Supported proxies
+ProxyWake must be reachable from the proxy on your LAN. Use the **host IP**, not `localhost`.
+
+## Guides
 
 | Proxy | Guide |
 |-------|-------|
@@ -51,32 +43,17 @@ sequenceDiagram
 | Caddy | [examples/caddy.md](examples/caddy.md) |
 | Home Assistant | [examples/home-assistant.md](examples/home-assistant.md) |
 
-Snippets are generated in the UI with your current API key and ProxyWake URL.
-
 ## Waiting page
 
-Public route: `/waiting?domain=<hostname>`
-
-Used when the proxy redirects visitors while the device boots. Polls `GET /api/public/status/<domain>` (rate limited).
-
-## Examples
-
-**ProxyWake URL for Docker on host:**
-
-```
-http://192.168.1.10:8462
-```
-
-**Per-host NPM snippet:** Generated per device in Integration → NPM.
+Visitors can be redirected to `/waiting?domain=<hostname>` while a device boots. Snippets in the Integration tab handle this per proxy.
 
 ## Common mistakes
 
-- Wake request blocks the proxy request — use background/`auth_request` patterns from the UI snippets.
-- Domain typo — `nas.home` vs `nas.home.lab` must match exactly.
-- ProxyWake only on `127.0.0.1` — other containers cannot reach it.
+- Domain in ProxyWake does not match the proxy hostname.
+- API key missing `wake` scope.
+- ProxyWake URL points to `127.0.0.1` from inside another container.
 
-## Related pages
+## See also
 
-- [API](api.md) — public vs authenticated endpoints
-- [Security](security.md) — rate limits and exposure
+- [Configuration](configuration.md)
 - [Troubleshooting](troubleshooting.md)

@@ -1,78 +1,44 @@
 # Security
 
-Security practices for self-hosted ProxyWake deployments.
+Security practices for self-hosted ProxyWake.
 
-## Purpose
-
-Help operators deploy ProxyWake safely on home and small-office networks.
-
-## Requirements
-
-- Understanding of your network trust boundary
-- HTTPS termination at your reverse proxy (recommended)
-
-## Authentication
+## Basics
 
 - Set **`PROXYWAKE_PASSWORD`** before exposing the UI.
-- Rotate the API key periodically via **Settings**.
+- Rotate the API key via **Settings** when needed.
 - Use **scoped API keys** — NPM typically needs only `wake`.
-- Do not expose the management UI directly to the internet without HTTPS.
+- Do not expose the management UI to the internet without HTTPS.
 
 ## Public endpoints
 
-Intentionally unauthenticated (rate limited where noted):
+These are intentionally unauthenticated (rate limited where noted):
 
-| Endpoint | Risk mitigation |
-|----------|-----------------|
+| Endpoint | Notes |
+|----------|-------|
 | `GET /api/health` | No sensitive data |
 | `GET /api/metrics` | Aggregate counters only |
 | `GET /api/public/status/<domain>` | Domain must exist |
 | `POST /api/public/wake/<domain>` | 30 requests/minute per IP |
 
-Review these when deploying on untrusted networks. See [SECURITY.md](../SECURITY.md) for vulnerability reporting.
+Review these on untrusted networks.
 
-## Secrets and credentials
+## Secrets
 
 - API keys and password hashes live in `PROXYWAKE_DATA_DIR`.
-- Device credentials (SSH, IPMI, webhooks) are **encrypted at rest** using `PROXYWAKE_SECRET_KEY`.
-- Passwords and secrets are **never returned** by the API.
-- Logs sanitize sensitive values — do not enable debug logging on shared systems without review.
+- Device credentials (SSH, IPMI, webhooks) are encrypted with `PROXYWAKE_SECRET_KEY`.
+- Passwords and secrets are never returned by the API.
 
-## Network
+Set a fixed `PROXYWAKE_SECRET_KEY` in production so sessions and encrypted credentials survive restarts.
 
-- Docker requires `NET_RAW` for WOL — minimize container capabilities otherwise.
-- Prefer Tailscale/WireGuard over Wake-on-WAN port forwarding.
-- `POST /api/scan` requires authentication and is rate limited.
+## HTTPS
 
-## CORS and headers
+When ProxyWake is behind HTTPS, ensure your reverse proxy forwards `X-Forwarded-Proto: https` and set `PROXYWAKE_SESSION_COOKIE_SECURE=true` if the UI is HTTPS-only.
 
-- Set `PROXYWAKE_ALLOWED_ORIGINS` when the UI is served from a specific origin.
-- Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` when the UI is **only** accessed via HTTPS (reverse proxy with TLS). Leave unset for plain HTTP on trusted LANs.
-- Place ProxyWake behind a reverse proxy that sets `X-Forwarded-Proto` for HTTPS.
+## Reporting vulnerabilities
 
-## Backup and restore
+See [SECURITY.md](../SECURITY.md) for private vulnerability reporting.
 
-- Backup files contain encrypted credentials — treat as sensitive.
-- Restore requires compatible `PROXYWAKE_SECRET_KEY` for encrypted fields.
-
-## Hardening checklist
-
-- [ ] Strong `PROXYWAKE_PASSWORD`
-- [ ] Fixed `PROXYWAKE_SECRET_KEY` in production
-- [ ] Restricted API key scopes
-- [ ] HTTPS via reverse proxy
-- [ ] Management UI not publicly reachable
-- [ ] Regular image updates (`latest` or pinned semver tag)
-- [ ] Volume backups encrypted at rest (disk/OS level)
-
-## Common mistakes
-
-- Publishing port `8462` to the internet without authentication.
-- Sharing API keys in screenshots or git repos.
-- Changing `PROXYWAKE_SECRET_KEY` without re-entering device credentials.
-
-## Related pages
+## See also
 
 - [Configuration](configuration.md)
-- [API](api.md)
-- [SECURITY.md](../SECURITY.md)
+- [Troubleshooting](troubleshooting.md)

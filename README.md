@@ -8,13 +8,12 @@
   <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker" alt="Docker Pulls"></a>
   <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&label=version" alt="Docker Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square" alt="License"></a>
-  <a href="https://github.com/jeffreymooiweer/ProxyWake/actions"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/docker.yml?style=flat-square&label=build" alt="Build"></a>
   <img src="https://img.shields.io/badge/platform-amd64%20%7C%20arm64-blue?style=flat-square" alt="Platform">
 </p>
 
 <p align="center">
   <strong>Access it. Wake it.</strong><br/>
-  Wake sleeping devices on your network when they are accessed through a reverse proxy.
+  Wake sleeping devices when they are accessed through a reverse proxy.
 </p>
 
 <p align="center">
@@ -25,82 +24,15 @@
 
 ## What it does
 
-1. You register a device (domain, IP, MAC address).
-2. Nginx Proxy Manager sends a background wake request when someone visits that domain.
-3. ProxyWake sends a Wake-on-LAN magic packet and optionally shows a waiting page until the device is online.
+1. Register a device (domain, IP, MAC address).
+2. Your reverse proxy sends a background wake request when someone visits that domain.
+3. ProxyWake wakes the device and optionally shows a waiting page until it is online.
 
-That's it — no need to keep servers running 24/7 just because they might be accessed.
-
----
-
-## Features
-
-- Wake-on-LAN with smart wake (skip if online, cooldown, broadcast)
-- **Verified wake** with ping/TCP/HTTP status checks and job polling
-- **Multiple wake methods:** WOL, SSH, webhook, Home Assistant, **IPMI**
-- **Device dependencies** — wake chain with circular-detection
-- **Adaptive wake timeout** based on historical boot times
-- Web UI — devices, groups, logs, statistics, settings
-- NPM / Traefik / Caddy / Home Assistant integration snippets
-- Waiting page with auto-redirect (`/waiting?domain=...`)
-- Webhooks, scheduled wake, export/import, **full backup/restore**
-- **OpenAPI docs** at `/api/docs` with scoped API keys (40+ routes)
-- **Slack & Telegram** notifications on wake events
-- **15 languages** (i18n)
-- Password protection, API key auth, audit log, rotating logs
+No need to keep servers running 24/7 just because they might be accessed.
 
 ---
 
-## Screenshots
-
-> Screenshots are generated from demo data — see [docs/assets/README.md](docs/assets/README.md) to regenerate.
-
-<p align="center">
-  <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake Dashboard" width="900" />
-  <br />
-  <sub><strong>Dashboard</strong> — device overview, status cards and quick start</sub>
-</p>
-
-<table align="center">
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <img src="docs/assets/screenshots/devices.png" alt="Device management" width="440" />
-      <br />
-      <sub><strong>Devices</strong> — link domains to IP/MAC addresses</sub>
-    </td>
-    <td width="50%" align="center" valign="top">
-      <img src="docs/assets/screenshots/integration.png" alt="NPM integration" width="440" />
-      <br />
-      <sub><strong>Integration</strong> — copy &amp; paste NPM, Traefik and Caddy configs</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <img src="docs/assets/screenshots/statistics.png" alt="Statistics" width="440" />
-      <br />
-      <sub><strong>Statistics</strong> — wake history and per-device metrics</sub>
-    </td>
-    <td width="50%" align="center" valign="top">
-      <img src="docs/assets/screenshots/settings.png" alt="Settings" width="440" />
-      <br />
-      <sub><strong>Settings</strong> — theme, API key, export and security</sub>
-    </td>
-  </tr>
-</table>
-
-<p align="center">
-  <img src="docs/assets/screenshots/waiting.png" alt="Waiting page" width="520" />
-  <br />
-  <sub><strong>Waiting page</strong> — shown to visitors while a sleeping device wakes up</sub>
-</p>
-
----
-
-## Installation
-
-### Docker Hub (recommended)
-
-Pull the image from Docker Hub and run it:
+## Quick start
 
 ```bash
 docker run -d \
@@ -110,63 +42,30 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2.2
+  jeffersonmouze/proxywake:latest
 ```
 
-Open `http://<server-ip>:8462` — a setup wizard walks you through the initial configuration.
+Open `http://<server-ip>:8462` and follow the setup wizard.
 
-Pin a specific release with `:4.2.2`, the minor line with `:4.2`, or use `:latest`.
+**Next steps:** add a device, then copy the integration snippets from the **Integration** tab into Nginx Proxy Manager (or Traefik/Caddy). Full walkthrough: [docs/quick-start.md](docs/quick-start.md).
 
-**Docker Compose:**
+| Install option | Guide |
+|----------------|-------|
+| Docker Compose | [docs/docker.md](docs/docker.md) |
+| Unraid | [docs/unraid.md](docs/unraid.md) |
+| Environment variables | [docs/configuration.md](docs/configuration.md) |
 
-```bash
-curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
-curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/.env.example
-cp .env.example .env   # edit PROXYWAKE_PASSWORD
-docker compose up -d
-```
-
-### Build locally
-
-```bash
-git clone https://github.com/jeffreymooiweer/ProxyWake.git
-cd ProxyWake/docker
-cp .env.example .env   # edit password
-docker compose up -d --build
-```
-
----
-
-## Docker Hub
-
-| | |
-|---|---|
-| **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `4.2`, `4.2.2` (current) — older: `4.2.1`, `4.2.0`, `4.1`, `4.0` |
-| **Architectures** | `linux/amd64`, `linux/arm64` |
-
-### Unraid
-
-| Setting | Value |
-|---------|-------|
-| Repository | `jeffersonmouze/proxywake:4.2.2` (or `:latest`) |
-| Port | `8462:5001` |
-| Extra Parameters | `--cap-add=NET_RAW` |
-| Variable | `PROXYWAKE_PASSWORD` |
-| Path | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
-
-See [docs/unraid.md](docs/unraid.md) for details.
+Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.2`, `4.2.2` · amd64 & arm64
 
 ---
 
 ## Reverse proxy integration
 
-ProxyWake integrates with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and **Home Assistant**.
+Works with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and **Home Assistant**.
 
-1. Open the **Integration** tab in the UI.
-2. Copy the **global config** and **per-host snippet** for your proxy.
-3. Ensure ProxyWake is reachable from your proxy container (use the host IP, not `localhost`).
-4. Test from the UI.
+1. Open **Integration** in the ProxyWake UI.
+2. Copy the config snippets for your proxy.
+3. Use your server's **LAN IP** in the ProxyWake URL (not `localhost` from inside another container).
 
 | Guide | Link |
 |-------|------|
@@ -178,18 +77,15 @@ ProxyWake integrates with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and *
 
 ---
 
-## Environment variables
+## Screenshots
 
-| Variable | Description |
-|----------|-------------|
-| `PROXYWAKE_PASSWORD` | Web UI password (recommended) |
-| `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset); supports scopes via Settings |
-| `PROXYWAKE_SECRET_KEY` | Flask session secret and credential encryption key |
-| `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
-| `PROXYWAKE_SESSION_COOKIE_SECURE` | Set `true` when UI is HTTPS-only |
-| `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
+<p align="center">
+  <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake Dashboard" width="900" />
+</p>
 
-Full reference: [docs/configuration.md](docs/configuration.md)
+<p align="center">
+  <img src="docs/assets/screenshots/integration.png" alt="NPM integration" width="700" />
+</p>
 
 ---
 
@@ -197,17 +93,12 @@ Full reference: [docs/configuration.md](docs/configuration.md)
 
 | Topic | Link |
 |-------|------|
-| **Documentation index** | [docs/README.md](docs/README.md) |
-| Quick start | [docs/quick-start.md](docs/quick-start.md) |
-| Docker | [docs/docker.md](docs/docker.md) |
-| API & OpenAPI | [docs/api.md](docs/api.md) |
-| Security | [docs/security.md](docs/security.md) |
+| **Start here** | [docs/quick-start.md](docs/quick-start.md) |
+| All guides | [docs/README.md](docs/README.md) |
 | Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
-| Changelog | [CHANGELOG.md](CHANGELOG.md) — **v4.2.2** |
-| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Security policy | [SECURITY.md](SECURITY.md) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
-Interactive API docs when running: `/api/docs`
+API reference (when running): `/api/docs`
 
 ---
 

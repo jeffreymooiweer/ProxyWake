@@ -50,9 +50,22 @@ docker compose up -d --build
 pip install -r backend/requirements-dev.txt
 pytest
 
+# With coverage
+pytest --cov=backend --cov-report=term-missing
+
 # Frontend build check
 cd frontend && npm ci && npm run build
 ```
+
+## Versioning
+
+The application version is defined in `backend/version.py`. After changing it, run:
+
+```bash
+python3 scripts/sync_version.py
+```
+
+This updates `frontend/package.json`, `Dockerfile` OCI labels, and Docker publish workflow tags.
 
 ## Code Style
 
@@ -72,8 +85,12 @@ cd frontend && npm ci && npm run build
 ## Adding Translations
 
 1. Add keys to `frontend/src/i18n/locales/en.json`.
-2. Mirror keys in other locale files (at minimum `nl.json` and `de.json`).
+2. Run `python3 scripts/sync_i18n.py` to merge keys into other locales.
 3. Add backend error/message codes to `backend/errors.py` if needed.
+
+## Documentation
+
+User-facing guides live in `docs/`. Update the relevant page when changing installation, configuration, or integration behavior. Cross-link related pages instead of duplicating content.
 
 ## Reporting Issues
 

@@ -1,7 +1,7 @@
 # ProxyWake
 
 <p align="center">
-  <img src="docs/assets/banner.png" alt="ProxyWake — Access it. Wake it." width="900" />
+  <img src="docs/assets/banner.svg" alt="ProxyWake — Access it. Wake it." width="900" />
 </p>
 
 <p align="center">
@@ -44,13 +44,16 @@ That's it — no need to keep servers running 24/7 just because they might be ac
 - NPM / Traefik / Caddy / Home Assistant integration snippets
 - Waiting page with auto-redirect (`/waiting?domain=...`)
 - Webhooks, scheduled wake, export/import, **full backup/restore**
-- **OpenAPI docs** at `/api/docs` with scoped API keys
+- **OpenAPI docs** at `/api/docs` with scoped API keys (40+ routes)
 - **Slack & Telegram** notifications on wake events
+- **15 languages** (i18n)
 - Password protection, API key auth, audit log, rotating logs
 
 ---
 
 ## Screenshots
+
+> Screenshots are generated from demo data — see [docs/assets/README.md](docs/assets/README.md) to regenerate.
 
 <p align="center">
   <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake Dashboard" width="900" />
@@ -116,7 +119,9 @@ Open `http://<server-ip>:8462` — a setup wizard walks you through the initial 
 
 ```bash
 curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/docker-compose.yml
-PROXYWAKE_PASSWORD=YourSecurePassword docker compose up -d
+curl -O https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/.env.example
+cp .env.example .env   # edit PROXYWAKE_PASSWORD
+docker compose up -d
 ```
 
 ### Build locally
@@ -135,7 +140,7 @@ docker compose up -d --build
 | | |
 |---|---|
 | **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `4.1`, `4.1.0`, `4.0`, `4.0.0` |
+| **Tags** | `latest`, `4.2`, `4.2.1`, `4.2.0`, `4.1`, `4.0` |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid
@@ -148,18 +153,26 @@ docker compose up -d --build
 | Variable | `PROXYWAKE_PASSWORD` |
 | Path | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
 
+See [docs/unraid.md](docs/unraid.md) for details.
+
 ---
 
-## Nginx Proxy Manager
+## Reverse proxy integration
 
-After starting ProxyWake:
+ProxyWake integrates with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and **Home Assistant**.
 
 1. Open the **Integration** tab in the UI.
-2. Copy the **global config** into NPM (`server_proxy.conf`).
-3. Add the **per-host snippet** under Advanced for each proxy host.
+2. Copy the **global config** and **per-host snippet** for your proxy.
+3. Ensure ProxyWake is reachable from your proxy container (use the host IP, not `localhost`).
 4. Test from the UI.
 
-ProxyWake must be reachable from your NPM container on the local network (use the host IP, not `localhost`).
+| Guide | Link |
+|-------|------|
+| Overview | [docs/reverse-proxy.md](docs/reverse-proxy.md) |
+| NPM | [docs/examples/nginx-proxy-manager.md](docs/examples/nginx-proxy-manager.md) |
+| Traefik | [docs/examples/traefik.md](docs/examples/traefik.md) |
+| Caddy | [docs/examples/caddy.md](docs/examples/caddy.md) |
+| Home Assistant | [docs/examples/home-assistant.md](docs/examples/home-assistant.md) |
 
 ---
 
@@ -171,16 +184,28 @@ ProxyWake must be reachable from your NPM container on the local network (use th
 | `PROXYWAKE_API_KEY` | Fixed API key for NPM (auto-generated if unset); supports scopes via Settings |
 | `PROXYWAKE_SECRET_KEY` | Flask session secret and credential encryption key |
 | `PROXYWAKE_ALLOWED_ORIGINS` | CORS origins (comma-separated) |
+| `PROXYWAKE_SESSION_COOKIE_SECURE` | Set `true` when UI is HTTPS-only |
 | `PROXYWAKE_DATA_DIR` | Data directory (default: `/app/backend/data`) |
+
+Full reference: [docs/configuration.md](docs/configuration.md)
 
 ---
 
 ## Documentation
 
-- [Changelog](CHANGELOG.md) — v4.0.0 release notes
-- [API documentation](/api/docs) — OpenAPI / Swagger UI (when running)
-- [Contributing](CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
+| Topic | Link |
+|-------|------|
+| **Documentation index** | [docs/README.md](docs/README.md) |
+| Quick start | [docs/quick-start.md](docs/quick-start.md) |
+| Docker | [docs/docker.md](docs/docker.md) |
+| API & OpenAPI | [docs/api.md](docs/api.md) |
+| Security | [docs/security.md](docs/security.md) |
+| Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) — **v4.2.1** |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Security policy | [SECURITY.md](SECURITY.md) |
+
+Interactive API docs when running: `/api/docs`
 
 ---
 

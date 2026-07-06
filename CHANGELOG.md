@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-07-06
+
+### Added
+
+- Complete OpenAPI 3.0 coverage for all `/api/*` routes (40+ paths)
+- Automated OpenAPI parity test against Flask route registry
+- `scripts/sync_i18n.py` to merge missing translation keys from English
+
+### Changed
+
+- i18n: Golf C–E strings synced to all 13 non-English locales (missing keys fall back to English)
+- OpenAPI spec documents session-only vs scoped vs public endpoints
+- `package-lock.json` version aligned with frontend `4.2.0`
+
 ## [4.1.0] - 2026-07-06
 
 ### Added
@@ -150,7 +164,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...main
+[4.2.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.5.0...v4.0.0
 [3.5.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.4.0...v3.5.0

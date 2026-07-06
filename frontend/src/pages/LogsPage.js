@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -33,7 +33,7 @@ const LogsPage = () => {
   const [level, setLevel] = useState('');
   const [search, setSearch] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [logData, auditData] = await Promise.all([
@@ -46,13 +46,13 @@ const LogsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [level, search]);
 
   useEffect(() => {
     load().catch(() => setLoading(false));
     const interval = setInterval(load, 10000);
     return () => clearInterval(interval);
-  }, [level, search]);
+  }, [load]);
 
   return (
     <Box>

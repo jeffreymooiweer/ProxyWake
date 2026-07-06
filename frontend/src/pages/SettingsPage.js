@@ -46,7 +46,13 @@ const SettingsPage = () => {
       setSettings(data);
       setSelectedScopes(data.api_scopes || []);
       setLogLevel(data.log_level || 'INFO');
-      setNotifications(data.notifications || notifications);
+      setNotifications(data.notifications || {
+        slack_enabled: false,
+        slack_webhook_url: '',
+        telegram_enabled: false,
+        telegram_bot_token: '',
+        telegram_chat_id: '',
+      });
     }).catch(() => {});
   }, []);
 

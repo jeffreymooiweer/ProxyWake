@@ -50,7 +50,7 @@ const WaitingPage = () => {
       active = false;
       clearInterval(interval);
     };
-  }, [domain]);
+  }, [domain, t]);
 
   if (!domain) {
     return (

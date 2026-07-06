@@ -3,6 +3,7 @@ import time
 
 import requests
 
+from services.adaptive_wake_service import effective_wake_timeout
 from utils.network import check_host_online
 from utils.validators import VALID_CHECK_TYPES
 
@@ -42,7 +43,7 @@ def check_device_online(device):
 
 
 def wait_for_device(device, max_wait=None, interval=None):
-    timeout = max_wait if max_wait is not None else (device.wake_timeout_seconds or 120)
+    timeout = effective_wake_timeout(device, max_wait=max_wait)
     poll_interval = interval if interval is not None else (device.wake_poll_interval_seconds or 3)
     elapsed = 0
     while elapsed < timeout:

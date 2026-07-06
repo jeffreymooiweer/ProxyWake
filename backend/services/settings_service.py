@@ -32,6 +32,37 @@ def export_devices():
     return [device.to_dict() for device in devices]
 
 
+NOTIFICATION_KEYS = (
+    'notify_slack_enabled',
+    'notify_slack_webhook_url',
+    'notify_telegram_enabled',
+    'notify_telegram_bot_token',
+    'notify_telegram_chat_id',
+)
+
+
+def get_notification_settings():
+    return {
+        'slack_enabled': get_setting('notify_slack_enabled', 'false') == 'true',
+        'slack_webhook_url': get_setting('notify_slack_webhook_url', ''),
+        'telegram_enabled': get_setting('notify_telegram_enabled', 'false') == 'true',
+        'telegram_bot_token': get_setting('notify_telegram_bot_token', ''),
+        'telegram_chat_id': get_setting('notify_telegram_chat_id', ''),
+    }
+
+
+def set_notification_settings(data):
+    set_setting('notify_slack_enabled', 'true' if data.get('slack_enabled') else 'false')
+    if data.get('slack_webhook_url') is not None:
+        set_setting('notify_slack_webhook_url', data.get('slack_webhook_url', ''))
+    set_setting('notify_telegram_enabled', 'true' if data.get('telegram_enabled') else 'false')
+    if data.get('telegram_bot_token') is not None:
+        set_setting('notify_telegram_bot_token', data.get('telegram_bot_token', ''))
+    if data.get('telegram_chat_id') is not None:
+        set_setting('notify_telegram_chat_id', data.get('telegram_chat_id', ''))
+    return get_notification_settings()
+
+
 def import_devices(data_list, merge=True):
     imported = 0
     for item in data_list:

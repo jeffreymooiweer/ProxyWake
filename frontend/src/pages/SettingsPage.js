@@ -5,7 +5,14 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
   Grid,
+  InputLabel,
+  MenuItem,
+  Select,
   Snackbar,
   TextField,
   Typography,
@@ -23,10 +30,24 @@ const SettingsPage = () => {
   const { mode, toggleTheme } = useThemeMode();
   const [settings, setSettings] = useState(null);
   const [password, setPassword] = useState('');
+  const [selectedScopes, setSelectedScopes] = useState([]);
+  const [logLevel, setLogLevel] = useState('INFO');
+  const [notifications, setNotifications] = useState({
+    slack_enabled: false,
+    slack_webhook_url: '',
+    telegram_enabled: false,
+    telegram_bot_token: '',
+    telegram_chat_id: '',
+  });
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
-    api.getSettings().then(setSettings).catch(() => {});
+    api.getSettings().then((data) => {
+      setSettings(data);
+      setSelectedScopes(data.api_scopes || []);
+      setLogLevel(data.log_level || 'INFO');
+      setNotifications(data.notifications || notifications);
+    }).catch(() => {});
   }, []);
 
   const show = (message, severity = 'success') => setNotification({ open: true, message, severity });
@@ -49,6 +70,32 @@ const SettingsPage = () => {
     const data = JSON.parse(text);
     const result = await api.importDevices(data.devices || data, true);
     show(t('settings.importDone', { count: result.imported }));
+  };
+
+  const handleFullBackup = async () => {
+    const data = await api.downloadBackup();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'proxywake-full-backup.json';
+    link.click();
+    show(t('settings.fullBackupDone'));
+  };
+
+  const handleFullRestore = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const result = await api.restoreBackup(data, true);
+    show(t('settings.fullRestoreDone', { devices: result.restored?.devices || 0 }));
+  };
+
+  const toggleScope = (scope) => {
+    setSelectedScopes((prev) => (
+      prev.includes(scope) ? prev.filter((item) => item !== scope) : [...prev, scope]
+    ));
   };
 
   return (
@@ -104,7 +151,76 @@ const SettingsPage = () => {
                   {t('settings.importJson')}
                   <input hidden type="file" accept="application/json" onChange={handleImport} />
                 </Button>
+                <Button variant="outlined" onClick={handleFullBackup}>{t('settings.fullBackup')}</Button>
+                <Button variant="outlined" component="label">
+                  {t('settings.fullRestore')}
+                  <input hidden type="file" accept="application/json" onChange={handleFullRestore} />
+                </Button>
               </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>{t('settings.apiScopesSection')}</Typography>
+              <FormGroup>
+                {(settings?.available_api_scopes || []).map((scope) => (
+                  <FormControlLabel
+                    key={scope}
+                    control={<Checkbox checked={selectedScopes.includes(scope)} onChange={() => toggleScope(scope)} />}
+                    label={t(`settings.apiScopes.${scope}`, scope)}
+                  />
+                ))}
+              </FormGroup>
+              <Button sx={{ mt: 2 }} variant="contained" onClick={() => api.updateApiScopes(selectedScopes).then((result) => show(t('settings.scopesUpdated', { scopes: result.api_scopes.join(', ') })))}>
+                {t('common.save')}
+              </Button>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <a href="/api/docs" target="_blank" rel="noreferrer">{t('settings.openApiDocs')}</a>
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>{t('settings.notificationsSection')}</Typography>
+              <FormControlLabel
+                control={<Checkbox checked={notifications.slack_enabled} onChange={(e) => setNotifications({ ...notifications, slack_enabled: e.target.checked })} />}
+                label={t('settings.slackEnabled')}
+              />
+              <TextField fullWidth label={t('settings.slackWebhook')} value={notifications.slack_webhook_url} onChange={(e) => setNotifications({ ...notifications, slack_webhook_url: e.target.value })} sx={{ mb: 2 }} />
+              <FormControlLabel
+                control={<Checkbox checked={notifications.telegram_enabled} onChange={(e) => setNotifications({ ...notifications, telegram_enabled: e.target.checked })} />}
+                label={t('settings.telegramEnabled')}
+              />
+              <TextField fullWidth label={t('settings.telegramToken')} value={notifications.telegram_bot_token} onChange={(e) => setNotifications({ ...notifications, telegram_bot_token: e.target.value })} sx={{ mb: 1 }} />
+              <TextField fullWidth label={t('settings.telegramChatId')} value={notifications.telegram_chat_id} onChange={(e) => setNotifications({ ...notifications, telegram_chat_id: e.target.value })} sx={{ mb: 2 }} />
+              <Button variant="contained" onClick={() => api.updateNotifications(notifications).then(() => show(t('settings.notificationsUpdated')))}>
+                {t('common.save')}
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>{t('settings.loggingSection')}</Typography>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>{t('settings.logLevel')}</InputLabel>
+                <Select value={logLevel} label={t('settings.logLevel')} onChange={(e) => setLogLevel(e.target.value)}>
+                  {['DEBUG', 'INFO', 'WARNING', 'ERROR'].map((level) => (
+                    <MenuItem key={level} value={level}>{level}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button variant="contained" onClick={() => api.updateLogLevel(logLevel).then(() => show(t('settings.logLevelUpdated')))}>
+                {t('common.save')}
+              </Button>
             </CardContent>
           </Card>
         </Grid>

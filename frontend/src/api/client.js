@@ -65,7 +65,12 @@ export const api = {
   getWakeEvents: (limit = 50) => request(`/api/wake-events?limit=${limit}`),
   getAuditLogs: (limit = 100) => request(`/api/audit?limit=${limit}`),
   scanNetwork: (payload) => request('/api/scan', { method: 'POST', body: JSON.stringify(payload) }),
-  getLogs: (lines = 100) => request(`/api/logs?lines=${lines}`),
+  getLogs: (lines = 100, level = '', search = '') => request(`/api/logs?lines=${lines}${level ? `&level=${encodeURIComponent(level)}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`),
+  downloadBackup: () => request('/api/backup'),
+  restoreBackup: (backup, merge = true) => request('/api/backup/restore', { method: 'POST', body: JSON.stringify({ backup, merge }) }),
+  updateApiScopes: (scopes) => request('/api/settings/api-scopes', { method: 'PUT', body: JSON.stringify({ scopes }) }),
+  updateLogLevel: (level) => request('/api/settings/log-level', { method: 'PUT', body: JSON.stringify({ level }) }),
+  updateNotifications: (settings) => request('/api/settings/notifications', { method: 'PUT', body: JSON.stringify(settings) }),
   publicStatus: (domain) => request(`/api/public/status/${encodeURIComponent(domain)}`),
   publicWake: (domain) => request(`/api/public/wake/${encodeURIComponent(domain)}`, { method: 'POST' }),
 };

@@ -9,9 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v4.0.0
 
-- OpenAPI documentation and API scopes
-- Enhanced logging, backups, and notifications
 - IPMI wake support
+- Adaptive wake intelligence
+
+## [3.5.0] - 2026-07-06
+
+### Added
+
+- OpenAPI 3.0 specification at `/api/openapi.json` with Swagger UI at `/api/docs`
+- API key scopes: `read`, `write`, `wake`, `admin` with scope enforcement on device endpoints
+- Full configuration backup and restore (`GET /api/backup`, `POST /api/backup/restore`)
+- Rotating log files (5 × 5 MB) with configurable log level
+- Log viewer filters (level + search) in frontend
+- Notification channels: Slack webhook and Telegram bot
+- Settings UI for API scopes, notifications, log level, and full backup/restore
+
+### Changed
+
+- Schema version bumped to `3.5`
+- Wake notifications now dispatch to configured Slack/Telegram channels
 
 ## [3.4.0] - 2026-07-06
 

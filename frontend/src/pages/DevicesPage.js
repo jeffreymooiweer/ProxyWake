@@ -13,6 +13,7 @@ import {
   FormControl,
   FormControlLabel,
   Grid,
+  LinearProgress,
   IconButton,
   InputLabel,
   MenuItem,
@@ -50,6 +51,7 @@ const DevicesPage = () => {
   const [scanSubnet, setScanSubnet] = useState('192.168.1.0/24');
   const [scanResults, setScanResults] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [wakeJobs, setWakeJobs] = useState({});
 
   const loadDevices = async () => {
     const [data, groupData] = await Promise.all([api.getDevices(true), api.getGroups()]);
@@ -111,11 +113,41 @@ const DevicesPage = () => {
 
   const handleWake = async (device) => {
     try {
-      const result = await api.wakeDevice(device.id);
-      showMessage(result.message);
+      const started = await api.wakeDeviceVerify(device.id);
+      setWakeJobs((prev) => ({ ...prev, [device.id]: started }));
+
+      const poll = async () => {
+        const job = await api.getWakeJob(started.job_id);
+        setWakeJobs((prev) => ({ ...prev, [device.id]: job }));
+
+        if (['online', 'failed', 'skipped', 'cooldown'].includes(job.status)) {
+          if (job.message_code) {
+            const translated = t(`messages.${job.message_code}`, {
+              name: device.name,
+              seconds: Math.round((job.waited_ms || 0) / 1000),
+            });
+            showMessage(translated, job.status === 'online' || job.status === 'skipped' ? 'success' : 'error');
+          }
+          setWakeJobs((prev) => {
+            const next = { ...prev };
+            delete next[device.id];
+            return next;
+          });
+          await loadDevices();
+          return;
+        }
+        setTimeout(poll, 1500);
+      };
+      poll();
     } catch (err) {
       showMessage(err.message, 'error');
     }
+  };
+
+  const wakeStatusLabel = (status) => {
+    const key = `devices.wakeStatus.${status}`;
+    const translated = t(key);
+    return translated === key ? status : translated;
   };
 
   const copyText = async (text) => {
@@ -256,11 +288,26 @@ const DevicesPage = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        label={device.online ? t('common.online') : t('common.offline')}
-                        color={device.online ? 'success' : 'default'}
-                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 100 }}>
+                        <Chip
+                          size="small"
+                          label={device.online ? t('common.online') : t('common.offline')}
+                          color={device.online ? 'success' : 'default'}
+                        />
+                        {device.last_wake_duration_seconds != null && (
+                          <Typography variant="caption" color="text.secondary">
+                            {t('devices.lastWake', { seconds: device.last_wake_duration_seconds })}
+                          </Typography>
+                        )}
+                        {wakeJobs[device.id] && !['online', 'failed', 'skipped', 'cooldown'].includes(wakeJobs[device.id].status) && (
+                          <Box>
+                            <Typography variant="caption" color="secondary.main">
+                              {wakeStatusLabel(wakeJobs[device.id].status)}
+                            </Typography>
+                            <LinearProgress color="secondary" sx={{ mt: 0.5 }} />
+                          </Box>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title={t('devices.testWake')}>
@@ -321,6 +368,47 @@ const DevicesPage = () => {
                 label={t('devices.mac')}
                 value={editing?.mac || ''}
                 onChange={(e) => setEditing({ ...editing, mac: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>{t('devices.statusCheckType')}</InputLabel>
+                <Select
+                  value={editing?.status_check_type || 'ping'}
+                  label={t('devices.statusCheckType')}
+                  onChange={(e) => setEditing({ ...editing, status_check_type: e.target.value })}
+                >
+                  <MenuItem value="ping">{t('devices.statusCheck.ping')}</MenuItem>
+                  <MenuItem value="tcp">{t('devices.statusCheck.tcp')}</MenuItem>
+                  <MenuItem value="http">{t('devices.statusCheck.http')}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('devices.statusCheckPort')}
+                value={editing?.status_check_port ?? ''}
+                onChange={(e) => setEditing({ ...editing, status_check_port: e.target.value ? Number(e.target.value) : null })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label={t('devices.statusCheckUrl')}
+                value={editing?.status_check_url || ''}
+                onChange={(e) => setEditing({ ...editing, status_check_url: e.target.value })}
+                placeholder="http://192.168.1.50:32400/identity"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('devices.wakeTimeout')}
+                value={editing?.wake_timeout_seconds ?? 120}
+                onChange={(e) => setEditing({ ...editing, wake_timeout_seconds: Number(e.target.value) })}
               />
             </Grid>
           </Grid>

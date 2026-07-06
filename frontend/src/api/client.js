@@ -36,6 +36,8 @@ export const api = {
   updateDevice: (id, device) => request(`/api/devices/${id}`, { method: 'PUT', body: JSON.stringify(device) }),
   deleteDevice: (id) => request(`/api/devices/${id}`, { method: 'DELETE' }),
   wakeDevice: (id, force = false) => request(`/api/devices/${id}/wake?force=${force}`, { method: 'POST' }),
+  wakeDeviceVerify: (id, force = false) => request(`/api/devices/${id}/wake?verify=true&force=${force}`, { method: 'POST' }),
+  getWakeJob: (jobId) => request(`/api/wake/jobs/${jobId}`),
   exportDevices: (format = 'json') => request(`/api/devices/export?format=${format}`),
   importDevices: (devices, merge = true) => request('/api/devices/import', { method: 'POST', body: JSON.stringify({ devices, merge }) }),
   getGroups: () => request('/api/groups'),

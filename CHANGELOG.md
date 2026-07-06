@@ -9,8 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v4.0.0
 
-- Wake verification with TCP/HTTP health checks
 - Multiple wake methods (WOL, SSH, webhook, Home Assistant)
+- Device dependencies and adaptive wake intelligence
+- OpenAPI documentation and API scopes
+- Enhanced logging, backups, and notifications
+
+## [3.3.0] - 2026-07-06
+
+### Added
+
+- Wake verification with ICMP ping, TCP port, and HTTP health checks per device
+- Verified wake jobs with polling API (`POST /api/devices/:id/wake?verify=true`, `GET /api/wake/jobs/:id`)
+- Device wake statistics (`wake_count`, success/failure counts, last wake duration)
+- Frontend wake progress indicator on Devices page
+- Status check configuration in device edit dialog
+
+### Changed
+
+- Online detection uses per-device `status_check_type` instead of ping-only
+- Public waiting page uses device-specific timeout and check settings
+- `WakeEvent` records `status` and `duration_ms`
+
+## [3.2.0] - 2026-07-06
 - Device dependencies and adaptive wake intelligence
 - OpenAPI documentation and API scopes
 - Enhanced logging, statistics, backups, and notifications

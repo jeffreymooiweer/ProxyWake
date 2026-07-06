@@ -57,6 +57,7 @@
     "SUBNET_REQUIRED": "Subnet or IP is required.",
     "NOT_FOUND": "Resource not found.",
     "RATE_LIMITED": "Too many requests. Please try again later.",
+    "INVALID_STATUS_CHECK_TYPE": "Invalid status check type. Use ping, tcp, or http.",
     "WAKE_FAILED": "Failed to send magic packet.",
     "INTERNAL_ERROR": "Internal server error.",
     "GENERIC": "Something went wrong."
@@ -79,6 +80,9 @@
     "WAKE_SKIPPED_ONLINE": "{{name}} is already online.",
     "WAKE_PROCESSED": "Wake processed for {{domain}}.",
     "WAKE_TIMEOUT": "Timed out waiting for device to start.",
+    "WAKE_SENDING": "Sending wake packet to {{name}}...",
+    "WAKE_WAITING": "Waiting for {{name}} to come online...",
+    "WAKE_ONLINE": "{{name}} is online after {{seconds}}s.",
     "ALREADY_ONLINE": "Device is already online."
   },
   "login": {
@@ -153,7 +157,27 @@
     "scannerTitle": "Network scanner",
     "subnet": "Subnet",
     "startScan": "Start scan",
-    "useIp": "Use IP"
+    "useIp": "Use IP",
+    "statusCheckType": "Status check",
+    "statusCheckPort": "Check port",
+    "statusCheckUrl": "Health check URL",
+    "wakeTimeout": "Wake timeout (s)",
+    "lastWake": "Last wake: {{seconds}}s",
+    "statusCheck": {
+      "ping": "ICMP ping",
+      "tcp": "TCP port",
+      "http": "HTTP URL"
+    },
+    "wakeStatus": {
+      "starting": "Starting wake...",
+      "checking": "Checking status...",
+      "sending_packet": "Sending wake packet",
+      "waiting": "Waiting for device",
+      "online": "Device online",
+      "failed": "Wake failed",
+      "skipped": "Already online",
+      "cooldown": "Cooldown active"
+    }
   },
   "groups": {
     "title": "Groups",

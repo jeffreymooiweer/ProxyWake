@@ -24,8 +24,10 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:4.2
+  jeffersonmouze/proxywake:4.2.1
 ```
+
+Pin `:4.2` for the minor line or `:latest` for the newest build.
 
 ### Docker Compose (root)
 

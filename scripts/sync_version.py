@@ -9,20 +9,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from version_utils import major_minor, read_version  # noqa: E402
+
 VERSION_FILE = ROOT / 'backend' / 'version.py'
-
-
-def read_version() -> str:
-    text = VERSION_FILE.read_text(encoding='utf-8')
-    match = re.search(r"__version__\s*=\s*['\"]([^'\"]+)['\"]", text)
-    if not match:
-        raise SystemExit(f'Could not parse __version__ from {VERSION_FILE}')
-    return match.group(1)
-
-
-def major_minor(version: str) -> str:
-    parts = version.split('.')
-    return '.'.join(parts[:2]) if len(parts) >= 2 else version
 
 
 def update_package_json(path: Path, version: str) -> bool:
@@ -35,8 +26,7 @@ def update_package_json(path: Path, version: str) -> bool:
 
 
 def update_package_lock(path: Path, version: str) -> bool:
-    text = path.read_text(encoding='utf-8')
-    data = json.loads(text)
+    data = json.loads(path.read_text(encoding='utf-8'))
     changed = False
     if data.get('version') != version:
         data['version'] = version
@@ -69,56 +59,65 @@ def update_dockerfile(path: Path, version: str) -> bool:
     return True
 
 
-def update_docker_workflow(path: Path, version: str) -> bool:
+def update_version_py_version_constant(path: Path, version: str) -> bool:
     text = path.read_text(encoding='utf-8')
-    mm = major_minor(version)
-    original = text
+    new_text, count = re.subn(
+        r"^VERSION\s*=\s*['\"][^'\"]+['\"]",
+        f"VERSION = '{version}'",
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count == 0:
+        if f"VERSION = '{version}'" in text:
+            return False
+        raise SystemExit(f'VERSION constant not found in {path}')
+    if new_text == text:
+        return False
+    path.write_text(new_text, encoding='utf-8')
+    return True
 
-    text, _ = re.subn(
+
+def update_docker_workflow_description(path: Path, version: str) -> bool:
+    text = path.read_text(encoding='utf-8')
+    new_text, count = re.subn(
         r"description: 'Extra Docker tag \(e\.g\. [^']+\)'",
         f"description: 'Extra Docker tag (e.g. {version})'",
         text,
         count=1,
     )
+    if new_text == text:
+        return False
+    path.write_text(new_text, encoding='utf-8')
+    return True
 
-    # Remove stale default-branch semver tags (keep `latest`).
-    text = re.sub(
-        r'\n\s+type=raw,value=\d+\.\d+(?:\.\d+)?,enable=\{\{is_default_branch\}\}',
-        '',
+
+def update_docs_docker_tags(path: Path, version: str) -> bool:
+    text = path.read_text(encoding='utf-8')
+    mm = major_minor(version)
+    new_line = f"| Tags | `latest`, `{mm}`, `{version}` (see [CHANGELOG](../CHANGELOG.md)) |"
+    new_text, count = re.subn(
+        r'\| Tags \| `latest`, `[^`]+`, `[^`]+` \(see \[CHANGELOG\]\(\.\./CHANGELOG\.md\)\) \|',
+        new_line,
         text,
+        count=1,
     )
-
-    latest_line = 'type=raw,value=latest,enable={{is_default_branch}}'
-    minor_line = f'type=raw,value={mm},enable={{{{is_default_branch}}}}'
-    full_line = f'type=raw,value={version},enable={{{{is_default_branch}}}}'
-
-    if minor_line not in text:
-        text = text.replace(
-            latest_line,
-            f'{latest_line}\n            {minor_line}',
-            1,
-        )
-    if full_line not in text:
-        text = text.replace(
-            minor_line,
-            f'{minor_line}\n            {full_line}',
-            1,
-        )
-
-    if text != original:
-        path.write_text(text, encoding='utf-8')
-    return text != original
+    if count == 0 or new_text == text:
+        return False
+    path.write_text(new_text, encoding='utf-8')
+    return True
 
 
 def main() -> int:
-    version = read_version()
+    version = read_version(VERSION_FILE)
     updates: list[str] = []
 
     targets = [
         ('frontend/package.json', lambda p: update_package_json(p, version)),
         ('frontend/package-lock.json', lambda p: update_package_lock(p, version)),
         ('Dockerfile', lambda p: update_dockerfile(p, version)),
-        ('.github/workflows/docker.yml', lambda p: update_docker_workflow(p, version)),
+        ('.github/workflows/docker.yml', lambda p: update_docker_workflow_description(p, version)),
+        ('docs/docker.md', lambda p: update_docs_docker_tags(p, version)),
     ]
 
     for rel, updater in targets:

@@ -12,25 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Full `docs/` documentation site (quick start, Docker, reverse proxy, API, security, examples)
-- `scripts/sync_version.py` — propagate version from `backend/version.py` to package.json, Dockerfile, and CI
+- `scripts/sync_version.py` — propagate version from `backend/version.py` to package.json and Dockerfile
+- `scripts/check_version_consistency.py` — fail CI when critical version files disagree
+- `.github/workflows/version-check.yml` — dedicated version consistency workflow
+- `docs/releases/v4.2.1.md` — release notes draft
 - Root `.env.example` for Docker Compose
 - GitHub PR template and issue template config
 - `docs/github-metadata-checklist.md` for repository settings
 - SVG banner (`docs/assets/banner.svg`)
+- Tests: groups, public routes, write-scope matrix, config helpers
 
 ### Changed
 
-- README updated for v4.2.x (Docker tags, documentation links, reverse proxy section)
-- `SECURITY.md` — 4.2.x supported
+- README and docs updated for **v4.2.1** (Docker tags, documentation links, reverse proxy section)
+- `SECURITY.md` — explicit 4.2.x / 4.1.x / 4.0.x support policy
+- `backend/version.py` — `__version__` and `VERSION` constants as single source of truth
 - Backend tests import version from `version.py` instead of hardcoding
-- CI: pytest coverage report; version consistency check in backend workflow
-- Docker workflow dispatch description and default-branch tags aligned to 4.2.1
+- CI: pytest coverage report; version consistency check in backend tests and `version-check.yml`
+- Docker workflow derives default-branch tags (`latest`, minor, patch) from `backend/version.py`
 - `PROXYWAKE_SESSION_COOKIE_SECURE` for HTTPS-only session cookies
-- Tests: groups, public routes, write-scope matrix, config helpers
 
 ### Fixed
 
-- Stale Docker CI tag `4.2.0` on default branch builds
+- CHANGELOG compare links aligned to v4.2.1 (`[Unreleased]`, `[4.2.1]`)
+- Stale v4.2.0 references as current release in documentation
+- Prevented future version drift through automated consistency checks
 
 ## [4.2.0] - 2026-07-06
 
@@ -189,7 +195,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...main
+[4.2.1]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.5.0...v4.0.0

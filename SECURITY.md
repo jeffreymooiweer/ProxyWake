@@ -68,4 +68,4 @@ Review these endpoints when deploying in untrusted networks.
 - [ ] Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` behind HTTPS
 - [ ] Place ProxyWake behind a reverse proxy with HTTPS
 - [ ] Restrict network access to the management UI
-- [ ] Keep Docker images updated (pin `4.2.1` or use `latest`)
+- [ ] Keep Docker images updated (pin `4.2.2` or use `latest`)

@@ -2,7 +2,7 @@
 
 Welcome to the ProxyWake documentation. ProxyWake wakes sleeping devices on your network when they are accessed through a reverse proxy.
 
-**Current version:** 4.2.1 (see [CHANGELOG](../CHANGELOG.md) and [release notes](releases/v4.2.1.md))
+**Current version:** 4.2.2 (see [CHANGELOG](../CHANGELOG.md) and [release notes](releases/v4.2.2.md))
 
 ## Getting started
 

@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.title="ProxyWake" \
       org.opencontainers.image.description="Wake-on-LAN platform for Nginx Proxy Manager" \
       org.opencontainers.image.source="https://github.com/jeffreymooiweer/ProxyWake" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.version="4.2.1"
+      org.opencontainers.image.version="4.2.2"
 
 WORKDIR /app
 

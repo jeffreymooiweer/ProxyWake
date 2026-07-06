@@ -44,11 +44,18 @@ def check_version_py(version: str, mismatches: list[Mismatch]) -> None:
         ))
 
 
+def _rel(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def check_package_json(path: Path, version: str, mismatches: list[Mismatch]) -> None:
     data = json.loads(path.read_text(encoding='utf-8'))
     found = data.get('version', '')
     if found != version:
-        mismatches.append(Mismatch(str(path.relative_to(ROOT)), version, found, 'package version field'))
+        mismatches.append(Mismatch(_rel(path), version, found, 'package version field'))
 
 
 def check_package_lock(path: Path, version: str, mismatches: list[Mismatch]) -> None:
@@ -56,7 +63,7 @@ def check_package_lock(path: Path, version: str, mismatches: list[Mismatch]) -> 
     root_pkg = data.get('packages', {}).get('', {})
     found = root_pkg.get('version', data.get('version', ''))
     if found != version:
-        mismatches.append(Mismatch(str(path.relative_to(ROOT)), version, found, 'root package version'))
+        mismatches.append(Mismatch(_rel(path), version, found, 'root package version'))
 
 
 def check_dockerfile(path: Path, version: str, mismatches: list[Mismatch]) -> None:
@@ -64,12 +71,12 @@ def check_dockerfile(path: Path, version: str, mismatches: list[Mismatch]) -> No
     match = re.search(r'org\.opencontainers\.image\.version="([^"]+)"', text)
     found = match.group(1) if match else '<missing>'
     if found != version:
-        mismatches.append(Mismatch(str(path.relative_to(ROOT)), version, found, 'OCI image version label'))
+        mismatches.append(Mismatch(_rel(path), version, found, 'OCI image version label'))
 
 
 def check_docker_workflow(path: Path, version: str, mismatches: list[Mismatch]) -> None:
     text = path.read_text(encoding='utf-8')
-    rel = str(path.relative_to(ROOT))
+    rel = _rel(path)
     mm = major_minor(version)
 
     uses_dynamic = (
@@ -104,52 +111,69 @@ def check_openapi_source(path: Path, version: str, mismatches: list[Mismatch]) -
     text = path.read_text(encoding='utf-8')
     if 'from version import __version__' not in text:
         mismatches.append(Mismatch(
-            str(path.relative_to(ROOT)),
+            _rel(path),
             version,
             'no dynamic import',
             'OpenAPI spec must use __version__ from backend/version.py',
         ))
 
 
+def previous_release_version(changelog_text: str, version: str) -> str | None:
+    releases = re.findall(r'^## \[(\d+\.\d+\.\d+)\]', changelog_text, re.MULTILINE)
+    if version not in releases:
+        return None
+    index = releases.index(version)
+    if index + 1 < len(releases):
+        return releases[index + 1]
+    return None
+
+
 def check_changelog(path: Path, version: str, mismatches: list[Mismatch]) -> None:
     text = path.read_text(encoding='utf-8')
-    rel = str(path.relative_to(ROOT))
+    rel = _rel(path)
 
     if f'## [{version}]' not in text:
         mismatches.append(Mismatch(rel, version, 'section missing', 'latest release section header'))
 
     unreleased = re.search(r'\[Unreleased\]:\s*(\S+)', text)
+    expected_unreleased = f'compare/v{version}...main'
     if not unreleased:
-        mismatches.append(Mismatch(rel, f'compare/v{version}...main', 'missing', '[Unreleased] compare link'))
-    elif f'v{version}...main' not in unreleased.group(1):
+        mismatches.append(Mismatch(rel, expected_unreleased, 'missing', '[Unreleased] compare link'))
+    elif expected_unreleased not in unreleased.group(1):
         mismatches.append(Mismatch(
             rel,
-            f'compare/v{version}...main',
+            expected_unreleased,
             unreleased.group(1),
             '[Unreleased] compare link must start from current release tag',
         ))
 
     release_link = re.search(rf'\[{re.escape(version)}\]:\s*(\S+)', text)
+    previous = previous_release_version(text, version)
     if not release_link:
         mismatches.append(Mismatch(rel, f'[{version}] link', 'missing', 'release compare link'))
-    elif 'v4.2.0...v4.2.1' not in release_link.group(1) and version == '4.2.1':
-        mismatches.append(Mismatch(
-            rel,
-            'compare/v4.2.0...v4.2.1',
-            release_link.group(1),
-            f'[{version}] compare link',
-        ))
+    elif previous:
+        expected_release = f'compare/v{previous}...v{version}'
+        if expected_release not in release_link.group(1):
+            mismatches.append(Mismatch(
+                rel,
+                expected_release,
+                release_link.group(1),
+                f'[{version}] compare link',
+            ))
 
 
 def check_readme(path: Path, version: str, mismatches: list[Mismatch]) -> None:
     text = path.read_text(encoding='utf-8')
-    rel = str(path.relative_to(ROOT))
+    rel = _rel(path)
 
     if version not in text:
         mismatches.append(Mismatch(rel, version, 'not mentioned', 'README must reference current release'))
 
     if re.search(r'(current|latest)\s+(release|version)[:\s`*]*4\.2\.0', text, re.IGNORECASE):
         mismatches.append(Mismatch(rel, version, '4.2.0 as current', 'README must not list 4.2.0 as current release'))
+
+    if re.search(r'(current|latest)\s+(release|version)[:\s`*]*4\.2\.1(?!\d)', text, re.IGNORECASE):
+        mismatches.append(Mismatch(rel, version, '4.2.1 as current', 'README must not list 4.2.1 as current release'))
 
     tags_section = re.search(r'\*\*Tags\*\*.*', text)
     if tags_section and version not in tags_section.group(0):
@@ -158,7 +182,7 @@ def check_readme(path: Path, version: str, mismatches: list[Mismatch]) -> None:
 
 def check_docs_docker(path: Path, version: str, mismatches: list[Mismatch]) -> None:
     text = path.read_text(encoding='utf-8')
-    rel = str(path.relative_to(ROOT))
+    rel = _rel(path)
     mm = major_minor(version)
     if version not in text:
         mismatches.append(Mismatch(rel, version, 'not mentioned', 'docs/docker.md must reference current release'))

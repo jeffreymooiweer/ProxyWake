@@ -20,7 +20,7 @@ When ProxyWake is running:
 | Swagger UI | `/api/docs` |
 | OpenAPI JSON | `/api/openapi.json` |
 
-The OpenAPI spec version matches `backend/version.py` (currently **4.2.1**).
+The OpenAPI spec version matches `backend/version.py` (currently **4.2.2**).
 
 ## Authentication
 

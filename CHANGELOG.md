@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.2] - 2026-07-06
+
+### Added
+
+- `docs/releases/v4.2.2.md` — release notes for the correction release
+
+### Changed
+
+- Repository version references aligned to **4.2.2** (`backend/version.py`, frontend, Dockerfile, docs)
+- `scripts/check_version_consistency.py` — generic changelog compare-link validation for any release
+- CHANGELOG compare links: `[Unreleased]` → `v4.2.2...main`, `[4.2.2]` → `v4.2.1...v4.2.2`
+
+### Fixed
+
+- Final release consistency fixes after v4.2.1 finalization sprint
+- Corrected changelog compare links that still referenced v4.2.1 as the open baseline
+- Version-check script no longer hardcodes v4.2.1-specific compare expectations
+- Docker workflow tag description updated to 4.2.2 (tags still derived from `backend/version.py`)
+- Release/tag alignment: v4.2.2 published from current `main` without rewriting v4.2.1 history
+
 ## [4.2.1] - 2026-07-06
 
 ### Added
@@ -195,7 +215,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...main
+[4.2.2]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.0.0...v4.1.0

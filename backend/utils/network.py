@@ -1,44 +1,8 @@
 import ipaddress
-import re
-import subprocess
 import platform
+import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-
-IP_PATTERN = re.compile(
-    r"""
-    ^
-    (?:
-      (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
-    \.){3}
-    (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
-    $
-    """,
-    re.VERBOSE,
-)
-
-MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
-DOMAIN_PATTERN = re.compile(
-    r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
-)
-
-
-def is_valid_ip(ip):
-    return bool(IP_PATTERN.match(ip))
-
-
-def is_valid_mac(mac):
-    return bool(MAC_PATTERN.match(mac))
-
-
-def normalize_mac(mac):
-    cleaned = mac.replace('-', ':').upper()
-    parts = cleaned.split(':')
-    return ':'.join(part.zfill(2) for part in parts)
-
-
-def is_valid_domain(domain):
-    return bool(DOMAIN_PATTERN.match(domain.strip()))
 
 
 def check_host_online(ip, timeout=1):
@@ -57,7 +21,6 @@ def check_host_online(ip, timeout=1):
 
 
 def wait_for_host(ip, max_wait=120, interval=3):
-    import time
     elapsed = 0
     while elapsed < max_wait:
         if check_host_online(ip):

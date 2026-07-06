@@ -9,8 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v4.0.0
 
-- Backend modularization (blueprints + services)
 - Wake verification with TCP/HTTP health checks
+- Multiple wake methods (WOL, SSH, webhook, Home Assistant)
+- Device dependencies and adaptive wake intelligence
+- OpenAPI documentation and API scopes
+- Enhanced logging, statistics, backups, and notifications
+
+## [3.2.0] - 2026-07-06
+
+### Added
+
+- Backend modular structure: `routes/` blueprints, `services/` package, `utils/` package
+- `create_app()` factory pattern in `app.py`
+- `database.py` for initialization and schema migration
+- `extensions.py` for shared Flask extensions (rate limiter)
+- Schema version tracking in database migrations (`schema_version` setting)
+
+### Changed
+
+- Split monolithic `app.py` (710 lines) into focused route modules
+- Split `services.py` into `wake_service`, `settings_service`, `notification_service`, etc.
+- Split `utils.py` into `validators`, `network`, and `http` helpers
+- No breaking API changes — all existing endpoints preserved
+
 - Multiple wake methods (WOL, SSH, webhook, Home Assistant)
 - Device dependencies and adaptive wake intelligence
 - OpenAPI documentation and API scopes

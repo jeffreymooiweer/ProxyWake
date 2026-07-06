@@ -25,8 +25,10 @@ docker run -d \
   -p 8462:5001 \
   -e PROXYWAKE_PASSWORD=YourSecurePassword \
   -v proxywake_data:/app/backend/data \
-  jeffersonmouze/proxywake:latest
+  jeffersonmouze/proxywake:4.2.1
 ```
+
+Use `:latest` for the newest build on Docker Hub, or pin `:4.2` for the current minor line.
 
 Open `http://<server-ip>:8462` and complete the setup wizard.
 

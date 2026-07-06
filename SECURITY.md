@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 4.2.x   | :white_check_mark: |
-| 4.1.x   | :white_check_mark: |
-| 4.0.x   | :white_check_mark: |
-| 3.x     | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 4.2.x   | Yes — full support |
+| 4.1.x   | Security fixes only |
+| 4.0.x   | Security fixes only |
+| &lt;4.0   | No |
 
 ## Reporting a Vulnerability
 
@@ -33,6 +33,7 @@ If you discover a security issue in ProxyWake, report it responsibly:
 - Set `PROXYWAKE_PASSWORD` in production.
 - Rotate the API key periodically via Settings.
 - Do not expose ProxyWake directly to the internet without HTTPS (use NPM with Let's Encrypt).
+- Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` when the UI is served only over HTTPS.
 
 ### Public Endpoints
 
@@ -64,6 +65,7 @@ Review these endpoints when deploying in untrusted networks.
 - [ ] Set a strong `PROXYWAKE_PASSWORD`
 - [ ] Configure `PROXYWAKE_ALLOWED_ORIGINS` for CORS
 - [ ] Set a fixed `PROXYWAKE_SECRET_KEY` for session stability
+- [ ] Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` behind HTTPS
 - [ ] Place ProxyWake behind a reverse proxy with HTTPS
 - [ ] Restrict network access to the management UI
-- [ ] Keep Docker images updated
+- [ ] Keep Docker images updated (pin `4.2.1` or use `latest`)

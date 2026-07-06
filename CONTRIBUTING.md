@@ -65,7 +65,13 @@ The application version is defined in `backend/version.py`. After changing it, r
 python3 scripts/sync_version.py
 ```
 
-This updates `frontend/package.json`, `Dockerfile` OCI labels, and Docker publish workflow tags.
+This updates `frontend/package.json`, `Dockerfile` OCI labels, and related consumer files.
+
+Verify alignment before committing:
+
+```bash
+python3 scripts/check_version_consistency.py
+```
 
 ## Code Style
 

@@ -20,7 +20,7 @@ Run ProxyWake as an Unraid Docker container with persistent appdata and Wake-on-
 
 | Setting | Value |
 |---------|-------|
-| **Repository** | `jeffersonmouze/proxywake:latest` |
+| **Repository** | `jeffersonmouze/proxywake:4.2.1` (or `:latest`) |
 | **Network Type** | Bridge (default) |
 | **Port** | `8462:5001` |
 | **Extra Parameters** | `--cap-add=NET_RAW` |

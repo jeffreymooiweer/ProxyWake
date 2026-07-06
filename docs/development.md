@@ -66,6 +66,7 @@ After changing the version:
 
 ```bash
 python3 scripts/sync_version.py
+python3 scripts/check_version_consistency.py
 ```
 
 This updates `frontend/package.json`, `Dockerfile` OCI labels, and Docker workflow tags.

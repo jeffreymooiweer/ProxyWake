@@ -119,4 +119,7 @@ def validate_device_payload(data, device=None):
         'webhook_headers': data.get('webhook_headers'),
         'webhook_body': data.get('webhook_body'),
         'homeassistant_webhook_url': (data.get('homeassistant_webhook_url') or '').strip() or None,
+        'ipmi_host': (data.get('ipmi_host') or '').strip() or None,
+        'ipmi_port': int(data.get('ipmi_port', 623)),
+        'ipmi_username': (data.get('ipmi_username') or '').strip() or None,
     }, None

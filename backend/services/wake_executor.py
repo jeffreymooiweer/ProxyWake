@@ -26,7 +26,7 @@ def execute_wake_action(device):
         'ssh': _wake_ssh,
         'webhook': _wake_webhook,
         'home_assistant': _wake_home_assistant,
-        'ipmi': _wake_ipmi_placeholder,
+        'ipmi': _wake_ipmi,
     }
     return handlers[method](device)
 
@@ -65,31 +65,33 @@ def _wake_ssh(device):
     ssh_cmd.append(command)
 
     try:
+        if private_key:
+            result = subprocess.run(
+                ssh_cmd,
+                input=private_key.encode(),
+                capture_output=True,
+                timeout=15,
+                check=False,
+            )
+            if result.returncode != 0:
+                raise WakeMethodError('SSH_WAKE_FAILED', 'SSH wake command failed.')
+            return
+
+        if not password:
+            raise WakeMethodError('SSH_CREDENTIALS_MISSING', 'SSH credentials are not configured for this device.')
+
+        sshpass = subprocess.run(['which', 'sshpass'], capture_output=True, timeout=2)
+        if sshpass.returncode != 0:
+            raise WakeMethodError('SSH_PASS_UNAVAILABLE', 'sshpass is required for SSH password authentication.')
+
         result = subprocess.run(
-            ssh_cmd,
-            input=private_key.encode() if private_key else None,
+            ['sshpass', '-p', password, *ssh_cmd],
             capture_output=True,
             timeout=15,
             check=False,
         )
-        if result.returncode != 0 and not password:
+        if result.returncode != 0:
             raise WakeMethodError('SSH_WAKE_FAILED', 'SSH wake command failed.')
-        if password:
-            # Fallback: sshpass if available, otherwise skip password auth in MVP
-            sshpass = subprocess.run(
-                ['which', 'sshpass'],
-                capture_output=True,
-                timeout=2,
-            )
-            if sshpass.returncode != 0:
-                logging.warning('sshpass not available; SSH password auth skipped for %s', device.domain)
-            else:
-                subprocess.run(
-                    ['sshpass', '-p', password, *ssh_cmd],
-                    capture_output=True,
-                    timeout=15,
-                    check=False,
-                )
     except subprocess.TimeoutExpired as exc:
         raise WakeMethodError('SSH_WAKE_FAILED', 'SSH wake command timed out.') from exc
     except OSError as exc:
@@ -133,5 +135,32 @@ def _wake_home_assistant(device):
         raise WakeMethodError('HA_WAKE_FAILED', 'Home Assistant webhook request failed.') from exc
 
 
-def _wake_ipmi_placeholder(device):
-    raise WakeMethodError('IPMI_NOT_SUPPORTED', 'IPMI wake is reserved for a future release.')
+def _wake_ipmi(device):
+    host = device.ipmi_host or device.ip
+    port = device.ipmi_port or 623
+    username = device.ipmi_username or 'ADMIN'
+    password = get_credential(device.id, 'ipmi_password')
+
+    if not password:
+        raise WakeMethodError('IPMI_CREDENTIALS_MISSING', 'IPMI password is not configured for this device.')
+
+    cmd = [
+        'ipmitool',
+        '-I', 'lanplus',
+        '-H', host,
+        '-p', str(port),
+        '-U', username,
+        '-P', password,
+        'chassis', 'power', 'on',
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, timeout=15, check=False, text=True)
+        output = f'{result.stdout or ""}{result.stderr or ""}'.lower()
+        if result.returncode != 0 and 'already' not in output:
+            logging.error('IPMI wake failed for %s: %s', device.domain, output.strip())
+            raise WakeMethodError('IPMI_WAKE_FAILED', 'IPMI chassis power on command failed.')
+    except subprocess.TimeoutExpired as exc:
+        raise WakeMethodError('IPMI_WAKE_FAILED', 'IPMI command timed out.') from exc
+    except OSError as exc:
+        raise WakeMethodError('IPMI_WAKE_FAILED', 'ipmitool could not be executed.') from exc

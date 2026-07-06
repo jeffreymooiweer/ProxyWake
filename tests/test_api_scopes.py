@@ -34,3 +34,15 @@ def test_wake_scope_allows_wake(client, sample_device, api_key):
         headers={'X-API-Key': api_key},
     )
     assert response.status_code == 200
+
+
+def test_backup_requires_admin_scope(client, api_key):
+    set_api_key_scopes(['read'])
+    response = client.get('/api/backup', headers={'X-API-Key': api_key})
+    assert response.status_code == 403
+
+
+def test_backup_allows_admin_scope(client, api_key):
+    set_api_key_scopes(['admin'])
+    response = client.get('/api/backup', headers={'X-API-Key': api_key})
+    assert response.status_code == 200

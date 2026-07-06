@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-07-06
+
+### Added
+
+- **IPMI wake** via `ipmitool chassis power on` (BMC host, port, username, encrypted password)
+- IPMI configuration fields in device edit dialog
+- Credential encryption tests
+- API scope tests for backup (`admin` required)
+
+### Fixed
+
+- Docker image now includes `openssh-client`, `sshpass`, and `ipmitool` for SSH and IPMI wake
+- SSH password auth fails clearly when `sshpass` is unavailable (no silent skip)
+- Backup/restore routes enforce `admin` API scope (aligned with OpenAPI)
+- Group wake and dependency updates enforce `wake` / `write` scopes
+- `BACKUP_VERSION` aligned to `4.0`
+- Duplicate and misplaced entries in CHANGELOG 3.2.0 section removed
+
+### Changed
+
+- Schema version bumped to `4.1`
+- IPMI removed from “coming soon” in UI
+
 ## [4.0.0] - 2026-07-06
 
 Major release — consolidates Golf A through E into a production-ready v4 baseline.
@@ -27,7 +50,7 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 
 ### Known limitations
 
-- IPMI wake remains a placeholder for a future minor release
+- None for planned v4 baseline features
 
 ## [3.5.0] - 2026-07-06
 
@@ -80,11 +103,6 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - `WakeEvent` records `status` and `duration_ms`
 
 ## [3.2.0] - 2026-07-06
-- Device dependencies and adaptive wake intelligence
-- OpenAPI documentation and API scopes
-- Enhanced logging, statistics, backups, and notifications
-
-## [3.2.0] - 2026-07-06
 
 ### Added
 
@@ -100,11 +118,6 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Split `services.py` into `wake_service`, `settings_service`, `notification_service`, etc.
 - Split `utils.py` into `validators`, `network`, and `http` helpers
 - No breaking API changes — all existing endpoints preserved
-
-- Multiple wake methods (WOL, SSH, webhook, Home Assistant)
-- Device dependencies and adaptive wake intelligence
-- OpenAPI documentation and API scopes
-- Enhanced logging, statistics, backups, and notifications
 
 ## [3.1.0] - 2026-07-06
 
@@ -137,6 +150,12 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.1.0...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.1.0...main
+[4.1.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.0.0...v4.1.0
+[4.0.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.5.0...v4.0.0
+[3.5.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.4.0...v3.5.0
+[3.4.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.3.0...v3.4.0
+[3.3.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.2.0...v3.3.0
+[3.2.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/jeffreymooiweer/ProxyWake/releases/tag/v3.0.0

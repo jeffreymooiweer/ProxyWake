@@ -97,7 +97,7 @@ def get_device_dependencies(device_id):
 
 
 @bp.route('/api/devices/<int:device_id>/dependencies', methods=['PUT'])
-@login_required
+@api_key_or_session_required('write')
 def update_device_dependencies(device_id):
     Device.query.get_or_404(device_id)
     data = request.get_json(silent=True) or {}

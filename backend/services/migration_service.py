@@ -1,6 +1,6 @@
 from sqlalchemy import inspect, text
 
-SCHEMA_VERSION = '4.0'
+SCHEMA_VERSION = '4.1'
 
 DEVICE_MIGRATIONS = {
     'group_id': 'INTEGER',
@@ -31,6 +31,9 @@ DEVICE_MIGRATIONS = {
     'webhook_headers': 'TEXT',
     'webhook_body': 'TEXT',
     'homeassistant_webhook_url': 'VARCHAR(500)',
+    'ipmi_host': 'VARCHAR(255)',
+    'ipmi_port': 'INTEGER DEFAULT 623',
+    'ipmi_username': 'VARCHAR(120)',
 }
 
 WAKE_EVENT_MIGRATIONS = {

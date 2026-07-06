@@ -37,7 +37,7 @@ That's it — no need to keep servers running 24/7 just because they might be ac
 
 - Wake-on-LAN with smart wake (skip if online, cooldown, broadcast)
 - **Verified wake** with ping/TCP/HTTP status checks and job polling
-- **Multiple wake methods:** WOL, SSH, webhook, Home Assistant
+- **Multiple wake methods:** WOL, SSH, webhook, Home Assistant, **IPMI**
 - **Device dependencies** — wake chain with circular-detection
 - **Adaptive wake timeout** based on historical boot times
 - Web UI — devices, groups, logs, statistics, settings
@@ -135,7 +135,7 @@ docker compose up -d --build
 | | |
 |---|---|
 | **Image** | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| **Tags** | `latest`, `4.0`, `4.0.0` |
+| **Tags** | `latest`, `4.1`, `4.1.0`, `4.0`, `4.0.0` |
 | **Architectures** | `linux/amd64`, `linux/arm64` |
 
 ### Unraid

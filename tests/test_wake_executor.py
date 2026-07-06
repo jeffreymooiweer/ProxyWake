@@ -40,17 +40,44 @@ def test_webhook_requires_url(client):
     assert exc.value.code == 'WEBHOOK_URL_MISSING'
 
 
-def test_ipmi_placeholder_not_supported(client):
+def test_ipmi_requires_password(client):
     device = Device(
         name='IPMI',
         domain='ipmi.test.local',
         ip='192.168.1.62',
         mac='AA:BB:CC:DD:EE:62',
         wake_method='ipmi',
+        ipmi_host='192.168.1.62',
+        ipmi_username='ADMIN',
     )
     db.session.add(device)
     db.session.commit()
 
     with pytest.raises(WakeMethodError) as exc:
         execute_wake_action(device)
-    assert exc.value.code == 'IPMI_NOT_SUPPORTED'
+    assert exc.value.code == 'IPMI_CREDENTIALS_MISSING'
+
+
+def test_ipmi_wake_runs_ipmitool(client):
+    device = Device(
+        name='IPMI',
+        domain='ipmi2.test.local',
+        ip='192.168.1.63',
+        mac='AA:BB:CC:DD:EE:63',
+        wake_method='ipmi',
+        ipmi_host='192.168.1.63',
+        ipmi_port=623,
+        ipmi_username='ADMIN',
+    )
+    db.session.add(device)
+    db.session.commit()
+
+    with patch('services.wake_executor.get_credential', return_value='secret'):
+        with patch('services.wake_executor.subprocess.run') as mock_run:
+            mock_run.return_value.returncode = 0
+            execute_wake_action(device)
+
+    args = mock_run.call_args[0][0]
+    assert args[0] == 'ipmitool'
+    assert 'chassis' in args
+    assert 'power' in args

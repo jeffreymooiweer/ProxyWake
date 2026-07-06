@@ -1,7 +1,7 @@
 from models import DeviceCredential, db
 from utils.crypto import decrypt_value, encrypt_value
 
-SUPPORTED_CREDENTIAL_KEYS = ('ssh_password', 'ssh_private_key')
+SUPPORTED_CREDENTIAL_KEYS = ('ssh_password', 'ssh_private_key', 'ipmi_password')
 
 
 def save_credentials(device_id, credentials):
@@ -36,5 +36,7 @@ def delete_credential(device_id, key):
         db.session.commit()
 
 
-def credentials_configured(device_id):
+def credentials_configured(device_id, keys=None):
+    if keys:
+        return any(get_credential(device_id, key) for key in keys)
     return DeviceCredential.query.filter_by(device_id=device_id).count() > 0

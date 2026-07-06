@@ -14,7 +14,7 @@ from models import (
 )
 from version import __version__
 
-BACKUP_VERSION = '3.5'
+BACKUP_VERSION = '4.0'
 
 
 def create_backup():

@@ -64,6 +64,7 @@ def build_openapi_spec(base_url=''):
         'tags': [
             {'name': 'devices', 'description': 'Device management and wake actions'},
             {'name': 'backup', 'description': 'Full configuration backup and restore'},
+            {'name': 'groups', 'description': 'Device groups'},
             {'name': 'health', 'description': 'Health and metrics'},
             {'name': 'public', 'description': 'Unauthenticated public wake endpoints'},
         ],
@@ -165,6 +166,30 @@ def _paths():
                 'summary': 'Public wake by domain',
                 'security': [],
                 'responses': {'200': {'description': 'Wake processed'}},
+            },
+        },
+        '/api/groups': {
+            'get': {
+                'tags': ['groups'],
+                'summary': 'List device groups',
+                'x-scopes': ['read', 'admin'],
+                'responses': {'200': {'description': 'Group list'}},
+            },
+        },
+        '/api/groups/{group_id}/wake': {
+            'post': {
+                'tags': ['groups'],
+                'summary': 'Wake all devices in a group',
+                'x-scopes': ['wake', 'admin'],
+                'responses': {'200': {'description': 'Group wake results'}},
+            },
+        },
+        '/api/metrics': {
+            'get': {
+                'tags': ['health'],
+                'summary': 'Prometheus metrics',
+                'security': [],
+                'responses': {'200': {'description': 'Prometheus text format'}},
             },
         },
     }

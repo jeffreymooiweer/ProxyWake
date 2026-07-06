@@ -6,7 +6,7 @@ from services.backup_service import create_backup, restore_backup
 
 def test_create_backup_contains_devices(client, sample_device):
     backup = create_backup()
-    assert backup['backup_version'] == '3.5'
+    assert backup['backup_version'] == '4.0'
     assert len(backup['devices']) == 1
     assert backup['devices'][0]['domain'] == sample_device['domain']
 

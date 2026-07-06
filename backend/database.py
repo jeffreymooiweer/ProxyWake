@@ -14,6 +14,6 @@ def init_database(app):
         format='%(asctime)s:%(levelname)s:%(message)s',
     )
     with app.app_context():
-        migrate_db(db.engine)
         db.create_all()
+        migrate_db(db.engine)
         start_scheduler(app)

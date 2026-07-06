@@ -42,10 +42,21 @@ class Device(db.Model):
     broadcast_ip = db.Column(db.String(15), nullable=True)
     wake_cooldown_seconds = db.Column(db.Integer, default=30)
     last_wake_at = db.Column(db.DateTime, nullable=True)
+    status_check_type = db.Column(db.String(16), default='ping')
+    status_check_host = db.Column(db.String(255), nullable=True)
+    status_check_port = db.Column(db.Integer, nullable=True)
+    status_check_url = db.Column(db.String(500), nullable=True)
+    wake_timeout_seconds = db.Column(db.Integer, default=120)
+    wake_poll_interval_seconds = db.Column(db.Integer, default=3)
+    last_wake_success = db.Column(db.Boolean, nullable=True)
+    last_wake_duration_seconds = db.Column(db.Integer, nullable=True)
+    wake_count = db.Column(db.Integer, default=0)
+    wake_success_count = db.Column(db.Integer, default=0)
+    wake_failure_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self, include_status=False, online=None):
-        from utils import check_host_online
+        from services.status_service import check_device_online
 
         payload = {
             'id': self.id,
@@ -59,10 +70,21 @@ class Device(db.Model):
             'broadcast_ip': self.broadcast_ip,
             'wake_cooldown_seconds': self.wake_cooldown_seconds,
             'last_wake_at': self.last_wake_at.isoformat() if self.last_wake_at else None,
+            'status_check_type': self.status_check_type or 'ping',
+            'status_check_host': self.status_check_host,
+            'status_check_port': self.status_check_port,
+            'status_check_url': self.status_check_url,
+            'wake_timeout_seconds': self.wake_timeout_seconds or 120,
+            'wake_poll_interval_seconds': self.wake_poll_interval_seconds or 3,
+            'last_wake_success': self.last_wake_success,
+            'last_wake_duration_seconds': self.last_wake_duration_seconds,
+            'wake_count': self.wake_count or 0,
+            'wake_success_count': self.wake_success_count or 0,
+            'wake_failure_count': self.wake_failure_count or 0,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
         if include_status:
-            payload['online'] = online if online is not None else check_host_online(self.ip)
+            payload['online'] = online if online is not None else check_device_online(self)
         return payload
 
 
@@ -73,6 +95,8 @@ class WakeEvent(db.Model):
     success = db.Column(db.Boolean, default=True)
     skipped = db.Column(db.Boolean, default=False)
     online_after_ms = db.Column(db.Integer, nullable=True)
+    duration_ms = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String(32), nullable=True)
     error = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     device = db.relationship('Device', backref='wake_events')
@@ -87,6 +111,8 @@ class WakeEvent(db.Model):
             'success': self.success,
             'skipped': self.skipped,
             'online_after_ms': self.online_after_ms,
+            'duration_ms': self.duration_ms,
+            'status': self.status,
             'error': self.error,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }

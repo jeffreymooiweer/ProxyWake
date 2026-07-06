@@ -51,6 +51,12 @@ def import_devices(data_list, merge=True):
             'use_broadcast': item.get('use_broadcast', False),
             'broadcast_ip': item.get('broadcast_ip'),
             'wake_cooldown_seconds': item.get('wake_cooldown_seconds', 30),
+            'status_check_type': item.get('status_check_type', 'ping'),
+            'status_check_host': item.get('status_check_host'),
+            'status_check_port': item.get('status_check_port'),
+            'status_check_url': item.get('status_check_url'),
+            'wake_timeout_seconds': item.get('wake_timeout_seconds', 120),
+            'wake_poll_interval_seconds': item.get('wake_poll_interval_seconds', 3),
         }
         if existing:
             for key, value in payload.items():

@@ -2,6 +2,8 @@ import re
 
 from models import Device
 
+VALID_CHECK_TYPES = ('ping', 'tcp', 'http')
+
 IP_PATTERN = re.compile(
     r"""
     ^
@@ -68,6 +70,24 @@ def validate_device_payload(data, device=None):
     else:
         npm_host_id = int(npm_host_id)
 
+    status_check_type = (data.get('status_check_type') or 'ping').strip().lower()
+    if status_check_type not in VALID_CHECK_TYPES:
+        return None, 'INVALID_STATUS_CHECK_TYPE'
+
+    status_check_host = (data.get('status_check_host') or '').strip() or None
+    if status_check_host and not is_valid_ip(status_check_host) and not is_valid_domain(status_check_host):
+        return None, 'INVALID_IP'
+
+    status_check_port = data.get('status_check_port')
+    if status_check_port in ('', None):
+        status_check_port = None
+    else:
+        status_check_port = int(status_check_port)
+
+    status_check_url = (data.get('status_check_url') or '').strip() or None
+    wake_timeout_seconds = int(data.get('wake_timeout_seconds', 120))
+    wake_poll_interval_seconds = int(data.get('wake_poll_interval_seconds', 3))
+
     return {
         'domain': domain,
         'ip': ip,
@@ -78,4 +98,10 @@ def validate_device_payload(data, device=None):
         'use_broadcast': bool(data.get('use_broadcast', False)),
         'broadcast_ip': data.get('broadcast_ip'),
         'wake_cooldown_seconds': int(data.get('wake_cooldown_seconds', 30)),
+        'status_check_type': status_check_type,
+        'status_check_host': status_check_host,
+        'status_check_port': status_check_port,
+        'status_check_url': status_check_url,
+        'wake_timeout_seconds': wake_timeout_seconds,
+        'wake_poll_interval_seconds': wake_poll_interval_seconds,
     }, None

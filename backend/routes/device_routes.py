@@ -2,12 +2,13 @@ import csv
 import io
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from auth import api_key_or_session_required, login_required
 from extensions import limiter
 from models import Device, db
 from services.settings_service import export_devices, import_devices, log_audit
+from services.wake_job_service import create_wake_job, get_wake_job, start_verified_wake
 from services.wake_service import smart_wake_device
 from utils.http import actor_ip, json_error, json_message
 from utils.validators import validate_device_payload
@@ -65,11 +66,27 @@ def modify_device(device_id):
 def wake_device(device_id):
     device = Device.query.get_or_404(device_id)
     force = request.args.get('force', 'false').lower() == 'true'
+    verify = request.args.get('verify', 'false').lower() == 'true'
+
+    if verify:
+        job_id = create_wake_job(device.id)
+        start_verified_wake(current_app._get_current_object(), device, job_id, force=force)
+        return jsonify({'job_id': job_id, 'status': 'starting', 'device_id': device.id}), 202
+
     try:
         result = smart_wake_device(device, source='manual', force=force)
         return jsonify(result), 200
     except Exception:
         return json_error('WAKE_FAILED', 500)
+
+
+@bp.route('/api/wake/jobs/<job_id>')
+@api_key_or_session_required
+def wake_job_status(job_id):
+    job = get_wake_job(job_id)
+    if not job:
+        return json_error('NOT_FOUND', 404)
+    return jsonify(job)
 
 
 @bp.route('/api/devices/<int:device_id>/status')

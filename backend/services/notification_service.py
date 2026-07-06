@@ -23,7 +23,7 @@ def send_webhooks(event_name, payload):
             logging.error('Webhook %s mislukt: %s', hook.name, exc)
 
 
-def record_wake_event(device, source, success=True, skipped=False, online_after_ms=None, error=None):
+def record_wake_event(device, source, success=True, skipped=False, online_after_ms=None, error=None, status=None, duration_ms=None):
     event = WakeEvent(
         device_id=device.id,
         source=source,
@@ -31,6 +31,8 @@ def record_wake_event(device, source, success=True, skipped=False, online_after_
         skipped=skipped,
         online_after_ms=online_after_ms,
         error=error,
+        status=status,
+        duration_ms=duration_ms if duration_ms is not None else online_after_ms,
     )
     db.session.add(event)
     db.session.commit()

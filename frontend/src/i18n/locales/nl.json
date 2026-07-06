@@ -58,6 +58,7 @@
     "NOT_FOUND": "Resource niet gevonden.",
     "RATE_LIMITED": "Te veel verzoeken. Probeer het later opnieuw.",
     "WAKE_FAILED": "Verzenden van magic packet mislukt.",
+    "INVALID_STATUS_CHECK_TYPE": "Ongeldig statuscheck-type. Gebruik ping, tcp of http.",
     "INTERNAL_ERROR": "Interne serverfout.",
     "GENERIC": "Er is iets misgegaan."
   },
@@ -79,6 +80,9 @@
     "WAKE_SKIPPED_ONLINE": "{{name}} is al online.",
     "WAKE_PROCESSED": "Wake verwerkt voor {{domain}}.",
     "WAKE_TIMEOUT": "Time-out bij wachten tot apparaat opstart.",
+    "WAKE_SENDING": "Wake-packet versturen naar {{name}}...",
+    "WAKE_WAITING": "Wachten tot {{name}} online is...",
+    "WAKE_ONLINE": "{{name}} is online na {{seconds}}s.",
     "ALREADY_ONLINE": "Apparaat is al online."
   },
   "login": {
@@ -153,7 +157,27 @@
     "scannerTitle": "Netwerkscanner",
     "subnet": "Subnet",
     "startScan": "Scan starten",
-    "useIp": "IP gebruiken"
+    "useIp": "IP gebruiken",
+    "statusCheckType": "Statuscontrole",
+    "statusCheckPort": "Controle-poort",
+    "statusCheckUrl": "Health check URL",
+    "wakeTimeout": "Wake-timeout (s)",
+    "lastWake": "Laatste wake: {{seconds}}s",
+    "statusCheck": {
+      "ping": "ICMP ping",
+      "tcp": "TCP-poort",
+      "http": "HTTP URL"
+    },
+    "wakeStatus": {
+      "starting": "Wake starten...",
+      "checking": "Status controleren...",
+      "sending_packet": "Wake-packet versturen",
+      "waiting": "Wachten op apparaat",
+      "online": "Apparaat online",
+      "failed": "Wake mislukt",
+      "skipped": "Al online",
+      "cooldown": "Cooldown actief"
+    }
   },
   "groups": {
     "title": "Groepen",

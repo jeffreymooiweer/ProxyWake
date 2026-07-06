@@ -18,6 +18,7 @@ ERROR_MESSAGES = {
     'NOT_FOUND': 'Resource not found.',
     'RATE_LIMITED': 'Too many requests. Please try again later.',
     'WAKE_FAILED': 'Failed to send magic packet.',
+    'INVALID_STATUS_CHECK_TYPE': 'Invalid status check type. Use ping, tcp, or http.',
     'INTERNAL_ERROR': 'Internal server error.',
     'GENERIC': 'Something went wrong.',
 }
@@ -40,6 +41,9 @@ MESSAGE_CODES = {
     'WAKE_SKIPPED_ONLINE': '{{name}} is already online.',
     'WAKE_PROCESSED': 'Wake processed for {{domain}}.',
     'WAKE_TIMEOUT': 'Timed out waiting for device to start.',
+    'WAKE_SENDING': 'Sending wake packet to {{name}}...',
+    'WAKE_WAITING': 'Waiting for {{name}} to come online...',
+    'WAKE_ONLINE': '{{name}} is online after {{seconds}}s.',
     'ALREADY_ONLINE': 'Device is already online.',
 }
 

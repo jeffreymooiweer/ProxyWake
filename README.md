@@ -55,7 +55,7 @@ Open `http://<server-ip>:8462` and follow the setup wizard.
 | Unraid | [docs/unraid.md](docs/unraid.md) — CA template in [unraid/](unraid/) |
 | Environment variables | [docs/configuration.md](docs/configuration.md) |
 
-Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.2`, `4.2.5` · amd64 & arm64
+Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.2`, `4.2.6` · amd64 & arm64
 
 ---
 

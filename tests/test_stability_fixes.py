@@ -18,6 +18,19 @@ def test_secret_key_is_stable_without_env(monkeypatch, tmp_path):
     assert (tmp_path / 'secret.key').read_text().strip() == first
 
 
+def test_secret_key_recovers_from_empty_file(monkeypatch, tmp_path):
+    """A worker that read the file mid-write (or a crashed writer) must not
+    leave the app with an empty secret key."""
+    monkeypatch.delenv('PROXYWAKE_SECRET_KEY', raising=False)
+    monkeypatch.setattr(config, 'DATA_DIR', tmp_path)
+    monkeypatch.setattr(config, 'SECRET_KEY_FILE', tmp_path / 'secret.key')
+    (tmp_path / 'secret.key').write_text('')
+
+    key = config.get_secret_key()
+    assert key
+    assert config.get_secret_key() == key
+
+
 def test_secret_key_env_still_wins(monkeypatch, tmp_path):
     monkeypatch.setenv('PROXYWAKE_SECRET_KEY', 'env-key')
     monkeypatch.setattr(config, 'SECRET_KEY_FILE', tmp_path / 'secret.key')

@@ -13,35 +13,51 @@ LOG_FILE = DATA_DIR / 'app.log'
 DB_PATH = DATA_DIR / 'devices.db'
 
 
+def _read_secret_key_file():
+    try:
+        return SECRET_KEY_FILE.read_text().strip()
+    except OSError:
+        return ''
+
+
+def _write_secret_key_file():
+    new_key = secrets.token_hex(32)
+    fd = os.open(SECRET_KEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, 'w') as handle:
+        handle.write(new_key)
+    return new_key
+
+
 def get_secret_key():
     """Return a stable secret key.
 
     The key must be identical across gunicorn workers and restarts: it signs
     session cookies and derives the Fernet key for stored device credentials.
     Without the env var, a generated key is persisted in the data directory.
+    Creation is serialized with a file lock: with O_EXCL alone the second
+    worker could read the file in the window before the winner finished
+    writing and end up with an empty key.
     """
     key = os.environ.get('PROXYWAKE_SECRET_KEY')
     if key:
         return key
 
-    try:
-        stored = SECRET_KEY_FILE.read_text().strip()
-        if stored:
-            return stored
-    except OSError:
-        pass
+    stored = _read_secret_key_file()
+    if stored:
+        return stored
 
-    new_key = secrets.token_hex(32)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     try:
-        # O_EXCL so two workers booting at once cannot overwrite each other:
-        # the loser re-reads the winner's key.
-        fd = os.open(SECRET_KEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(fd, 'w') as handle:
-            handle.write(new_key)
-        return new_key
-    except FileExistsError:
-        return SECRET_KEY_FILE.read_text().strip()
+        import fcntl
+    except ImportError:
+        return _read_secret_key_file() or _write_secret_key_file()
+
+    with open(DATA_DIR / 'secret.key.lock', 'w') as lock_handle:
+        fcntl.flock(lock_handle, fcntl.LOCK_EX)
+        stored = _read_secret_key_file()
+        if stored:
+            return stored
+        return _write_secret_key_file()
 
 
 VALID_API_SCOPES = ('read', 'write', 'wake', 'admin')

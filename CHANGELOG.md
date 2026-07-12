@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.6] - 2026-07-12
+
+### Fixed
+
+- Race in secret-key creation on first boot: a worker could read the `secret.key` file in the window before the other worker finished writing it, ending up with a permanently empty key (broken sessions, HTTP 500 on login/setup). Key creation is now serialized with a file lock, and an existing empty key file is repaired automatically
+
+### Verified
+
+- The generated Nginx Proxy Manager snippets were exercised end-to-end against a real nginx 1.24: `nginx -t` accepts both snippets, the `mirror` trigger wakes the device via `/api/wake/by-host`, the `error_page` rule redirects offline visits to the waiting page, and online traffic passes through without extra wake events
+
 ## [4.2.5] - 2026-07-12
 
 ### Fixed
@@ -259,7 +269,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.6...main
+[4.2.6]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...v4.2.6
 [4.2.5]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...v4.2.5
 [4.2.4]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...v4.2.4
 [4.2.3]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...v4.2.3

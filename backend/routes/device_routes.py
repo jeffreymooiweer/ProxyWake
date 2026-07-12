@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from auth import api_key_or_session_required, login_required
 from extensions import limiter
-from models import Device, db
+from models import Device, DeviceDependency, ScheduledWake, WakeEvent, db
 from services.credential_service import save_credentials
 from services.dependency_service import (
     DependencyCycleError,
@@ -14,6 +14,7 @@ from services.dependency_service import (
     set_device_dependencies,
 )
 from services.settings_service import export_devices, import_devices, log_audit
+from services.status_service import bulk_online_status
 from services.wake_executor import WakeMethodError
 from services.wake_job_service import create_wake_job, get_wake_job, start_verified_wake
 from services.wake_service import smart_wake_device
@@ -28,7 +29,13 @@ bp = Blueprint('devices', __name__)
 def list_devices():
     include_status = request.args.get('status', 'false').lower() == 'true'
     devices = Device.query.order_by(Device.domain.asc()).all()
-    return jsonify([device.to_dict(include_status=include_status) for device in devices])
+    if not include_status:
+        return jsonify([device.to_dict() for device in devices])
+    online_map = bulk_online_status(devices)
+    return jsonify([
+        device.to_dict(include_status=True, online=online_map.get(device.id, False))
+        for device in devices
+    ])
 
 
 @bp.route('/api/devices', methods=['POST'])
@@ -61,6 +68,14 @@ def modify_device(device_id):
         return jsonify(device.to_dict()), 200
 
     domain = device.domain
+    # Remove dependent rows first: wake_event.device_id and schedule rows are
+    # NOT NULL, so deleting the device alone fails with an IntegrityError.
+    WakeEvent.query.filter_by(device_id=device.id).delete()
+    ScheduledWake.query.filter_by(device_id=device.id).delete()
+    DeviceDependency.query.filter(
+        (DeviceDependency.device_id == device.id)
+        | (DeviceDependency.depends_on_device_id == device.id)
+    ).delete()
     db.session.delete(device)
     db.session.commit()
     log_audit('device_deleted', domain, actor_ip())

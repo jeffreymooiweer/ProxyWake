@@ -38,6 +38,7 @@ def create_npm_host():
 @login_required
 def delete_npm_host(host_id):
     host = NpmHost.query.get_or_404(host_id)
+    Device.query.filter_by(npm_host_id=host.id).update({'npm_host_id': None})
     db.session.delete(host)
     db.session.commit()
     return json_message('NPM_HOST_DELETED')
@@ -47,10 +48,12 @@ def delete_npm_host(host_id):
 @api_key_required
 @limiter.limit('60 per minute')
 def wake_by_host():
+    # The explicit ?host= parameter must beat the implicit Host header, which
+    # is always present in HTTP and would otherwise make the parameter dead.
     host = (
         request.headers.get('X-Forwarded-Host')
-        or request.headers.get('Host')
         or request.args.get('host')
+        or request.headers.get('Host')
         or ''
     ).split(':')[0].strip().lower()
     if not host:

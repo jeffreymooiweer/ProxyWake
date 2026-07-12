@@ -51,6 +51,11 @@ def _device_export(device):
     payload = device.to_dict(include_status=False)
     payload.pop('dependencies', None)
     payload.pop('ssh_credentials_configured', None)
+    payload.pop('ipmi_credentials_configured', None)
+    # to_dict() masks webhook URLs for display; a backup must round-trip the
+    # real values (the endpoint is admin-scoped).
+    payload['webhook_url'] = device.webhook_url
+    payload['homeassistant_webhook_url'] = device.homeassistant_webhook_url
     return payload
 
 

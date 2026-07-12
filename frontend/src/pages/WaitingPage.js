@@ -18,12 +18,11 @@ const WaitingPage = () => {
     let active = true;
     let ticks = 0;
 
+    // Fire the wake once, without holding a server thread until the device
+    // is online; this page polls the status endpoint for progress.
+    api.publicWake(domain, false).catch(() => {});
+
     const poll = async () => {
-      try {
-        await api.publicWake(domain);
-      } catch {
-        // wake may already be in progress
-      }
       try {
         const data = await api.publicStatus(domain);
         if (!active) return;

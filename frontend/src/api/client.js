@@ -72,5 +72,5 @@ export const api = {
   updateLogLevel: (level) => request('/api/settings/log-level', { method: 'PUT', body: JSON.stringify({ level }) }),
   updateNotifications: (settings) => request('/api/settings/notifications', { method: 'PUT', body: JSON.stringify(settings) }),
   publicStatus: (domain) => request(`/api/public/status/${encodeURIComponent(domain)}`),
-  publicWake: (domain) => request(`/api/public/wake/${encodeURIComponent(domain)}`, { method: 'POST' }),
+  publicWake: (domain, wait = true) => request(`/api/public/wake/${encodeURIComponent(domain)}${wait ? '' : '?wait=false'}`, { method: 'POST' }),
 };

@@ -1,4 +1,4 @@
 """Single source of truth for ProxyWake version."""
 
-__version__ = '4.2.5'
-VERSION = '4.2.5'
+__version__ = '4.2.6'
+VERSION = '4.2.6'

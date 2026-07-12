@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from auth import api_key_or_session_required, login_required
-from models import DeviceGroup, db
+from models import Device, DeviceGroup, db
 from services.wake_service import wake_group
 from utils.http import json_error, json_message
 
@@ -44,6 +44,7 @@ def modify_group(group_id):
         group.color = data.get('color', group.color)
         db.session.commit()
         return jsonify(group.to_dict()), 200
+    Device.query.filter_by(group_id=group.id).update({'group_id': None})
     db.session.delete(group)
     db.session.commit()
     return json_message('GROUP_DELETED')

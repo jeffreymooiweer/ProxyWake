@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from extensions import limiter
 from models import Device
-from services.wake_service import wake_and_wait
+from services.wake_service import smart_wake_device, wake_and_wait
 from utils.http import json_error
 
 bp = Blueprint('public', __name__)
@@ -27,5 +27,10 @@ def public_wake(domain):
     device = Device.query.filter_by(domain=domain.lower()).first()
     if not device:
         return json_error('DEVICE_NOT_FOUND', 404)
+    # ?wait=false sends the wake without blocking until the device is online;
+    # the waiting page polls /api/public/status separately.
+    if request.args.get('wait', 'true').lower() == 'false':
+        result = smart_wake_device(device, source='public')
+        return jsonify(result), 200
     result = wake_and_wait(device, source='public')
     return jsonify(result), 200

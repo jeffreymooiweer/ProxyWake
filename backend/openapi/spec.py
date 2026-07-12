@@ -270,7 +270,11 @@ def _paths():
     add('/api/public/status/{domain}',
         get=_op('Public device status', 'public', public=True, parameters=[_path_id('domain', 'string')]))
     add('/api/public/wake/{domain}',
-        post=_op('Public wake by domain', 'public', public=True, parameters=[_path_id('domain', 'string')]))
+        post=_op('Public wake by domain', 'public', public=True, parameters=[
+            _path_id('domain', 'string'),
+            {'name': 'wait', 'in': 'query', 'schema': {'type': 'boolean', 'default': True},
+             'description': 'When false, send the wake without blocking until the device is online.'},
+        ]))
 
     add('/api/openapi.json', get=_op('OpenAPI specification', 'docs', public=True))
     add('/api/docs', get=_op('Swagger UI', 'docs', public=True))

@@ -1,8 +1,14 @@
 import logging
+import re
 from logging.handlers import RotatingFileHandler
 
 LOG_FORMAT = '%(asctime)s:%(levelname)s:%(message)s'
 VALID_LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+
+# asctime itself contains colons, so anchor the split on a known level name.
+_LOG_LINE_PATTERN = re.compile(
+    r'^(?P<timestamp>.*?):(?P<level>' + '|'.join(VALID_LOG_LEVELS) + r'):(?P<message>.*)$'
+)
 
 
 def setup_logging(log_file, level='INFO'):
@@ -31,13 +37,13 @@ def setup_logging(log_file, level='INFO'):
 
 
 def parse_log_line(line):
-    parts = line.split(':', 2)
-    if len(parts) < 3:
+    match = _LOG_LINE_PATTERN.match(line)
+    if not match:
         return {'level': 'INFO', 'message': line, 'raw': line}
     return {
-        'timestamp': parts[0],
-        'level': parts[1],
-        'message': parts[2],
+        'timestamp': match.group('timestamp'),
+        'level': match.group('level'),
+        'message': match.group('message'),
         'raw': line,
     }
 

@@ -85,6 +85,14 @@ def validate_device_payload(data, device=None):
     else:
         status_check_port = int(status_check_port)
 
+    def _unmasked_url(field):
+        # to_dict() masks credentials/tokens in webhook URLs; when a client
+        # echoes the masked value back on update, keep the stored original.
+        value = (data.get(field) or '').strip() or None
+        if value and '***' in value and device is not None:
+            return getattr(device, field)
+        return value
+
     status_check_url = (data.get('status_check_url') or '').strip() or None
     wake_timeout_seconds = int(data.get('wake_timeout_seconds', 120))
     wake_poll_interval_seconds = int(data.get('wake_poll_interval_seconds', 3))
@@ -114,11 +122,11 @@ def validate_device_payload(data, device=None):
         'ssh_port': int(data.get('ssh_port', 22)),
         'ssh_username': (data.get('ssh_username') or '').strip() or None,
         'ssh_command': (data.get('ssh_command') or 'exit').strip() or 'exit',
-        'webhook_url': (data.get('webhook_url') or '').strip() or None,
+        'webhook_url': _unmasked_url('webhook_url'),
         'webhook_method': (data.get('webhook_method') or 'POST').upper(),
         'webhook_headers': data.get('webhook_headers'),
         'webhook_body': data.get('webhook_body'),
-        'homeassistant_webhook_url': (data.get('homeassistant_webhook_url') or '').strip() or None,
+        'homeassistant_webhook_url': _unmasked_url('homeassistant_webhook_url'),
         'ipmi_host': (data.get('ipmi_host') or '').strip() or None,
         'ipmi_port': int(data.get('ipmi_port', 623)),
         'ipmi_username': (data.get('ipmi_username') or '').strip() or None,

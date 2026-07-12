@@ -138,8 +138,26 @@ const DevicesPage = () => {
       const started = await api.wakeDeviceVerify(device.id);
       setWakeJobs((prev) => ({ ...prev, [device.id]: started }));
 
+      let pollErrors = 0;
       const poll = async () => {
-        const job = await api.getWakeJob(started.job_id);
+        let job;
+        try {
+          job = await api.getWakeJob(started.job_id);
+          pollErrors = 0;
+        } catch (err) {
+          pollErrors += 1;
+          if (pollErrors >= 5) {
+            setWakeJobs((prev) => {
+              const next = { ...prev };
+              delete next[device.id];
+              return next;
+            });
+            showMessage(err.message, 'error');
+            return;
+          }
+          setTimeout(poll, 1500);
+          return;
+        }
         setWakeJobs((prev) => ({ ...prev, [device.id]: job }));
 
         if (['online', 'failed', 'skipped', 'cooldown'].includes(job.status)) {

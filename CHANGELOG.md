@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Secret key is now persisted in the data directory when `PROXYWAKE_SECRET_KEY` is not set. Previously every worker (and every call) generated a fresh random key, which invalidated sessions between the two gunicorn workers and made stored SSH/IPMI credentials permanently undecryptable
+- Verified-wake job status is stored in the database instead of per-process memory, so job polling works regardless of which gunicorn worker answers the request
+- Scheduled wakes run in exactly one worker (data-dir file lock); previously every worker ran its own scheduler loop. The loop now aligns to minute boundaries so schedules can no longer be skipped or double-fired
+- Log level filtering on the Logs page: the log timestamp contains colons, so the parser never recognised the level of a line
+- Editing a device no longer overwrites webhook URLs with their masked (`***`) display value; full backups now export the real webhook URLs so restores round-trip
+- Deleting a group or NPM host clears the reference on linked devices instead of leaving a dangling id
+- Schedules validate that the device exists and that hour/minute are in range; the API now also returns the configured `days`
+- The waiting page fires the wake request once (non-blocking via `?wait=false`) instead of starting a new blocking wake every 3 seconds, which could exhaust all server threads
+- Wake progress polling on the Devices page recovers from transient errors instead of leaving the spinner stuck
+
+### Changed
+
+- `POST /api/public/wake/{domain}` accepts `?wait=false` to send a wake without blocking until the device is online
+- Device status checks (`/api/devices?status=true`, `/api/stats`) run concurrently instead of serially, so lists stay fast with several offline devices
+
 ## [4.2.3] - 2026-07-06
 
 ### Fixed

@@ -8,15 +8,40 @@ DATA_DIR = Path(os.environ.get('PROXYWAKE_DATA_DIR', BASE_DIR))
 
 API_KEY_FILE = DATA_DIR / 'api_keys.json'
 PASSWORD_HASH_FILE = DATA_DIR / 'password.hash'
+SECRET_KEY_FILE = DATA_DIR / 'secret.key'
 LOG_FILE = DATA_DIR / 'app.log'
 DB_PATH = DATA_DIR / 'devices.db'
 
 
 def get_secret_key():
+    """Return a stable secret key.
+
+    The key must be identical across gunicorn workers and restarts: it signs
+    session cookies and derives the Fernet key for stored device credentials.
+    Without the env var, a generated key is persisted in the data directory.
+    """
     key = os.environ.get('PROXYWAKE_SECRET_KEY')
     if key:
         return key
-    return secrets.token_hex(32)
+
+    try:
+        stored = SECRET_KEY_FILE.read_text().strip()
+        if stored:
+            return stored
+    except OSError:
+        pass
+
+    new_key = secrets.token_hex(32)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        # O_EXCL so two workers booting at once cannot overwrite each other:
+        # the loser re-reads the winner's key.
+        fd = os.open(SECRET_KEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'w') as handle:
+            handle.write(new_key)
+        return new_key
+    except FileExistsError:
+        return SECRET_KEY_FILE.read_text().strip()
 
 
 VALID_API_SCOPES = ('read', 'write', 'wake', 'admin')

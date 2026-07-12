@@ -14,6 +14,7 @@ from services.dependency_service import (
     set_device_dependencies,
 )
 from services.settings_service import export_devices, import_devices, log_audit
+from services.status_service import bulk_online_status
 from services.wake_executor import WakeMethodError
 from services.wake_job_service import create_wake_job, get_wake_job, start_verified_wake
 from services.wake_service import smart_wake_device
@@ -28,7 +29,13 @@ bp = Blueprint('devices', __name__)
 def list_devices():
     include_status = request.args.get('status', 'false').lower() == 'true'
     devices = Device.query.order_by(Device.domain.asc()).all()
-    return jsonify([device.to_dict(include_status=include_status) for device in devices])
+    if not include_status:
+        return jsonify([device.to_dict() for device in devices])
+    online_map = bulk_online_status(devices)
+    return jsonify([
+        device.to_dict(include_status=True, online=online_map.get(device.id, False))
+        for device in devices
+    ])
 
 
 @bp.route('/api/devices', methods=['POST'])

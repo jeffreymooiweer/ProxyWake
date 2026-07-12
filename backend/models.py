@@ -217,8 +217,41 @@ class ScheduledWake(db.Model):
             'device_name': self.device.name if self.device else None,
             'hour': self.hour,
             'minute': self.minute,
+            'days': [int(day) for day in self.days.split(',') if day != ''] if self.days else [],
             'enabled': self.enabled,
         }
+
+
+class WakeJob(db.Model):
+    id = db.Column(db.String(36), primary_key=True)
+    device_id = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(32), default='starting')
+    message_code = db.Column(db.String(64), nullable=True)
+    online = db.Column(db.Boolean, default=False)
+    waited_ms = db.Column(db.Integer, nullable=True)
+    error = db.Column(db.Text, nullable=True)
+    extra = db.Column(db.Text, nullable=True)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        import json
+
+        payload = {
+            'job_id': self.id,
+            'device_id': self.device_id,
+            'status': self.status,
+            'message_code': self.message_code,
+            'online': self.online,
+            'waited_ms': self.waited_ms,
+            'error': self.error,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+        if self.extra:
+            try:
+                payload.update(json.loads(self.extra))
+            except ValueError:
+                pass
+        return payload
 
 
 class DeviceCredential(db.Model):

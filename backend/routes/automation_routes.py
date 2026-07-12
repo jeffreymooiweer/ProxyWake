@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 
 from auth import login_required
-from models import ScheduledWake, Webhook, db
-from utils.http import json_message
+from models import Device, ScheduledWake, Webhook, db
+from utils.http import json_error, json_message
 
 bp = Blueprint('automation', __name__)
 
@@ -55,10 +55,17 @@ def list_schedules():
 @login_required
 def create_schedule():
     data = request.get_json(silent=True) or {}
+    device_id = data.get('device_id')
+    if not device_id or not db.session.get(Device, device_id):
+        return json_error('DEVICE_NOT_FOUND', 404)
+    hour = int(data.get('hour', 7))
+    minute = int(data.get('minute', 0))
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return json_error('REQUIRED_FIELDS', 400)
     schedule = ScheduledWake(
-        device_id=data.get('device_id'),
-        hour=int(data.get('hour', 7)),
-        minute=int(data.get('minute', 0)),
+        device_id=device_id,
+        hour=hour,
+        minute=minute,
         days=','.join(str(day) for day in data.get('days', [0, 1, 2, 3, 4, 5, 6])),
         enabled=data.get('enabled', True),
     )

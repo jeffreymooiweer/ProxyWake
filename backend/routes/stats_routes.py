@@ -7,6 +7,7 @@ from auth import login_required
 from config import LOG_FILE
 from extensions import limiter
 from models import AuditLog, Device, WakeEvent, db
+from services.status_service import bulk_online_status
 from utils.http import json_error
 from utils.logging_config import filter_log_lines
 from utils.network import scan_subnet, subnet_from_ip
@@ -26,15 +27,17 @@ def stats():
         func.count(WakeEvent.id),
     ).filter(WakeEvent.created_at >= since).group_by(func.date(WakeEvent.created_at)).all()
 
+    all_devices = Device.query.all()
+    online_map = bulk_online_status(all_devices)
     device_stats = []
-    for device in Device.query.all():
+    for device in all_devices:
         events = WakeEvent.query.filter_by(device_id=device.id).order_by(WakeEvent.created_at.desc()).limit(5).all()
         avg_wake = db.session.query(func.avg(WakeEvent.online_after_ms)).filter(
             WakeEvent.device_id == device.id,
             WakeEvent.online_after_ms.isnot(None),
         ).scalar()
         device_stats.append({
-            'device': device.to_dict(include_status=True),
+            'device': device.to_dict(include_status=True, online=online_map.get(device.id, False)),
             'wake_count': WakeEvent.query.filter_by(device_id=device.id).count(),
             'avg_wake_ms': int(avg_wake) if avg_wake else None,
             'recent_events': [event.to_dict() for event in events],

@@ -38,6 +38,7 @@ def create_npm_host():
 @login_required
 def delete_npm_host(host_id):
     host = NpmHost.query.get_or_404(host_id)
+    Device.query.filter_by(npm_host_id=host.id).update({'npm_host_id': None})
     db.session.delete(host)
     db.session.commit()
     return json_message('NPM_HOST_DELETED')

@@ -1,5 +1,6 @@
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
@@ -7,7 +8,7 @@ from services.adaptive_wake_service import effective_wake_timeout
 from utils.network import check_host_online
 from utils.validators import VALID_CHECK_TYPES
 
-__all__ = ['VALID_CHECK_TYPES', 'check_device_online', 'check_http_url', 'check_tcp_port', 'wait_for_device']
+__all__ = ['VALID_CHECK_TYPES', 'bulk_online_status', 'check_device_online', 'check_http_url', 'check_tcp_port', 'wait_for_device']
 
 
 def check_tcp_port(host, port, timeout=2):
@@ -40,6 +41,15 @@ def check_device_online(device):
             url = f'http://{host}:{port}/'
         return check_http_url(url)
     return check_host_online(host)
+
+
+def bulk_online_status(devices, max_workers=16):
+    """Check many devices concurrently; serial pings make device lists crawl."""
+    if not devices:
+        return {}
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(devices))) as executor:
+        results = list(executor.map(check_device_online, devices))
+    return {device.id: online for device, online in zip(devices, results)}
 
 
 def wait_for_device(device, max_wait=None, interval=None):

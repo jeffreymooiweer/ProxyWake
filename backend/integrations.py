@@ -27,31 +27,64 @@ mirror_request_body off;
 
 
 def build_traefik_config(base_url, api_key):
-    return f"""# ProxyWake - Traefik middleware (Docker labels voorbeeld)
-# Voeg toe aan je service labels:
+    return f"""# ProxyWake - Traefik (ingebouwde forwardAuth-middleware, geen plugins nodig)
+#
+# Elk request gaat eerst langs ProxyWake: Traefik stuurt X-Forwarded-Host mee,
+# ProxyWake zoekt het apparaat op dat domein en wekt het indien offline.
+# Antwoord 200 = request gaat door naar je service.
+#
+# Docker labels — eenmalig de middleware definieren, daarna per service koppelen:
 
 labels:
-  - "traefik.http.middlewares.proxywake-wake.plugin.webhook.url={base_url}/api/wake/by-host"
-  - "traefik.http.middlewares.proxywake-wake.plugin.webhook.headers.X-API-Key={api_key}"
-  - "traefik.http.middlewares.proxywake-wake.plugin.webhook.headers.Host={{Host}}"
-  - "traefik.http.routers.myservice.middlewares=proxywake-wake"
+  - "traefik.http.middlewares.proxywake.forwardauth.address={base_url}/api/wake/by-host?api_key={api_key}"
+  - "traefik.http.routers.MIJN-SERVICE.middlewares=proxywake"
+
+# File provider (dynamic config) equivalent:
+#
+# http:
+#   middlewares:
+#     proxywake:
+#       forwardAuth:
+#         address: "{base_url}/api/wake/by-host?api_key={api_key}"
+#   routers:
+#     mijn-service:
+#       middlewares:
+#         - proxywake
+#
+# Let op:
+# - De API-key staat in de URL omdat forwardAuth geen eigen headers kan
+#   meesturen. Gebruik een interne (LAN/Docker-netwerk) ProxyWake-URL.
+# - Is ProxyWake zelf offline, dan blokkeert forwardAuth het request.
 """
 
 
 def build_caddy_config(base_url, api_key):
-    host = base_url.replace('https://', '').replace('http://', '').rstrip('/')
-    return f"""# ProxyWake - Caddy snippet (Caddyfile)
-@wake_needed {{
-    not host localhost
-}}
-handle @wake_needed {{
-    route /_proxywake_internal/* {{
-        reverse_proxy {host} {{
-            header_up X-API-Key "{api_key}"
-            header_up Host {{http.request.host}}
-        }}
+    return f"""# ProxyWake - Caddy (ingebouwde directives, geen plugins nodig)
+#
+# forward_auth stuurt elk request eerst langs ProxyWake (wekt het apparaat
+# indien offline); handle_errors toont de wachtpagina zolang de backend
+# nog opstart. Vervang APP.EXAMPLE.COM en het upstream-adres.
+
+APP.EXAMPLE.COM {{
+    forward_auth {base_url} {{
+        uri /api/wake/by-host?api_key={api_key}
+    }}
+
+    reverse_proxy 192.168.1.50:8080
+
+    # Backend nog niet bereikbaar (502/504)? Toon de ProxyWake-wachtpagina,
+    # die het apparaat wekt en automatisch terugstuurt zodra het online is.
+    # (handle_errors met statuscodes vereist Caddy 2.8+)
+    handle_errors 502 504 {{
+        redir * {base_url}/waiting?domain={{host}}
     }}
 }}
+
+# Let op:
+# - {base_url} moet zowel voor Caddy (forward_auth) als voor de browser
+#   (redirect naar de wachtpagina) bereikbaar zijn.
+# - De API-key staat in de URL omdat forward_auth geen eigen headers kan
+#   meesturen.
 """
 
 
@@ -77,12 +110,14 @@ def integration_instructions():
             'Optioneel: error_page regel toont wachtpagina bij offline backend.',
         ],
         'traefik': [
-            'Gebruik een webhook/forward-auth plugin of externe middleware.',
-            'Pas labels aan op basis van je Traefik-versie.',
+            'Definieer de forwardAuth-middleware eenmalig (labels of file provider).',
+            'Koppel de middleware aan de router van elke service die gewekt moet worden.',
+            'Zorg dat Traefik ProxyWake kan bereiken; als ProxyWake offline is blokkeert de middleware requests.',
         ],
         'caddy': [
-            'Voeg het snippet toe aan je Caddyfile site-blok.',
-            'Zorg dat Caddy ProxyWake intern kan bereiken.',
+            'Voeg forward_auth en handle_errors toe aan het site-blok van je service (Caddy 2.8+).',
+            'Gebruik een ProxyWake-URL die zowel Caddy als de browser kan bereiken.',
+            'Herlaad Caddy met `caddy reload` en test met het apparaat uit.',
         ],
         'home_assistant': [
             'Voeg REST switch toe aan configuration.yaml.',

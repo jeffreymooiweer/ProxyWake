@@ -69,8 +69,8 @@ def audit_logs():
 
 
 @bp.route('/api/scan', methods=['POST'])
-@login_required
 @limiter.limit('5 per minute')
+@login_required
 def scan_network():
     data = request.get_json(silent=True) or {}
     subnet = data.get('subnet')

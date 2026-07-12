@@ -62,12 +62,15 @@ def _wake_chain_if_needed(target_device, source, job_id=None, force=False):
     return None
 
 
-def smart_wake_device(device, source='manual', force=False):
+def smart_wake_device(device, source='manual', force=False, record_skips=True):
     now = datetime.now(timezone.utc)
     online = check_device_online(device)
 
     if online and not force:
-        record_wake_event(device, source, success=True, skipped=True, status='skipped')
+        # Proxy integrations call this on every request; recording a skipped
+        # event each time would flood the wake_event table (record_skips=False).
+        if record_skips:
+            record_wake_event(device, source, success=True, skipped=True, status='skipped')
         name = device.name or device.domain
         return {
             'message_code': 'DEVICE_ALREADY_ONLINE',

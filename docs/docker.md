@@ -17,7 +17,7 @@ docker run -d \
   jeffersonmouze/proxywake:latest
 ```
 
-Pin a release with `:4.2.4` or the minor line with `:4.2`.
+Pin a release with `:4.2.5` or the minor line with `:4.2`.
 
 ## Docker Compose
 
@@ -33,7 +33,7 @@ docker compose up -d
 | Property | Value |
 |----------|-------|
 | Image | `jeffersonmouze/proxywake` on [Docker Hub](https://hub.docker.com/r/jeffersonmouze/proxywake) |
-| Tags | `latest`, `4.2`, `4.2.4` |
+| Tags | `latest`, `4.2`, `4.2.5` |
 | Architectures | `linux/amd64`, `linux/arm64` |
 | Container port | `5001` (default host mapping `8462`) |
 | User | Non-root `proxywake` (UID 1000) |
@@ -70,7 +70,7 @@ docker compose up -d --build
 
 ```bash
 docker logs -f proxywake
-PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.4 docker compose up -d
+PROXYWAKE_IMAGE=jeffersonmouze/proxywake:4.2.5 docker compose up -d
 ```
 
 ## Common mistakes

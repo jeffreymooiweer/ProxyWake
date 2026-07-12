@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.5] - 2026-07-12
+
+### Fixed
+
+- **API-key brute force was never throttled**: rate-limit decorators sat inside the auth decorators, so rejected (401) requests were returned before the limiter ever counted them. The limiter now wraps auth on `/api/wake/by-host`, device wake and network scan, so invalid keys are throttled while valid traffic is unaffected
+- `/api/wake/by-host` no longer writes a skipped wake event for every proxied request when the device is already online, which flooded the wake-event table on busy proxies
+
+### Changed
+
+- **Traefik integration snippet rewritten** to a tested, plugin-free configuration using the built-in `forwardAuth` middleware (the old snippet referenced a generic "webhook plugin" that does not exist out of the box)
+- **Caddy integration snippet rewritten** to a tested, plugin-free configuration using built-in `forward_auth` plus `handle_errors` with a redirect to the waiting page (the old snippet did not trigger wakes)
+- The API key may be passed as an `?api_key=` query parameter (required for forward-auth middlewares, which cannot attach custom headers); headers still take precedence
+- Requests with a valid API key are exempt from the `/api/wake/by-host` rate limit, since forward-auth setups route every proxied request through it
+- `docs/examples/traefik.md` and `docs/examples/caddy.md` rewritten around the new configurations, including caveats
+
 ## [4.2.4] - 2026-07-12
 
 ### Fixed
@@ -244,7 +259,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...main
+[4.2.5]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...v4.2.5
 [4.2.4]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...v4.2.4
 [4.2.3]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...v4.2.3
 [4.2.2]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...v4.2.2

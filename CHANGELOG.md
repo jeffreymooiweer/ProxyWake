@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.4] - 2026-07-12
+
 ### Fixed
 
 - Deleting a device that has wake history no longer fails with HTTP 500 (`NOT NULL constraint failed: wake_event.device_id`); wake events, schedules and dependency links are removed together with the device
@@ -242,7 +244,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...main
+[4.2.4]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...v4.2.4
 [4.2.3]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.2...v4.2.3
 [4.2.2]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.1...v4.2.2
 [4.2.1]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.0...v4.2.1

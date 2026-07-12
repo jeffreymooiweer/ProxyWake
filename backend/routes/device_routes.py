@@ -83,8 +83,8 @@ def modify_device(device_id):
 
 
 @bp.route('/api/devices/<int:device_id>/wake', methods=['POST'])
-@api_key_or_session_required('wake')
 @limiter.limit('30 per minute')
+@api_key_or_session_required('wake')
 def wake_device(device_id):
     device = Device.query.get_or_404(device_id)
     force = request.args.get('force', 'false').lower() == 'true'

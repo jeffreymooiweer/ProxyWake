@@ -1,6 +1,12 @@
 from flask import Blueprint, jsonify, request
 
-from auth import api_key_or_session_required, api_key_required, login_required
+from auth import (
+    api_key_or_session_required,
+    api_key_required,
+    get_request_api_key,
+    login_required,
+    verify_api_key,
+)
 from config import get_or_create_api_key
 from extensions import limiter
 from integrations import (
@@ -44,9 +50,14 @@ def delete_npm_host(host_id):
     return json_message('NPM_HOST_DELETED')
 
 
+# The limiter must wrap the auth decorator (sit above it): decorated limits
+# are enforced inside the view wrapper, so with auth on the outside a request
+# rejected with 401 was never counted — key brute-force ran unthrottled.
+# Only unauthenticated callers are throttled; forward-auth middlewares route
+# every proxied request through here, so a valid key must never hit the limit.
 @bp.route('/api/wake/by-host', methods=['GET', 'POST'])
+@limiter.limit('60 per minute', exempt_when=lambda: verify_api_key(get_request_api_key()))
 @api_key_required
-@limiter.limit('60 per minute')
 def wake_by_host():
     # The explicit ?host= parameter must beat the implicit Host header, which
     # is always present in HTTP and would otherwise make the parameter dead.
@@ -62,7 +73,7 @@ def wake_by_host():
     if not device:
         return json_error('DEVICE_NOT_FOUND_FOR_DOMAIN', 404)
     try:
-        result = smart_wake_device(device, source='npm')
+        result = smart_wake_device(device, source='npm', record_skips=False)
         return jsonify({'message_code': 'WAKE_PROCESSED', 'domain': device.domain, 'device_id': device.id, **result}), 200
     except Exception:
         return json_error('WAKE_FAILED', 500)

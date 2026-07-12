@@ -64,7 +64,13 @@ def get_request_api_key():
     auth_header = request.headers.get('Authorization', '')
     if auth_header.lower().startswith('bearer '):
         return auth_header[7:].strip()
-    return request.headers.get('X-API-Key', '').strip()
+    header_key = request.headers.get('X-API-Key', '').strip()
+    if header_key:
+        return header_key
+    # Forward-auth middlewares (Traefik forwardAuth, Caddy forward_auth)
+    # cannot inject custom headers into the auth request, so the key may
+    # also be passed as a query parameter.
+    return request.args.get('api_key', '').strip()
 
 
 def set_password(password):

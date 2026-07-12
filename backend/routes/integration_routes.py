@@ -48,10 +48,12 @@ def delete_npm_host(host_id):
 @api_key_required
 @limiter.limit('60 per minute')
 def wake_by_host():
+    # The explicit ?host= parameter must beat the implicit Host header, which
+    # is always present in HTTP and would otherwise make the parameter dead.
     host = (
         request.headers.get('X-Forwarded-Host')
-        or request.headers.get('Host')
         or request.args.get('host')
+        or request.headers.get('Host')
         or ''
     ).split(':')[0].strip().lower()
     if not host:

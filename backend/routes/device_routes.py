@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from auth import api_key_or_session_required, login_required
 from extensions import limiter
-from models import Device, db
+from models import Device, DeviceDependency, ScheduledWake, WakeEvent, db
 from services.credential_service import save_credentials
 from services.dependency_service import (
     DependencyCycleError,
@@ -68,6 +68,14 @@ def modify_device(device_id):
         return jsonify(device.to_dict()), 200
 
     domain = device.domain
+    # Remove dependent rows first: wake_event.device_id and schedule rows are
+    # NOT NULL, so deleting the device alone fails with an IntegrityError.
+    WakeEvent.query.filter_by(device_id=device.id).delete()
+    ScheduledWake.query.filter_by(device_id=device.id).delete()
+    DeviceDependency.query.filter(
+        (DeviceDependency.device_id == device.id)
+        | (DeviceDependency.depends_on_device_id == device.id)
+    ).delete()
     db.session.delete(device)
     db.session.commit()
     log_audit('device_deleted', domain, actor_ip())

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Deleting a device that has wake history no longer fails with HTTP 500 (`NOT NULL constraint failed: wake_event.device_id`); wake events, schedules and dependency links are removed together with the device
+- First boot with a fresh database no longer crashes intermittently: both gunicorn workers raced in `db.create_all()` and one failed on `table app_setting already exists`, taking the server down. Schema creation now runs under a file lock
+- `?host=` query parameter of `/api/wake/by-host` was unreachable because the always-present `Host` header took precedence; the explicit parameter now wins over the implicit header
+
 - Secret key is now persisted in the data directory when `PROXYWAKE_SECRET_KEY` is not set. Previously every worker (and every call) generated a fresh random key, which invalidated sessions between the two gunicorn workers and made stored SSH/IPMI credentials permanently undecryptable
 - Verified-wake job status is stored in the database instead of per-process memory, so job polling works regardless of which gunicorn worker answers the request
 - Scheduled wakes run in exactly one worker (data-dir file lock); previously every worker ran its own scheduler loop. The loop now aligns to minute boundaries so schedules can no longer be skipped or double-fired

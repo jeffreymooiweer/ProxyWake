@@ -1,7 +1,7 @@
 """Regression tests for multi-worker stability and data-integrity fixes."""
 
 import config
-from models import Device, ScheduledWake, WakeJob, db
+from models import Device, ScheduledWake, WakeEvent, WakeJob, db
 from services.wake_job_service import create_wake_job, get_wake_job, update_wake_job
 from utils.logging_config import filter_log_lines, parse_log_line
 
@@ -102,6 +102,30 @@ def test_schedule_to_dict_includes_days(client, sample_device):
     assert response.status_code == 201
     data = response.get_json()
     assert data['days'] == [0, 1]
+
+
+def test_delete_device_with_wake_history(client, sample_device):
+    from services.notification_service import record_wake_event
+
+    device = db.session.get(Device, sample_device['id'])
+    record_wake_event(device, 'manual', success=True, status='sent')
+    schedule = ScheduledWake(device_id=device.id, hour=7, minute=0)
+    db.session.add(schedule)
+    db.session.commit()
+
+    response = client.delete(f"/api/devices/{device.id}")
+    assert response.status_code == 200
+    assert db.session.get(Device, sample_device['id']) is None
+
+
+def test_wake_by_host_query_param(client, sample_device, monkeypatch, api_key):
+    monkeypatch.setattr('services.wake_service.check_device_online', lambda device: True)
+    response = client.post(
+        f"/api/wake/by-host?host={sample_device['domain']}",
+        headers={'X-API-Key': api_key},
+    )
+    assert response.status_code == 200
+    assert response.get_json()['domain'] == sample_device['domain']
 
 
 def test_public_wake_nonblocking_param(client, sample_device, monkeypatch):

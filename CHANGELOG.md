@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.7] - 2026-08-12
+
+### Changed
+
+- Dependency updates (verified against the full test suite and a live smoke test): `flask-cors` `>=6.0.5`, `flask-limiter` `>=4.1.1`, `gunicorn` `>=26.0.0`, `cryptography` `>=49.0.0` (security), `Pillow` `>=12.3.0` (security, dev icon tooling)
+- CI action updates: `github/codeql-action` v3 → v4, `docker/setup-qemu-action` v3 → v4, `actions/setup-node` v4 → v6
+
 ## [4.2.6] - 2026-07-12
 
 ### Fixed
@@ -269,7 +276,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.6...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.7...main
+[4.2.7]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.6...v4.2.7
 [4.2.6]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...v4.2.6
 [4.2.5]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...v4.2.5
 [4.2.4]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.3...v4.2.4

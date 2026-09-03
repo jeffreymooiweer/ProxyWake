@@ -40,6 +40,9 @@ def start_scheduler(app):
         logging.info('Scheduler already running in another worker; skipping in this process')
         return
     _scheduler_started = True
+    # Schedules are evaluated in the container's local time; set the TZ
+    # environment variable so 07:00 means 07:00 where you live.
+    logging.info('Wake scheduler started (local timezone: %s)', time.tzname[0])
 
     def loop():
         from models import ScheduledWake
@@ -67,11 +70,11 @@ def start_scheduler(app):
                             try:
                                 smart_wake_device(device, source='scheduled')
                             except Exception as exc:
-                                logging.error('Geplande wake mislukt: %s', exc)
+                                logging.error('Scheduled wake failed: %s', exc)
                     if len(last_fired) > 1000:
                         last_fired = {key for key in last_fired if key[1] == minute_key}
             except Exception as exc:
-                logging.error('Scheduler fout: %s', exc)
+                logging.error('Scheduler error: %s', exc)
             # Wake up just past the next minute boundary so no minute is skipped.
             time.sleep(max(1, 61 - datetime.now().second))
 

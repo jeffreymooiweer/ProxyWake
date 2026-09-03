@@ -79,7 +79,7 @@ def import_devices(data_list, merge=True):
             'name': item.get('name'),
             'group_id': item.get('group_id'),
             'npm_host_id': item.get('npm_host_id'),
-            'use_broadcast': item.get('use_broadcast', False),
+            'use_broadcast': item.get('use_broadcast', True),
             'broadcast_ip': item.get('broadcast_ip'),
             'wake_cooldown_seconds': item.get('wake_cooldown_seconds', 30),
             'status_check_type': item.get('status_check_type', 'ping'),

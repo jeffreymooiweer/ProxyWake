@@ -107,7 +107,7 @@ def validate_device_payload(data, device=None):
         'name': name,
         'group_id': group_id,
         'npm_host_id': npm_host_id,
-        'use_broadcast': bool(data.get('use_broadcast', False)),
+        'use_broadcast': bool(data.get('use_broadcast', True)),
         'broadcast_ip': data.get('broadcast_ip'),
         'wake_cooldown_seconds': int(data.get('wake_cooldown_seconds', 30)),
         'status_check_type': status_check_type,

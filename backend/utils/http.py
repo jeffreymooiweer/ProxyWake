@@ -5,7 +5,11 @@ from services.settings_service import get_setting
 
 
 def actor_ip():
-    return request.headers.get('X-Forwarded-For', request.remote_addr)
+    """Client address for the audit log; the first X-Forwarded-For entry when proxied."""
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr
 
 
 def get_proxywake_base_url():

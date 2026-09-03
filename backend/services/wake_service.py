@@ -35,7 +35,7 @@ def _perform_wake_action(device, source):
         execute_wake_action(device)
         return None
     except WakeMethodError as exc:
-        logging.error('Wake mislukt voor %s (%s): %s', device.domain, exc.code, exc)
+        logging.error('Wake failed for %s (%s): %s', device.domain, exc.code, exc)
         record_wake_event(device, source, success=False, error=str(exc), status='failed')
         return exc.code
 
@@ -192,13 +192,11 @@ def wake_and_wait(device, source='public', max_wait=None):
         record_wake_event(device, source, success=True, skipped=True, status='skipped')
         return {'online': True, 'waited_ms': 0, 'message_code': 'ALREADY_ONLINE', 'skipped': True, 'status': 'skipped'}
 
-    dependency_error = _wake_chain_if_needed(device, source)
-    if dependency_error:
-        return {'online': False, 'message_code': dependency_error, 'status': 'failed'}
-
+    # smart_wake_device wakes the dependency chain itself and reports any
+    # failure as status 'failed'.
     result = smart_wake_device(device, source=source)
-    if result.get('message_code') in ('DEPENDENCY_WAKE_FAILED', 'SSH_CREDENTIALS_MISSING', 'WEBHOOK_URL_MISSING'):
-        return {'online': False, 'status': 'failed', **result}
+    if result.get('status') == 'failed':
+        return {'online': False, **result}
 
     if check_device_online(device):
         return {'online': True, 'waited_ms': 0, 'status': 'online', **result}

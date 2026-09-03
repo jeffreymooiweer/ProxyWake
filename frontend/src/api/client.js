@@ -16,7 +16,11 @@ async function request(path, options = {}) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
+    // Structured API errors carry error_code and are translated (and thrown)
+    // by translateApiPayload; anything else (proxy 502, non-JSON 500) must
+    // still surface as a failure instead of looking like success.
     translateApiPayload(data);
+    throw new Error(data.error || `${i18n.t('errors.GENERIC')} (HTTP ${response.status})`);
   }
   return translateApiPayload(data);
 }

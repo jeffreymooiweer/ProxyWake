@@ -3,13 +3,15 @@
   <Name>ProxyWake</Name>
   <Repository>jeffersonmouze/proxywake:latest</Repository>
   <Registry>https://hub.docker.com/r/jeffersonmouze/proxywake</Registry>
-  <Network>bridge</Network>
+  <!-- Host networking is required for Wake-on-LAN: magic packets are LAN broadcasts
+       that never leave Docker's private bridge network. -->
+  <Network>host</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
   <Support>https://github.com/jeffreymooiweer/ProxyWake/issues</Support>
   <Project>https://github.com/jeffreymooiweer/ProxyWake</Project>
-  <Overview>ProxyWake wakes sleeping devices on your network when they are accessed through a reverse proxy. Built for Nginx Proxy Manager, Traefik, Caddy and homelab setups.</Overview>
+  <Overview>ProxyWake wakes sleeping devices on your network when they are accessed through a reverse proxy. Built for Nginx Proxy Manager, Traefik, Caddy and homelab setups. Uses host networking so Wake-on-LAN broadcasts reach your LAN; the web UI runs on port 5001.</Overview>
   <Category>Network:Other Tools:Utilities</Category>
   <WebUI>http://[IP]:[PORT:5001]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/unraid/proxywake.xml</TemplateURL>
@@ -17,10 +19,11 @@
   <ExtraParams>--cap-add=NET_RAW</ExtraParams>
   <PostArgs/>
   <CPUset/>
-  <Config Name="WebUI Port" Target="5001" Default="5001" Mode="tcp" Description="Web interface port for ProxyWake." Type="Port" Display="always" Required="true" Mask="false">5001</Config>
-  <Config Name="Appdata" Target="/app/backend/data" Default="/mnt/user/appdata/proxywake" Mode="rw" Description="Persistent application data, database, logs and configuration." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/proxywake</Config>
-  <Config Name="Secret Key" Target="PROXYWAKE_SECRET_KEY" Default="" Mode="" Description="Required. Set a long random secret key for stable sessions and security. Example: generate at least 32 random characters." Type="Variable" Display="always" Required="true" Mask="true"/>
-  <Config Name="Password" Target="PROXYWAKE_PASSWORD" Default="" Mode="" Description="Optional. Web UI login password. Leave empty to set via the first-run setup wizard." Type="Variable" Display="advanced" Required="false" Mask="true"/>
-  <Config Name="Allowed Origins" Target="PROXYWAKE_ALLOWED_ORIGINS" Default="" Mode="" Description="Optional. Comma-separated allowed origins, for example https://proxywake.example.com. Leave empty for local direct access." Type="Variable" Display="advanced" Required="false" Mask="false"/>
-  <Config Name="Session Cookie Secure" Target="PROXYWAKE_SESSION_COOKIE_SECURE" Default="false" Mode="" Description="Set to true only when ProxyWake is accessed through HTTPS. Keep false for direct HTTP access via Unraid IP." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="WebUI Port" Target="5001" Default="5001" Mode="tcp" Description="Web interface port. With host networking the UI is always on port 5001 of the Unraid IP; this mapping only applies if you switch the network type to bridge." Type="Port" Display="advanced" Required="true" Mask="false">5001</Config>
+  <Config Name="Appdata" Target="/app/backend/data" Default="/mnt/user/appdata/proxywake" Mode="rw" Description="Persistent application data: database, logs, API key and settings." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/proxywake</Config>
+  <Config Name="Timezone" Target="TZ" Default="UTC" Mode="" Description="Timezone for scheduled wakes, e.g. Europe/Amsterdam or America/New_York." Type="Variable" Display="always" Required="false" Mask="false">UTC</Config>
+  <Config Name="Password" Target="PROXYWAKE_PASSWORD" Default="" Mode="" Description="Optional. Web UI login password. Leave empty to set it in the first-run setup wizard." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="Secret Key" Target="PROXYWAKE_SECRET_KEY" Default="" Mode="" Description="Optional. ProxyWake generates and stores a secret automatically. Only set your own (32+ random characters) if you want to control it, e.g. to restore a backup on another machine." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Allowed Origins" Target="PROXYWAKE_ALLOWED_ORIGINS" Default="" Mode="" Description="Optional. Comma-separated browser origins allowed to call the API, e.g. https://proxywake.example.com. Leave empty for direct access via the Unraid IP." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Session Cookie Secure" Target="PROXYWAKE_SESSION_COOKIE_SECURE" Default="false" Mode="" Description="Set to true only when ProxyWake is opened through HTTPS. Keep false for plain HTTP access via the Unraid IP." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
 </Container>

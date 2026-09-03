@@ -9,7 +9,7 @@ def test_public_status_unknown_domain(client):
     assert response.get_json()['error_code'] == 'DEVICE_NOT_FOUND'
 
 
-@patch('services.status_service.check_device_online', return_value=True)
+@patch('routes.public_routes.check_device_online', return_value=True)
 def test_public_status_known_domain(mock_online, client, sample_device):
     response = client.get(f'/api/public/status/{sample_device["domain"]}')
     assert response.status_code == 200
@@ -21,7 +21,7 @@ def test_public_status_known_domain(mock_online, client, sample_device):
 
 def test_public_status_is_case_insensitive(client, sample_device):
     domain = sample_device['domain'].upper()
-    with patch('services.status_service.check_device_online', return_value=False):
+    with patch('routes.public_routes.check_device_online', return_value=False):
         response = client.get(f'/api/public/status/{domain}')
     assert response.status_code == 200
     assert response.get_json()['online'] is False

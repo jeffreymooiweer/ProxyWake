@@ -29,6 +29,8 @@ app.example.com {
 
 Copy the exact snippet (with your URL and API key filled in) from **Integration → Caddy** in the ProxyWake UI.
 
+The example uses `http://proxywake:5001` as if ProxyWake and Caddy share a Docker network. Because ProxyWake normally runs with **host networking** (needed for Wake-on-LAN — see [Docker → Networking](../docker.md#networking-and-wake-on-lan)), you will usually use the LAN IP of the ProxyWake host instead, e.g. `http://192.168.1.10:5001` — that address is also what visitors' browsers are redirected to for the waiting page, so it must be reachable from them.
+
 On Caddy older than 2.8, replace the `handle_errors` block with the expression form:
 
 ```caddyfile

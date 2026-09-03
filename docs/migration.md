@@ -1,56 +1,61 @@
-# Migration
+# Upgrading
 
-Upgrading ProxyWake between versions.
+How to move to a newer ProxyWake version without losing anything.
 
 ## Before you upgrade
 
-1. **Back up** your data directory or use **Settings → Backup**.
-2. Note your environment variables (`PROXYWAKE_PASSWORD`, `PROXYWAKE_SECRET_KEY`, etc.).
-
-```bash
-curl -H "X-API-Key: $KEY" http://host:8462/api/backup -o proxywake-backup.json
-```
+1. **Make a backup.** Either copy the data folder (`/app/backend/data` in the container, `/mnt/user/appdata/proxywake` on Unraid), or download a full backup:
+   - in the UI: **Settings → Full backup**, or
+   - with the API: `curl -H "X-API-Key: $KEY" http://192.168.1.10:5001/api/backup -o proxywake-backup.json`
+2. Note the environment variables you set (`PROXYWAKE_PASSWORD`, `TZ`, and `PROXYWAKE_SECRET_KEY` if you set one).
 
 ## Upgrade
 
+Docker Compose:
+
 ```bash
-docker pull jeffersonmouze/proxywake:latest
-docker compose pull && docker compose up -d
+docker compose pull
+docker compose up -d
 ```
 
-Or stop, remove, and re-run `docker run` with the **same volume** and env vars.
+Plain Docker: stop and remove the old container, then run the same `docker run` command again with the **same volume** and environment variables. Unraid: click the container's **Update** button.
+
+The database is upgraded automatically on first start; you do not need to do anything. Check **Logs** if the container does not come up.
 
 ## Verify
 
 ```bash
-curl -s http://localhost:8462/api/health | jq .version
+curl -s http://192.168.1.10:5001/api/health
 ```
 
-Check **Logs** for migration messages on first start.
+The `version` field should show the new version.
 
-## Pinning versions
+## Pinning a version
 
-For production, pin a semver tag instead of `latest`:
+If you prefer not to follow `latest`, use a version tag:
 
 ```yaml
-image: jeffersonmouze/proxywake:4.2.2
+image: jeffersonmouze/proxywake:4.3.0
 ```
 
-## Downgrades
+`4.3` follows all 4.3.x patch releases; `4.3.0` never changes.
 
-Not officially supported. Restore from a backup taken on the target version if needed.
+## Downgrading
 
-## Major upgrades (3.x → 4.x)
+Not supported. Restore a backup taken on the older version if you need to go back.
 
-Backup/restore is strongly recommended. Docker tags `3.x` are no longer supported — see [SECURITY.md](../SECURITY.md) and [CHANGELOG](../CHANGELOG.md).
+## Notes for specific versions
+
+- **4.3.0** — new devices wake with broadcast on by default; existing devices keep their setting. Scheduled wakes now use the `TZ` environment variable; set it if your schedules should run in local time.
+- **4.2.4** — the secret key is now generated once and stored in the data folder. If you saved SSH/IPMI passwords on 4.2.3 or older *without* setting `PROXYWAKE_SECRET_KEY`, enter them again once.
+- **3.x → 4.x** — take a full backup first. 3.x images are no longer supported.
 
 ## Common mistakes
 
 - Upgrading without a backup.
-- Changing `PROXYWAKE_SECRET_KEY` during upgrade — breaks encrypted credentials.
+- Changing `PROXYWAKE_SECRET_KEY` during the upgrade — stored SSH/IPMI passwords become unreadable.
+- Forgetting the volume: starting a new container without `-v proxywake_data:/app/backend/data` gives you an empty ProxyWake.
 
 ## See also
 
-- [Docker](docker.md)
-- [Configuration](configuration.md)
-- [CHANGELOG](../CHANGELOG.md)
+- [Docker](docker.md) · [Configuration](configuration.md) · [Changelog](../CHANGELOG.md)

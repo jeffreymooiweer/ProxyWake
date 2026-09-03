@@ -35,6 +35,8 @@ http:
 
 Copy the exact snippet (with your URL and API key filled in) from **Integration → Traefik** in the ProxyWake UI.
 
+The examples use `http://proxywake:5001` as if ProxyWake and Traefik share a Docker network. Because ProxyWake normally runs with **host networking** (needed for Wake-on-LAN — see [Docker → Networking](../docker.md#networking-and-wake-on-lan)), you will usually use the LAN IP of the ProxyWake host instead, e.g. `http://192.168.1.10:5001`.
+
 ## Steps
 
 1. Set the ProxyWake URL in **Settings** (reachable from Traefik — LAN IP or Docker network name).

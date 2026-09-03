@@ -37,13 +37,13 @@ Then install it from **Apps → Private Apps**.
 
 | Setting | Value |
 |---------|-------|
-| **Network Type** | **Host** — required for Wake-on-LAN |
+| **Network Type** | **Host**, or **Custom: br0** with a fixed IP if you want ProxyWake on its own LAN address. Both put ProxyWake on your LAN, which Wake-on-LAN needs. Plain *Bridge* does **not** work for Wake-on-LAN. |
 | **Extra Parameters** | `--cap-add=NET_RAW` |
 | **Path** | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
 | **Variable** `TZ` | e.g. `Europe/Amsterdam` |
 | **Variable** `PROXYWAKE_PASSWORD` | your password (optional — the setup wizard asks otherwise) |
 
-   No port mapping is needed with host networking; the UI is on port 5001.
+   No port mapping is needed with Host or Custom: br0; the UI is on port 5001 of the Unraid IP (Host) or of the container's own IP (Custom: br0). With Custom: br0, enable **Settings → Docker → Host access to custom networks** if you want to reach the UI from the Unraid server itself.
 
 4. Apply, then open `http://<unraid-ip>:5001`.
 
@@ -59,7 +59,7 @@ Do **not** use `localhost` — from inside the NPM container that points at NPM 
 
 ## Common mistakes
 
-- **Bridge network** — the UI works but nothing ever wakes. Switch to Host.
+- **Bridge network** — the UI works but nothing ever wakes. Switch to Host or Custom: br0.
 - Mapping appdata to `/app/data` instead of `/app/backend/data`.
 - `localhost` in the NPM snippet.
 - Forgetting to include `/mnt/user/appdata/proxywake` in your backup routine.

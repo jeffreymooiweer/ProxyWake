@@ -87,10 +87,10 @@ const IntegrationPage = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={9}>
+            <Grid size={{ xs: 12, md: 9 }}>
               <TextField fullWidth label={t('integration.urlLabel')} value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Button fullWidth variant="contained" sx={{ height: '56px' }} onClick={refresh}>{t('integration.refresh')}</Button>
             </Grid>
           </Grid>
@@ -107,10 +107,10 @@ const IntegrationPage = () => {
 
       {tab === 0 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} lg={6}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <CodeBlock title={t('integration.npmGlobal')} description={t('integration.npmGlobalDesc')} value={config.npm.global_config} onCopy={copyText} copyLabel={t('common.copy')} />
           </Grid>
-          <Grid item xs={12} lg={6}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <CodeBlock title={t('integration.npmHost')} description={t('integration.npmHostDesc')} value={config.npm.host_config} onCopy={copyText} copyLabel={t('common.copy')} />
           </Grid>
         </Grid>

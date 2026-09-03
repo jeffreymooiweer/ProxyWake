@@ -46,6 +46,7 @@ Not supported. Restore a backup taken on the older version if you need to go bac
 
 ## Notes for specific versions
 
+- **4.4.0** — no configuration changes. Wake-on-LAN now also works from a macvlan/ipvlan network (Unraid *Custom: br0*); see [Docker → Networking](docker.md#networking-and-wake-on-lan). Contributors: the frontend build moved to Vite and needs Node 22.
 - **4.3.0** — new devices wake with broadcast on by default; existing devices keep their setting. Scheduled wakes now use the `TZ` environment variable; set it if your schedules should run in local time.
 - **4.2.4** — the secret key is now generated once and stored in the data folder. If you saved SSH/IPMI passwords on 4.2.3 or older *without* setting `PROXYWAKE_SECRET_KEY`, enter them again once.
 - **3.x → 4.x** — take a full backup first. 3.x images are no longer supported.

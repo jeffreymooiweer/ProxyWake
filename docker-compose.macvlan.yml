@@ -1,0 +1,64 @@
+# ProxyWake on a custom "macvlan" network: the container gets its own IP
+# address on your LAN, next to your other devices, instead of sharing the
+# host's network stack. Wake-on-LAN works because the container is on the
+# same physical network as the devices it wakes.
+#
+# Use this instead of docker-compose.yml when you prefer a dedicated IP,
+# or when host networking is not an option.
+#
+# Before starting, adjust the three values marked CHANGE ME:
+#   - parent:  the host network interface connected to your LAN (ip link)
+#   - subnet / gateway: your LAN
+#   - ipv4_address: a free IP on your LAN, outside your DHCP range
+#
+# Known Docker limitation: the *host itself* cannot reach a macvlan
+# container. Open the UI from another device on your LAN, or add a
+# macvlan "shim" interface on the host (see docs/docker.md).
+
+services:
+  proxywake:
+    image: ${PROXYWAKE_IMAGE:-jeffersonmouze/proxywake:latest}
+    container_name: proxywake
+    networks:
+      lan:
+        ipv4_address: 192.168.1.250        # CHANGE ME: free IP on your LAN
+      # Optional: also join the network your reverse proxy uses, so it can
+      # reach ProxyWake by container name. Uncomment and name it below.
+      # proxy:
+    environment:
+      PROXYWAKE_PASSWORD: ${PROXYWAKE_PASSWORD:-}
+      PROXYWAKE_API_KEY: ${PROXYWAKE_API_KEY:-}
+      PROXYWAKE_SECRET_KEY: ${PROXYWAKE_SECRET_KEY:-}
+      PROXYWAKE_ALLOWED_ORIGINS: ${PROXYWAKE_ALLOWED_ORIGINS:-}
+      PROXYWAKE_DATA_DIR: /app/backend/data
+      TZ: ${TZ:-UTC}
+      # ProxyWake picks the interface on the device's LAN automatically.
+      # If it ever guesses wrong (several LAN interfaces), pin it:
+      # PROXYWAKE_WOL_INTERFACE: 192.168.1.250
+    volumes:
+      - proxywake_data:/app/backend/data
+    restart: unless-stopped
+    cap_add:
+      - NET_RAW
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  lan:
+    driver: macvlan
+    driver_opts:
+      parent: eth0                          # CHANGE ME: your LAN interface
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24            # CHANGE ME: your LAN
+          gateway: 192.168.1.1              # CHANGE ME: your router
+  # proxy:
+  #   external: true
+  #   name: npm_default                     # the network your proxy is on
+
+volumes:
+  proxywake_data:

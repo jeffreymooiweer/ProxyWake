@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ── Frontend build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS frontend-build
+FROM node:22-alpine AS frontend-build
 
 WORKDIR /app/frontend
 
@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.title="ProxyWake" \
       org.opencontainers.image.description="Wake-on-LAN platform for Nginx Proxy Manager" \
       org.opencontainers.image.source="https://github.com/jeffreymooiweer/ProxyWake" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.version="4.3.0"
+      org.opencontainers.image.version="4.4.0"
 
 WORKDIR /app
 

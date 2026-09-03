@@ -213,7 +213,7 @@ const DevicesPage = () => {
           <Typography variant="h6" gutterBottom>{t('devices.newDevice')}</Typography>
           <Box component="form" onSubmit={handleCreate}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   fullWidth
                   label={t('devices.name')}
@@ -222,7 +222,7 @@ const DevicesPage = () => {
                   placeholder={t('devices.namePlaceholder')}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   fullWidth
                   required
@@ -232,7 +232,7 @@ const DevicesPage = () => {
                   placeholder={t('devices.domainPlaceholder')}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <TextField
                   fullWidth
                   required
@@ -242,7 +242,7 @@ const DevicesPage = () => {
                   placeholder={t('devices.ipPlaceholder')}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <TextField
                   fullWidth
                   required
@@ -252,7 +252,7 @@ const DevicesPage = () => {
                   placeholder={t('devices.macPlaceholder')}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <TextField
                   fullWidth
                   type="number"
@@ -261,7 +261,7 @@ const DevicesPage = () => {
                   onChange={(e) => setForm({ ...form, wake_cooldown_seconds: Number(e.target.value) })}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <FormControl fullWidth>
                   <InputLabel>{t('devices.group')}</InputLabel>
                   <Select value={form.group_id} label={t('devices.group')} onChange={(e) => setForm({ ...form, group_id: e.target.value })}>
@@ -270,13 +270,13 @@ const DevicesPage = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <FormControlLabel
                   control={<Switch checked={form.use_broadcast} onChange={(e) => setForm({ ...form, use_broadcast: e.target.checked })} />}
                   label={t('devices.broadcast')}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
+              <Grid size={{ xs: 12, md: 2 }}>
                 <Button
                   fullWidth
                   type="submit"
@@ -390,7 +390,7 @@ const DevicesPage = () => {
         <DialogTitle>{t('devices.editTitle')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('devices.name')}
@@ -398,7 +398,7 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, name: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('devices.domain')}
@@ -406,7 +406,7 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, domain: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label={t('devices.ip')}
@@ -414,7 +414,7 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, ip: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label={t('devices.mac')}
@@ -422,7 +422,7 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, mac: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('devices.statusCheckType')}</InputLabel>
                 <Select
@@ -436,7 +436,7 @@ const DevicesPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -445,7 +445,7 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, status_check_port: e.target.value ? Number(e.target.value) : null })}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('devices.statusCheckUrl')}
@@ -454,7 +454,7 @@ const DevicesPage = () => {
                 placeholder="http://192.168.1.50:32400/identity"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -465,13 +465,13 @@ const DevicesPage = () => {
             </Grid>
             {(editing?.wake_method || 'wol') === 'wol' && (
               <>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControlLabel
                     control={<Switch checked={editing?.use_broadcast ?? true} onChange={(e) => setEditing({ ...editing, use_broadcast: e.target.checked })} />}
                     label={t('devices.broadcast')}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label={t('devices.broadcastIp')}
@@ -483,7 +483,7 @@ const DevicesPage = () => {
                 </Grid>
               </>
             )}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('devices.wakeMethod')}</InputLabel>
                 <Select
@@ -497,7 +497,7 @@ const DevicesPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('devices.dependencies')}</InputLabel>
                 <Select
@@ -515,56 +515,56 @@ const DevicesPage = () => {
             </Grid>
             {(editing?.wake_method || 'wol') === 'ssh' && (
               <>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label={t('devices.sshHost')} value={editing?.ssh_host || ''} onChange={(e) => setEditing({ ...editing, ssh_host: e.target.value })} />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField fullWidth type="number" label={t('devices.sshPort')} value={editing?.ssh_port ?? 22} onChange={(e) => setEditing({ ...editing, ssh_port: Number(e.target.value) })} />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField fullWidth label={t('devices.sshUsername')} value={editing?.ssh_username || ''} onChange={(e) => setEditing({ ...editing, ssh_username: e.target.value })} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth label={t('devices.sshCommand')} value={editing?.ssh_command || 'exit'} onChange={(e) => setEditing({ ...editing, ssh_command: e.target.value })} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth type="password" label={t('devices.sshPassword')} value={credentialForm.ssh_password} onChange={(e) => setCredentialForm({ ...credentialForm, ssh_password: e.target.value })} helperText={editing?.ssh_credentials_configured ? t('devices.credentialsConfigured') : ''} />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth multiline minRows={2} label={t('devices.sshPrivateKey')} value={credentialForm.ssh_private_key} onChange={(e) => setCredentialForm({ ...credentialForm, ssh_private_key: e.target.value })} />
                 </Grid>
               </>
             )}
             {(editing?.wake_method || 'wol') === 'webhook' && (
               <>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth label={t('devices.webhookUrl')} value={editing?.webhook_url || ''} onChange={(e) => setEditing({ ...editing, webhook_url: e.target.value })} />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField fullWidth label={t('devices.webhookMethod')} value={editing?.webhook_method || 'POST'} onChange={(e) => setEditing({ ...editing, webhook_method: e.target.value })} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth multiline minRows={2} label={t('devices.webhookBody')} value={editing?.webhook_body || ''} onChange={(e) => setEditing({ ...editing, webhook_body: e.target.value })} />
                 </Grid>
               </>
             )}
             {(editing?.wake_method || 'wol') === 'home_assistant' && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField fullWidth label={t('devices.haWebhookUrl')} value={editing?.homeassistant_webhook_url || ''} onChange={(e) => setEditing({ ...editing, homeassistant_webhook_url: e.target.value })} />
               </Grid>
             )}
             {(editing?.wake_method || 'wol') === 'ipmi' && (
               <>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label={t('devices.ipmiHost')} value={editing?.ipmi_host || ''} onChange={(e) => setEditing({ ...editing, ipmi_host: e.target.value })} placeholder={editing?.ip || ''} />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField fullWidth type="number" label={t('devices.ipmiPort')} value={editing?.ipmi_port ?? 623} onChange={(e) => setEditing({ ...editing, ipmi_port: Number(e.target.value) })} />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid size={{ xs: 12, sm: 3 }}>
                   <TextField fullWidth label={t('devices.ipmiUsername')} value={editing?.ipmi_username || ''} onChange={(e) => setEditing({ ...editing, ipmi_username: e.target.value })} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField fullWidth type="password" label={t('devices.ipmiPassword')} value={credentialForm.ipmi_password} onChange={(e) => setCredentialForm({ ...credentialForm, ipmi_password: e.target.value })} helperText={editing?.ipmi_credentials_configured ? t('devices.credentialsConfigured') : ''} />
                 </Grid>
               </>

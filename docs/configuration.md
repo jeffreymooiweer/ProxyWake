@@ -15,6 +15,7 @@ Set these when starting the container (`-e NAME=value` with `docker run`, in `.e
 | `PROXYWAKE_ALLOWED_ORIGINS` | No | any | Comma-separated list of browser origins allowed to call the API. Only needed when the UI is served from a different hostname than the API. |
 | `PROXYWAKE_SESSION_COOKIE_SECURE` | No | `false` | Set to `true` when the UI is **only** opened over HTTPS. With `true` on plain HTTP you cannot log in. |
 | `PROXYWAKE_DATA_DIR` | No | `/app/backend/data` | Where the database, logs, keys and settings are stored. |
+| `PROXYWAKE_WOL_INTERFACE` | No | auto | Local IP of the network interface to send Wake-on-LAN broadcasts from. ProxyWake normally picks the interface on the device's LAN by itself; set this only if it guesses wrong on a host or container with several LAN interfaces. |
 
 ### Example `.env` for Docker Compose
 

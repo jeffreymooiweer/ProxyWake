@@ -26,10 +26,10 @@ python app.py
 # Frontend (separate terminal)
 cd frontend
 npm ci
-npm start
+npm run dev
 ```
 
-The backend serves the production frontend build on port `5001`. For frontend development with hot reload, run `npm start` (port 3000) and configure a proxy, or build the frontend:
+The backend serves the production frontend build on port `5001`. For frontend development with hot reload, run `npm run dev` (Vite, port 3000); it forwards `/api` calls to the backend on port 5001 automatically (see `vite.config.js`). To test the production bundle through the backend, build the frontend:
 
 ```bash
 cd frontend && npm run build

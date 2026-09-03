@@ -28,7 +28,7 @@ What the important parts mean:
 
 | Part | Why it is there |
 |------|-----------------|
-| `--network host` | **Required for Wake-on-LAN.** The magic packet is a broadcast on your LAN; from Docker's default private network it would never reach your devices. |
+| `--network host` | **Puts ProxyWake on your LAN, which Wake-on-LAN needs.** The magic packet is a broadcast; from Docker's default private network it would never reach your devices. Prefer a dedicated IP for the container? Use a macvlan network instead — see [Docker → Networking](docker.md#networking-and-wake-on-lan). |
 | `--cap-add NET_RAW` | Allows ProxyWake to *ping* devices to see whether they are online. |
 | `-e TZ=…` | Your timezone, so scheduled wakes happen at the right local time. |
 | `-v proxywake_data:…` | Keeps your devices, settings and logs when the container is updated. |

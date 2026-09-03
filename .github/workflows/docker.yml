@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Extra Docker tag (e.g. 4.3.0)'
+        description: 'Extra Docker tag (e.g. 4.4.0)'
         required: false
         default: 'latest'
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.4.0] - 2026-09-03
+
+### Added
+
+- **Custom network support for Wake-on-LAN.** ProxyWake now detects which of its network interfaces is on the target device's LAN and sends the broadcast from there, so running on a macvlan/ipvlan network (Unraid "Custom: br0") — optionally combined with the reverse proxy's bridge network — works out of the box. `PROXYWAKE_WOL_INTERFACE` pins the interface if needed. Includes `docker-compose.macvlan.yml` and a networking guide comparing host, macvlan and bridge
+- Pages load on demand (code splitting), so the first page load downloads about a third of what it used to
+
+### Changed
+
+- **Frontend toolchain migrated from Create React App to Vite 8**, unblocking the framework upgrades that Dependabot had been proposing: React 19.2, MUI 9.4 (new `Grid` size API, `slotProps`), i18next 26, react-i18next 17. Node 22 for the frontend build. No user-visible changes; every page, dialog and flow re-verified in Chromium
+- A bound broadcast send that fails (e.g. an interface without that route) falls back to an unbound send before being reported
+
 ## [4.3.0] - 2026-09-03
 
 ### Added
@@ -298,7 +310,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.3.0...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.4.0...main
+[4.4.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.7...v4.3.0
 [4.2.7]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.6...v4.2.7
 [4.2.6]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...v4.2.6

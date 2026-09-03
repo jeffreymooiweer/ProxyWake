@@ -34,7 +34,7 @@ def test_legacy_rows_without_flag_still_broadcast():
 def test_one_failing_target_does_not_block_the_others():
     sent = []
 
-    def fake_send(mac, ip_address, port):
+    def fake_send(mac, ip_address, port, interface=None):
         if ip_address == '192.168.1.186':
             raise OSError('Network is unreachable')
         sent.append(ip_address)
@@ -50,6 +50,54 @@ def test_all_targets_failing_raises_wol_error():
         with pytest.raises(WakeMethodError) as excinfo:
             _wake_wol(_device())
     assert excinfo.value.code == 'WOL_SEND_FAILED'
+
+
+def test_broadcast_is_bound_to_the_interface_on_the_device_lan():
+    calls = []
+
+    def fake_send(mac, ip_address, port, interface=None):
+        calls.append((ip_address, interface))
+
+    with patch('services.wake_executor._source_ip_for', return_value='192.168.1.10'), \
+         patch('services.wake_executor.send_magic_packet', side_effect=fake_send):
+        _wake_wol(_device())
+
+    assert calls == [
+        ('192.168.1.186', '192.168.1.10'),
+        ('192.168.1.255', '192.168.1.10'),
+        (LIMITED_BROADCAST, '192.168.1.10'),
+    ]
+
+
+def test_wol_interface_env_overrides_auto_detection(monkeypatch):
+    monkeypatch.setenv('PROXYWAKE_WOL_INTERFACE', '10.5.0.2')
+    calls = []
+    with patch('services.wake_executor.send_magic_packet', side_effect=lambda mac, ip_address, port, interface=None: calls.append(interface)):
+        _wake_wol(_device())
+    assert calls == ['10.5.0.2'] * 3
+
+
+def test_bound_send_falls_back_to_unbound():
+    attempts = []
+
+    def fake_send(mac, ip_address, port, interface=None):
+        attempts.append((ip_address, interface))
+        if interface:
+            raise OSError('Cannot assign requested address')
+
+    with patch('services.wake_executor._source_ip_for', return_value='10.9.9.9'), \
+         patch('services.wake_executor.send_magic_packet', side_effect=fake_send):
+        _wake_wol(_device(use_broadcast=False))
+
+    assert attempts == [('192.168.1.186', '10.9.9.9'), ('192.168.1.186', None)]
+
+
+def test_source_ip_auto_detection_uses_routing_table(monkeypatch):
+    from services.wake_executor import _source_ip_for
+
+    monkeypatch.delenv('PROXYWAKE_WOL_INTERFACE', raising=False)
+    # Loopback is always routable to itself; proves the probe returns a real local address.
+    assert _source_ip_for('127.0.0.1') == '127.0.0.1'
 
 
 def test_new_devices_broadcast_by_default(client):

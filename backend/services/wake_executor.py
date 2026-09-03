@@ -1,5 +1,7 @@
 import json
 import logging
+import os
+import socket
 import subprocess
 
 import requests
@@ -53,13 +55,45 @@ def wol_targets(device):
     return targets
 
 
+def _source_ip_for(target_ip):
+    """Local IP of the interface that routes to target_ip.
+
+    Binding the socket to it makes the limited broadcast (255.255.255.255)
+    leave through the interface that is actually on the device's LAN. That
+    matters when the container has several interfaces: host networking on
+    a multi-NIC server, or a macvlan/ipvlan network combined with a bridge
+    network for the reverse proxy. PROXYWAKE_WOL_INTERFACE overrides the
+    automatic choice with a fixed local IP.
+    """
+    forced = os.environ.get('PROXYWAKE_WOL_INTERFACE', '').strip()
+    if forced:
+        return forced
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+            probe.connect((target_ip, 9))
+            return probe.getsockname()[0]
+    except OSError:
+        return None
+
+
+def _send_via(mac, target, port, source_ip):
+    if source_ip:
+        try:
+            send_magic_packet(mac, ip_address=target, port=port, interface=source_ip)
+            return
+        except OSError as exc:
+            logging.debug('Bound send to %s via %s failed (%s); retrying unbound', target, source_ip, exc)
+    send_magic_packet(mac, ip_address=target, port=port)
+
+
 def _wake_wol(device):
     port = device.wol_port or 9
+    source_ip = _source_ip_for(device.ip)
     sent = 0
     last_error = None
     for target in wol_targets(device):
         try:
-            send_magic_packet(device.mac, ip_address=target, port=port)
+            _send_via(device.mac, target, port, source_ip)
             sent += 1
         except OSError as exc:
             # One unreachable target must not stop the others (e.g. unicast
@@ -68,6 +102,7 @@ def _wake_wol(device):
             logging.warning('Magic packet to %s for %s failed: %s', target, device.mac, exc)
     if sent == 0:
         raise WakeMethodError('WOL_SEND_FAILED', f'Could not send a magic packet: {last_error}')
+    logging.debug('Magic packet for %s sent to %d target(s) from %s', device.mac, sent, source_ip or 'default interface')
 
 
 def _broadcast_for_ip(ip):

@@ -12,13 +12,15 @@ The device stays off after pressing ⏻ in ProxyWake (or after visiting its doma
 
 **Cause:** The container runs on Docker's default bridge network. Wake-on-LAN packets are broadcasts, and broadcasts from that private network never reach your LAN.
 
-**Fix:** Run ProxyWake with **host networking**:
+**Fix:** Put ProxyWake on your LAN — either with **host networking** or with a **macvlan/ipvlan network** that gives it its own LAN IP:
 
-- `docker run … --network host …` (remove any `-p` mapping)
-- Docker Compose: `network_mode: host`
-- Unraid: **Network Type: Host**
+- `docker run … --network host …` (remove any `-p` mapping), or
+- Docker Compose: `network_mode: host`, or the bundled `docker-compose.macvlan.yml`, or
+- Unraid: **Network Type: Host** or **Custom: br0** with a fixed IP
 
-The UI then lives on port `5001` of the host IP. Details: [Docker → Networking](docker.md#networking-and-wake-on-lan).
+The UI then lives on port `5001` (of the host IP, or of the container's own IP). Details and the differences: [Docker → Networking](docker.md#networking-and-wake-on-lan).
+
+If you use a macvlan/custom network **and** the container also has a second network (for example the proxy's network), ProxyWake picks the interface on the device's LAN automatically. Check the Logs page at debug level for `Magic packet … sent to 3 target(s) from <ip>`; if the IP is not on the device's LAN, set `PROXYWAKE_WOL_INTERFACE` to the container's LAN IP.
 
 ### 2. Wrong MAC address
 

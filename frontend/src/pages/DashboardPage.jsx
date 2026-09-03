@@ -75,7 +75,7 @@ const DashboardPage = ({ onNavigate }) => {
       {loading && <LinearProgress sx={{ mb: 3 }} />}
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatCard
             title={t('dashboard.devices')}
             value={devices.length}
@@ -84,7 +84,7 @@ const DashboardPage = ({ onNavigate }) => {
             color="primary"
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatCard
             title={t('dashboard.online')}
             value={onlineCount}
@@ -93,7 +93,7 @@ const DashboardPage = ({ onNavigate }) => {
             color="success"
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StatCard
             title={t('dashboard.offline')}
             value={offlineCount}
@@ -126,7 +126,7 @@ const DashboardPage = ({ onNavigate }) => {
             <Typography variant="h6" gutterBottom>{t('dashboard.statusOverview')}</Typography>
             <Grid container spacing={2}>
               {devices.map((device) => (
-                <Grid item xs={12} sm={6} key={device.id}>
+                <Grid size={{ xs: 12, sm: 6 }} key={device.id}>
                   <Box
                     sx={{
                       p: 2,

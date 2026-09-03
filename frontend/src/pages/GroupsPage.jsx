@@ -56,7 +56,7 @@ const GroupsPage = () => {
 
       <Grid container spacing={2}>
         {groups.map((group) => (
-          <Grid item xs={12} md={6} key={group.id}>
+          <Grid size={{ xs: 12, md: 6 }} key={group.id}>
             <Card>
               <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

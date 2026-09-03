@@ -52,7 +52,7 @@ docker run -d \
 
 Then open **`http://<ip-of-that-machine>:5001`** and follow the setup wizard.
 
-> **Why `--network host`?** Wake-on-LAN works by shouting a "magic packet" to everyone on your local network. A container on Docker's default network is on a private network of its own, so its shout never reaches your devices. Host networking puts ProxyWake directly on your LAN. [More about this →](docs/docker.md#networking-and-wake-on-lan)
+> **Why `--network host`?** Wake-on-LAN works by shouting a "magic packet" to everyone on your local network. A container on Docker's default network is on a private network of its own, so its shout never reaches your devices. Host networking puts ProxyWake directly on your LAN. Prefer a dedicated IP for the container instead? Use a macvlan network (`docker-compose.macvlan.yml`, or *Custom: br0* on Unraid). [More about this →](docs/docker.md#networking-and-wake-on-lan)
 
 **Next:** add a device under **Devices**, press the ⏻ button to test that it wakes, then copy the snippet for your proxy from the **Integration** tab. Step-by-step walkthrough: **[docs/quick-start.md](docs/quick-start.md)**.
 
@@ -62,7 +62,7 @@ Then open **`http://<ip-of-that-machine>:5001`** and follow the setup wizard.
 | Unraid (Community Applications) | [docs/unraid.md](docs/unraid.md) |
 | Settings and environment variables | [docs/configuration.md](docs/configuration.md) |
 
-Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.3`, `4.3.0` · amd64 & arm64
+Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.4`, `4.4.0` · amd64 & arm64
 
 ---
 

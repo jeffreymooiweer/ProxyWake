@@ -56,13 +56,13 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
-              InputProps={{
+              slotProps={{ input: {
                 startAdornment: (
                   <InputAdornment position="start">
                     <LockOutlinedIcon fontSize="small" />
                   </InputAdornment>
                 ),
-              }}
+              } }}
             />
             <Button fullWidth type="submit" variant="contained" size="large" sx={{ mt: 3 }} disabled={loading}>
               {loading ? t('login.submitting') : t('login.submit')}

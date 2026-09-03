@@ -110,7 +110,7 @@ const SettingsPage = () => {
       <Typography color="text.secondary" sx={{ mb: 3 }}>{t('settings.subtitle')}</Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.themeSection')}</Typography>
@@ -125,11 +125,11 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.apiKeySection')}</Typography>
-              <TextField fullWidth value={settings?.api_key || ''} InputProps={{ readOnly: true }} sx={{ mb: 2 }} />
+              <TextField fullWidth value={settings?.api_key || ''} slotProps={{ input: { readOnly: true } }} sx={{ mb: 2 }} />
               <Button variant="outlined" startIcon={<VpnKeyIcon />} onClick={() => api.rotateApiKey().then((result) => { setSettings({ ...settings, api_key: result.api_key }); show(result.message); })}>
                 {t('settings.rotateKey')}
               </Button>
@@ -137,7 +137,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.passwordSection')}</Typography>
@@ -147,7 +147,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.exportSection')}</Typography>
@@ -167,7 +167,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.apiScopesSection')}</Typography>
@@ -190,7 +190,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.notificationsSection')}</Typography>
@@ -212,7 +212,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.loggingSection')}</Typography>
@@ -231,7 +231,7 @@ const SettingsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{t('settings.observability')}</Typography>

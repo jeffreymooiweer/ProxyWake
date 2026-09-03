@@ -38,9 +38,9 @@ const StatisticsPage = () => {
       <Typography color="text.secondary" sx={{ mb: 3 }}>{t('statistics.subtitle')}</Typography>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}><Card><CardContent><Typography color="text.secondary">{t('statistics.totalWakes')}</Typography><Typography variant="h4">{stats.total_wake_events}</Typography></CardContent></Card></Grid>
-        <Grid item xs={12} md={4}><Card><CardContent><Typography color="text.secondary">{t('statistics.last7Days')}</Typography><Typography variant="h4">{stats.wake_events_7d}</Typography></CardContent></Card></Grid>
-        <Grid item xs={12} md={4}><Card><CardContent><Typography color="text.secondary">{t('statistics.successful')}</Typography><Typography variant="h4">{stats.successful_wakes}</Typography></CardContent></Card></Grid>
+        <Grid size={{ xs: 12, md: 4 }}><Card><CardContent><Typography color="text.secondary">{t('statistics.totalWakes')}</Typography><Typography variant="h4">{stats.total_wake_events}</Typography></CardContent></Card></Grid>
+        <Grid size={{ xs: 12, md: 4 }}><Card><CardContent><Typography color="text.secondary">{t('statistics.last7Days')}</Typography><Typography variant="h4">{stats.wake_events_7d}</Typography></CardContent></Card></Grid>
+        <Grid size={{ xs: 12, md: 4 }}><Card><CardContent><Typography color="text.secondary">{t('statistics.successful')}</Typography><Typography variant="h4">{stats.successful_wakes}</Typography></CardContent></Card></Grid>
       </Grid>
 
       <Card sx={{ mb: 3 }}>
@@ -48,7 +48,7 @@ const StatisticsPage = () => {
           <Typography variant="h6" gutterBottom>{t('statistics.perDevice')}</Typography>
           <Grid container spacing={2}>
             {stats.devices.map((item) => (
-              <Grid item xs={12} md={6} key={item.device.id}>
+              <Grid size={{ xs: 12, md: 6 }} key={item.device.id}>
                 <Box sx={{ p: 2, borderRadius: 3, border: '1px solid rgba(148,163,184,0.12)' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography fontWeight={600}>{item.device.name}</Typography>

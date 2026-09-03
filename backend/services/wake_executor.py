@@ -31,20 +31,50 @@ def execute_wake_action(device):
     return handlers[method](device)
 
 
+LIMITED_BROADCAST = '255.255.255.255'
+
+
+def wol_targets(device):
+    """Addresses a magic packet is sent to, most specific first.
+
+    A sleeping machine no longer answers ARP, so a unicast packet to its IP
+    is often undeliverable. Broadcasts reach the NIC regardless: the
+    subnet-directed broadcast follows the routing table (correct interface
+    on multi-homed hosts) and the limited broadcast is what most WoL tools
+    use. Sending to all of them costs nothing and maximises the chance that
+    one of them reaches the device.
+    """
+    targets = [device.ip]
+    if device.use_broadcast is None or device.use_broadcast:
+        directed = device.broadcast_ip or _broadcast_for_ip(device.ip)
+        for candidate in (directed, LIMITED_BROADCAST):
+            if candidate and candidate not in targets:
+                targets.append(candidate)
+    return targets
+
+
 def _wake_wol(device):
     port = device.wol_port or 9
-    send_magic_packet(device.mac, ip_address=device.ip, port=port)
-    if device.use_broadcast:
-        broadcast = device.broadcast_ip or _broadcast_for_ip(device.ip)
-        if broadcast:
-            send_magic_packet(device.mac, ip_address=broadcast, port=port)
+    sent = 0
+    last_error = None
+    for target in wol_targets(device):
+        try:
+            send_magic_packet(device.mac, ip_address=target, port=port)
+            sent += 1
+        except OSError as exc:
+            # One unreachable target must not stop the others (e.g. unicast
+            # "network unreachable" while the broadcast would have worked).
+            last_error = exc
+            logging.warning('Magic packet to %s for %s failed: %s', target, device.mac, exc)
+    if sent == 0:
+        raise WakeMethodError('WOL_SEND_FAILED', f'Could not send a magic packet: {last_error}')
 
 
 def _broadcast_for_ip(ip):
     parts = ip.split('.')
     if len(parts) == 4:
         return f'{parts[0]}.{parts[1]}.{parts[2]}.255'
-    return '255.255.255.255'
+    return LIMITED_BROADCAST
 
 
 def _wake_ssh(device):

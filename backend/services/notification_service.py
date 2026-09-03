@@ -21,7 +21,7 @@ def send_webhooks(event_name, payload):
                 headers={'Content-Type': 'application/json', 'User-Agent': f'ProxyWake/{__version__}'},
             )
         except requests.RequestException as exc:
-            logging.error('Webhook %s mislukt: %s', hook.name, exc)
+            logging.error('Webhook %s failed: %s', hook.name, exc)
 
 
 def send_notification_channels(event_name, payload):
@@ -36,7 +36,7 @@ def send_notification_channels(event_name, payload):
                 timeout=5,
             )
         except requests.RequestException as exc:
-            logging.error('Slack notification mislukt: %s', exc)
+            logging.error('Slack notification failed: %s', exc)
 
     if settings.get('telegram_enabled') and settings.get('telegram_bot_token') and settings.get('telegram_chat_id'):
         try:
@@ -46,7 +46,7 @@ def send_notification_channels(event_name, payload):
                 timeout=5,
             )
         except requests.RequestException as exc:
-            logging.error('Telegram notification mislukt: %s', exc)
+            logging.error('Telegram notification failed: %s', exc)
 
 
 def _format_notification(event_name, payload):

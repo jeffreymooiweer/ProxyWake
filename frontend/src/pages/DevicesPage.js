@@ -38,7 +38,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 
-const emptyForm = { name: '', domain: '', ip: '', mac: '', group_id: '', use_broadcast: false, wake_cooldown_seconds: 30, wake_method: 'wol' };
+const emptyForm = { name: '', domain: '', ip: '', mac: '', group_id: '', use_broadcast: true, wake_cooldown_seconds: 30, wake_method: 'wol' };
 
 const WAKE_METHODS = ['wol', 'ssh', 'webhook', 'home_assistant', 'ipmi'];
 
@@ -162,10 +162,13 @@ const DevicesPage = () => {
 
         if (['online', 'failed', 'skipped', 'cooldown'].includes(job.status)) {
           if (job.message_code) {
-            const translated = t(`messages.${job.message_code}`, {
-              name: device.name,
-              seconds: Math.round((job.waited_ms || 0) / 1000),
-            });
+            const params = { name: device.name, seconds: Math.round((job.waited_ms || 0) / 1000) };
+            const messageKey = `messages.${job.message_code}`;
+            const errorKey = `errors.${job.message_code}`;
+            // Failure codes (e.g. SSH_CREDENTIALS_MISSING) live under errors.*
+            const translated = t(messageKey, params) !== messageKey
+              ? t(messageKey, params)
+              : (t(errorKey, params) !== errorKey ? t(errorKey, params) : job.message_code);
             showMessage(translated, job.status === 'online' || job.status === 'skipped' ? 'success' : 'error');
           }
           setWakeJobs((prev) => {
@@ -460,6 +463,26 @@ const DevicesPage = () => {
                 onChange={(e) => setEditing({ ...editing, wake_timeout_seconds: Number(e.target.value) })}
               />
             </Grid>
+            {(editing?.wake_method || 'wol') === 'wol' && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControlLabel
+                    control={<Switch checked={editing?.use_broadcast ?? true} onChange={(e) => setEditing({ ...editing, use_broadcast: e.target.checked })} />}
+                    label={t('devices.broadcast')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={t('devices.broadcastIp')}
+                    value={editing?.broadcast_ip || ''}
+                    onChange={(e) => setEditing({ ...editing, broadcast_ip: e.target.value })}
+                    placeholder="192.168.1.255"
+                    helperText={t('devices.broadcastHelp')}
+                  />
+                </Grid>
+              </>
+            )}
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>{t('devices.wakeMethod')}</InputLabel>

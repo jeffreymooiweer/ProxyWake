@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from extensions import limiter
 from models import Device
+from services.status_service import check_device_online
 from services.wake_service import smart_wake_device, wake_and_wait
 from utils.http import json_error
 
@@ -17,7 +18,7 @@ def public_status(domain):
     return jsonify({
         'domain': device.domain,
         'name': device.name or device.domain,
-        'online': device.to_dict(include_status=True)['online'],
+        'online': check_device_online(device),
     })
 
 

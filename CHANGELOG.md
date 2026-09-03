@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.3.0] - 2026-09-03
+
+### Added
+
+- **Weekday selection for scheduled wakes** in the Automation tab; existing schedules show the days they run on
+- **Broadcast address field** and broadcast toggle in the device edit dialog (previously only available when creating a device)
+- `TZ` environment variable support for scheduled wakes; the image now ships timezone data and the scheduler logs its active timezone at startup
+- Docker Compose file and Unraid template use **host networking** by default so Wake-on-LAN broadcasts reach the LAN; both carry a `TZ` setting
+
+### Changed
+
+- **Wake-on-LAN sends the magic packet on every useful path** — unicast to the device IP, the subnet-directed broadcast (or a custom broadcast address) and the limited broadcast `255.255.255.255`. A failing path no longer prevents the others (`WOL_SEND_FAILED` is reported only if none could be sent)
+- **Broadcast is on by default** for new devices; existing devices keep their setting
+- Generated integration snippets, log messages and audit entries are now in English (the UI itself remains available in 15 languages)
+- Frontend reports non-JSON server errors (e.g. a proxy 502) as failures instead of silently treating them as success; wake progress toasts translate failure codes
+- Audit log records the first `X-Forwarded-For` address instead of the raw header
+- Duplicate dependency-chain wake in the public wake path removed; `/api/public/status` no longer builds the full device payload just to read the online flag
+
+### Documentation
+
+- All guides rewritten in plain English for first-time users, with a prominent explanation of why Wake-on-LAN needs host networking in Docker, a step-by-step "wake does not work" checklist, and corrected details (Home Assistant webhook integration, wake endpoint paths, secret-key behaviour, rate limits)
+
 ## [4.2.7] - 2026-08-12
 
 ### Changed
@@ -276,7 +298,8 @@ Major release — consolidates Golf A through E into a production-ready v4 basel
 - Multi-arch Docker image (`linux/amd64`, `linux/arm64`)
 - README screenshot gallery
 
-[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.7...main
+[Unreleased]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.3.0...main
+[4.3.0]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.7...v4.3.0
 [4.2.7]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.6...v4.2.7
 [4.2.6]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.5...v4.2.6
 [4.2.5]: https://github.com/jeffreymooiweer/ProxyWake/compare/v4.2.4...v4.2.5

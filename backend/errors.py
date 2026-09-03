@@ -18,6 +18,7 @@ ERROR_MESSAGES = {
     'NOT_FOUND': 'Resource not found.',
     'RATE_LIMITED': 'Too many requests. Please try again later.',
     'WAKE_FAILED': 'Failed to send magic packet.',
+    'WOL_SEND_FAILED': 'Could not send a magic packet on any network path.',
     'INVALID_STATUS_CHECK_TYPE': 'Invalid status check type. Use ping, tcp, or http.',
     'INVALID_WAKE_METHOD': 'Invalid wake method.',
     'DEPENDENCY_CYCLE': 'Circular device dependency detected.',

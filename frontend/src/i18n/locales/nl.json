@@ -72,7 +72,8 @@
     "INVALID_BACKUP": "Ongeldig backupbestand.",
     "INVALID_LOG_LEVEL": "Ongeldig logniveau.",
     "INTERNAL_ERROR": "Interne serverfout.",
-    "GENERIC": "Er is iets misgegaan."
+    "GENERIC": "Er is iets misgegaan.",
+    "WOL_SEND_FAILED": "Could not send a magic packet on any network path."
   },
   "messages": {
     "NO_PASSWORD_CONFIGURED": "Geen wachtwoord geconfigureerd, sessie gestart.",
@@ -215,7 +216,9 @@
       "failed": "Wake mislukt",
       "skipped": "Al online",
       "cooldown": "Cooldown actief"
-    }
+    },
+    "broadcastIp": "Broadcast address (optional)",
+    "broadcastHelp": "Leave empty to use the subnet broadcast, e.g. 192.168.1.255."
   },
   "groups": {
     "title": "Groepen",
@@ -263,7 +266,20 @@
     "device": "Apparaat",
     "hour": "Uur",
     "minute": "Minuut",
-    "addSchedule": "Schema toevoegen"
+    "addSchedule": "Schema toevoegen",
+    "days": "Days of the week",
+    "dayNames": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "everyDay": "Every day",
+    "noDays": "No days selected",
+    "timezoneHint": "Times use the timezone of the ProxyWake container (TZ environment variable)."
   },
   "statistics": {
     "title": "Statistieken",

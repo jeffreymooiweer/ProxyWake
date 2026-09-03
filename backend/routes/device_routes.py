@@ -172,5 +172,5 @@ def import_devices_route():
     devices = data.get('devices', [])
     merge = data.get('merge', True)
     count = import_devices(devices, merge=merge)
-    log_audit('devices_imported', f'{count} apparaten', actor_ip())
+    log_audit('devices_imported', f'{count} devices', actor_ip())
     return jsonify({'imported': count}), 200

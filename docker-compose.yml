@@ -2,18 +2,37 @@ services:
   proxywake:
     image: ${PROXYWAKE_IMAGE:-jeffersonmouze/proxywake:latest}
     container_name: proxywake
-    ports:
-      - "${PROXYWAKE_PORT:-8462}:5001"
+
+    # --- Networking -----------------------------------------------------
+    # Wake-on-LAN magic packets are broadcasts that must be sent from the
+    # same network as the device you want to wake. A container on Docker's
+    # default "bridge" network lives on its own private network, so its
+    # broadcasts never reach your LAN and wake attempts silently do nothing.
+    #
+    # RECOMMENDED: use host networking (Linux hosts, incl. Unraid/TrueNAS).
+    # The web UI is then reachable on port 5001 of the host directly and the
+    # "ports:" mapping below is ignored.
+    network_mode: host
+    #
+    # If you cannot use host networking, comment out network_mode above,
+    # uncomment "ports:", and use a macvlan network or an SSH/webhook wake
+    # method instead of Wake-on-LAN.
+    # ports:
+    #   - "${PROXYWAKE_PORT:-8462}:5001"
+
     environment:
       PROXYWAKE_PASSWORD: ${PROXYWAKE_PASSWORD:-}
       PROXYWAKE_API_KEY: ${PROXYWAKE_API_KEY:-}
       PROXYWAKE_SECRET_KEY: ${PROXYWAKE_SECRET_KEY:-}
       PROXYWAKE_ALLOWED_ORIGINS: ${PROXYWAKE_ALLOWED_ORIGINS:-}
       PROXYWAKE_DATA_DIR: /app/backend/data
+      # Timezone for scheduled wakes (e.g. Europe/Amsterdam).
+      TZ: ${TZ:-UTC}
     volumes:
       - proxywake_data:/app/backend/data
     restart: unless-stopped
     cap_add:
+      # Lets the container send ICMP pings for the "ping" status check.
       - NET_RAW
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5001/api/health"]

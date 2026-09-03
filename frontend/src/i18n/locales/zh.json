@@ -72,7 +72,8 @@
     "SSH_PASS_UNAVAILABLE": "sshpass is required for SSH password authentication.",
     "INSUFFICIENT_API_SCOPE": "API key does not have the required scope.",
     "INVALID_BACKUP": "Invalid backup file.",
-    "INVALID_LOG_LEVEL": "Invalid log level."
+    "INVALID_LOG_LEVEL": "Invalid log level.",
+    "WOL_SEND_FAILED": "Could not send a magic packet on any network path."
   },
   "messages": {
     "NO_PASSWORD_CONFIGURED": "未配置密码，会话已开始。",
@@ -215,7 +216,9 @@
       "failed": "Wake failed",
       "skipped": "Already online",
       "cooldown": "Cooldown active"
-    }
+    },
+    "broadcastIp": "Broadcast address (optional)",
+    "broadcastHelp": "Leave empty to use the subnet broadcast, e.g. 192.168.1.255."
   },
   "groups": {
     "title": "分组",
@@ -263,7 +266,20 @@
     "device": "设备",
     "hour": "小时",
     "minute": "分钟",
-    "addSchedule": "添加计划"
+    "addSchedule": "添加计划",
+    "days": "Days of the week",
+    "dayNames": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "everyDay": "Every day",
+    "noDays": "No days selected",
+    "timezoneHint": "Times use the timezone of the ProxyWake container (TZ environment variable)."
   },
   "statistics": {
     "title": "统计",

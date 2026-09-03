@@ -38,7 +38,7 @@ class Device(db.Model):
     name = db.Column(db.String(120), nullable=True)
     group_id = db.Column(db.Integer, db.ForeignKey('device_group.id'), nullable=True)
     npm_host_id = db.Column(db.Integer, db.ForeignKey('npm_host.id'), nullable=True)
-    use_broadcast = db.Column(db.Boolean, default=False)
+    use_broadcast = db.Column(db.Boolean, default=True)
     broadcast_ip = db.Column(db.String(15), nullable=True)
     wake_cooldown_seconds = db.Column(db.Integer, default=30)
     last_wake_at = db.Column(db.DateTime, nullable=True)

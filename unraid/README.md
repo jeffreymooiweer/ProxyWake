@@ -1,109 +1,73 @@
-# ProxyWake Unraid Template
+# ProxyWake Unraid template
 
-Official Community Applications template files for installing ProxyWake on Unraid.
+The Community Applications template for installing ProxyWake on Unraid.
 
-## What this is
+## What is in this folder
 
-This directory contains the Unraid **Community Applications** template for ProxyWake:
+- `proxywake.xml` — the container template used by the Community Applications plugin
+- `icons/proxywake.png` — the icon shown in the Apps tab
 
-- `proxywake.xml` — container template used by the CA plugin
-- `icons/proxywake.png` — template icon shown in the Apps UI
+ProxyWake wakes sleeping devices on your LAN when they are accessed through a reverse proxy (Nginx Proxy Manager, Traefik, Caddy and similar).
 
-ProxyWake wakes sleeping devices on your LAN when traffic hits your reverse proxy (Nginx Proxy Manager, Traefik, Caddy, and similar).
-
-## Installation through Community Applications
-
-Once the template is published in Community Applications:
+## Installing through Community Applications
 
 1. Open **Apps** in the Unraid web UI.
-2. Search for **ProxyWake**.
-3. Click **Install**.
-4. Set **Secret Key** (`PROXYWAKE_SECRET_KEY`) to a long random value (at least 32 characters).
-5. Optionally set **Password** (`PROXYWAKE_PASSWORD`) or leave it empty and use the first-run setup wizard.
-6. Confirm **Appdata** maps `/mnt/user/appdata/proxywake` → `/app/backend/data`.
-7. Apply and start the container.
-8. Open the WebUI from the container link or `http://<unraid-ip>:5001` (or your chosen host port).
+2. Search for **ProxyWake** and click **Install**.
+3. Set **Timezone** (e.g. `Europe/Amsterdam`) and, optionally, a **Password**. Leave the password empty to set it in the first-run setup wizard.
+4. Keep **Appdata** at `/mnt/user/appdata/proxywake`.
+5. Click **Apply** and open the web UI at `http://<unraid-ip>:5001`.
 
-The template adds `--cap-add=NET_RAW` automatically — required for Wake-on-LAN ping.
+The template uses **host networking**. This is required: Wake-on-LAN magic packets are LAN broadcasts and never leave Docker's private bridge network. It also adds `--cap-add=NET_RAW` so ProxyWake can ping devices to check whether they are online.
 
-## Manual / private template testing
-
-Test the template before CA submission:
+## Testing the template before it is published
 
 ```bash
 mkdir -p /boot/config/plugins/community.applications/private/proxywake
+cp unraid/proxywake.xml /boot/config/plugins/community.applications/private/proxywake/proxywake.xml
 ```
 
-Copy this file from the repository:
+Then open **Apps → Private Apps** and install **ProxyWake** from there. Private templates are read from the USB boot drive; update the XML there when you change it.
 
-`unraid/proxywake.xml`
-
-to:
-
-`/boot/config/plugins/community.applications/private/proxywake/proxywake.xml`
-
-Then in Unraid:
-
-1. Open **Apps**.
-2. Go to **Private Apps**.
-3. Install **ProxyWake**.
-
-Private templates read from the USB boot path; update the XML there when you change the template locally.
-
-## Required settings
+## Template settings
 
 | Setting | Value |
 |---------|-------|
 | **Repository** | `jeffersonmouze/proxywake:latest` |
-| **WebUI port** | Container `5001` (map a host port, default `5001`) |
+| **Network Type** | Host (web UI on port `5001`) |
 | **Appdata** | `/mnt/user/appdata/proxywake` → `/app/backend/data` |
-| **Secret Key** | `PROXYWAKE_SECRET_KEY` — long random string |
-| **Extra Parameters** | `--cap-add=NET_RAW` (included in template) |
+| **Timezone** (`TZ`) | Your timezone, for scheduled wakes |
+| **Password** (`PROXYWAKE_PASSWORD`) | Optional; the setup wizard asks otherwise |
+| **Extra Parameters** | `--cap-add=NET_RAW` (included) |
 
-## Recommended settings
+Advanced (normally left empty):
 
-| Setting | Notes |
-|---------|-------|
-| `PROXYWAKE_PASSWORD` | Set a strong password, or leave empty for the setup wizard on first visit |
-| `PROXYWAKE_ALLOWED_ORIGINS` | Set when using a reverse proxy with a public hostname, e.g. `https://proxywake.example.com` |
-| `PROXYWAKE_SESSION_COOKIE_SECURE` | `true` only when the UI is served over HTTPS |
-| Backups | Include `/mnt/user/appdata/proxywake` in your Unraid backup routine |
+| Setting | When to use |
+|---------|-------------|
+| `PROXYWAKE_SECRET_KEY` | ProxyWake generates and stores one itself. Set your own only if you want to control it, e.g. to restore a backup on another machine. |
+| `PROXYWAKE_ALLOWED_ORIGINS` | When the UI is served from a public hostname through a reverse proxy, e.g. `https://proxywake.example.com` |
+| `PROXYWAKE_SESSION_COOKIE_SECURE` | `true` only when the UI is opened over HTTPS |
 
-Log level is configured in the ProxyWake UI under **Settings**, not via an environment variable.
+The log level is set in the ProxyWake UI under **Settings**, not through a variable.
 
-## Reverse proxy notes
+## Nginx Proxy Manager on Unraid
 
-When ProxyWake sits behind Nginx Proxy Manager or another reverse proxy:
-
-- Set `PROXYWAKE_ALLOWED_ORIGINS` to your public URL.
-- Set `PROXYWAKE_SESSION_COOKIE_SECURE=true` when using HTTPS.
-- Ensure the proxy can reach ProxyWake on the Unraid host (not `localhost` from inside another container unless they share a Docker network).
-
-## Nginx Proxy Manager notes
-
-In ProxyWake **Integration**, set the ProxyWake URL to an address NPM can reach:
+Under **Integration** in ProxyWake, set the ProxyWake URL to the address NPM can reach:
 
 ```
-http://UNRAID-IP:5001
+http://<unraid-ip>:5001
 ```
 
-Use your actual Unraid LAN IP and the **host** port you mapped (often `5001` with this template, or `8462` if you prefer that convention).
-
-Important:
-
-- Do **not** use NPM's own IP/port in the ProxyWake setup wizard.
-- Use the address NPM uses to reach ProxyWake — usually `http://UNRAID-IP:5001`.
-- If ProxyWake and NPM share a Docker custom network, you may use the container name/DNS instead when name resolution works.
+Use the Unraid LAN IP, not `localhost` (from inside the NPM container that is NPM itself). Then follow [docs/examples/nginx-proxy-manager.md](../docs/examples/nginx-proxy-manager.md).
 
 ## Troubleshooting
 
 | Problem | Check |
 |---------|-------|
-| WOL / ping fails | Extra Parameters must include `--cap-add=NET_RAW` |
-| NPM cannot reach ProxyWake | Use Unraid host IP, not `localhost` from NPM |
-| Sessions reset after restart | Set a fixed `PROXYWAKE_SECRET_KEY` |
-| Permission errors on appdata | Container runs as UID 1000; run `chown -R 1000:1000 /mnt/user/appdata/proxywake` or use image `4.2.3+` |
-| WebUI not loading | Confirm host port maps to container `5001` and the container is healthy |
+| Nothing wakes | Network Type must be **Host**; then verify the MAC address. See [docs/troubleshooting.md](../docs/troubleshooting.md#wake-does-not-work) |
+| Devices always shown offline | Extra Parameters must include `--cap-add=NET_RAW`, or switch the device's status check to TCP/HTTP |
+| NPM cannot reach ProxyWake | Use the Unraid IP and port 5001, not `localhost` |
+| `unable to open database file` | Fixed automatically since 4.2.3; on older images run `chown -R 1000:1000 /mnt/user/appdata/proxywake` |
+| Schedules fire at the wrong time | Set the **Timezone** variable |
 
 ## Links
 
@@ -113,4 +77,4 @@ Important:
 | Docker Hub | https://hub.docker.com/r/jeffersonmouze/proxywake |
 | Issues | https://github.com/jeffreymooiweer/ProxyWake/issues |
 | Template XML | https://raw.githubusercontent.com/jeffreymooiweer/ProxyWake/main/unraid/proxywake.xml |
-| Full Unraid docs | [docs/unraid.md](../docs/unraid.md) |
+| Full Unraid guide | [docs/unraid.md](../docs/unraid.md) |

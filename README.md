@@ -13,7 +13,7 @@
 
 <p align="center">
   <strong>Access it. Wake it.</strong><br/>
-  Wake sleeping devices when they are accessed through a reverse proxy.
+  Let your servers sleep. ProxyWake turns them on the moment someone actually needs them.
 </p>
 
 <p align="center">
@@ -22,69 +22,82 @@
 
 ---
 
-## What it does
+## What is ProxyWake?
 
-1. Register a device (domain, IP, MAC address).
-2. Your reverse proxy sends a background wake request when someone visits that domain.
-3. ProxyWake wakes the device and optionally shows a waiting page until it is online.
+Many home servers run 24/7 even though they are only used a few hours a day, just so they are there when you open `plex.myhome.net` or `nas.myhome.net`. ProxyWake lets you switch them off (or put them to sleep) and still have them available on demand:
 
-No need to keep servers running 24/7 just because they might be accessed.
+1. **You register a device** in ProxyWake: its domain name, IP address and MAC address.
+2. **Your reverse proxy** (Nginx Proxy Manager, Traefik or Caddy) tells ProxyWake whenever someone visits that domain.
+3. **ProxyWake wakes the device** — with Wake-on-LAN, or via SSH, a webhook, Home Assistant or IPMI — and can show a friendly "waking up…" page until it is online.
+
+You keep the convenience of always-on services with the electricity bill of a server that is off most of the time.
 
 ---
 
-## Quick start
+## Quick start (5 minutes)
+
+**Requirements:** a Linux machine with Docker (a NAS, Unraid, a Raspberry Pi, a mini PC…) on the same network as the devices you want to wake, and Wake-on-LAN enabled on those devices.
 
 ```bash
 docker run -d \
   --name proxywake \
   --restart unless-stopped \
+  --network host \
   --cap-add NET_RAW \
-  -p 8462:5001 \
-  -e PROXYWAKE_PASSWORD=YourSecurePassword \
+  -e PROXYWAKE_PASSWORD=ChooseAStrongPassword \
+  -e TZ=Europe/Amsterdam \
   -v proxywake_data:/app/backend/data \
   jeffersonmouze/proxywake:latest
 ```
 
-Open `http://<server-ip>:8462` and follow the setup wizard.
+Then open **`http://<ip-of-that-machine>:5001`** and follow the setup wizard.
 
-**Next steps:** add a device, then copy the integration snippets from the **Integration** tab into Nginx Proxy Manager (or Traefik/Caddy). Full walkthrough: [docs/quick-start.md](docs/quick-start.md).
+> **Why `--network host`?** Wake-on-LAN works by shouting a "magic packet" to everyone on your local network. A container on Docker's default network is on a private network of its own, so its shout never reaches your devices. Host networking puts ProxyWake directly on your LAN. [More about this →](docs/docker.md#networking-and-wake-on-lan)
 
-| Install option | Guide |
-|----------------|-------|
+**Next:** add a device under **Devices**, press the ⏻ button to test that it wakes, then copy the snippet for your proxy from the **Integration** tab. Step-by-step walkthrough: **[docs/quick-start.md](docs/quick-start.md)**.
+
+| How do you want to install? | Guide |
+|-----------------------------|-------|
 | Docker Compose | [docs/docker.md](docs/docker.md) |
-| Unraid | [docs/unraid.md](docs/unraid.md) — CA template in [unraid/](unraid/) |
-| Environment variables | [docs/configuration.md](docs/configuration.md) |
+| Unraid (Community Applications) | [docs/unraid.md](docs/unraid.md) |
+| Settings and environment variables | [docs/configuration.md](docs/configuration.md) |
 
-Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.2`, `4.2.7` · amd64 & arm64
-
----
-
-## Reverse proxy integration
-
-Works with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and **Home Assistant**.
-
-1. Open **Integration** in the ProxyWake UI.
-2. Copy the config snippets for your proxy.
-3. Use your server's **LAN IP** in the ProxyWake URL (not `localhost` from inside another container).
-
-| Guide | Link |
-|-------|------|
-| Overview | [docs/reverse-proxy.md](docs/reverse-proxy.md) |
-| NPM | [docs/examples/nginx-proxy-manager.md](docs/examples/nginx-proxy-manager.md) |
-| Traefik | [docs/examples/traefik.md](docs/examples/traefik.md) |
-| Caddy | [docs/examples/caddy.md](docs/examples/caddy.md) |
-| Home Assistant | [docs/examples/home-assistant.md](docs/examples/home-assistant.md) |
+Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.3`, `4.3.0` · amd64 & arm64
 
 ---
 
-## Screenshots
+## Connect your reverse proxy
+
+ProxyWake generates ready-to-paste configuration for each proxy under **Integration**. All of them work with the proxy's built-in features — no plugins needed.
+
+| Proxy | How it triggers a wake | Guide |
+|-------|------------------------|-------|
+| Nginx Proxy Manager | `mirror` sends a copy of each request to ProxyWake | [docs/examples/nginx-proxy-manager.md](docs/examples/nginx-proxy-manager.md) |
+| Traefik | built-in `forwardAuth` middleware | [docs/examples/traefik.md](docs/examples/traefik.md) |
+| Caddy | built-in `forward_auth` + `handle_errors` | [docs/examples/caddy.md](docs/examples/caddy.md) |
+| Home Assistant | REST switch calling the ProxyWake API | [docs/examples/home-assistant.md](docs/examples/home-assistant.md) |
+
+How the pieces fit together: [docs/reverse-proxy.md](docs/reverse-proxy.md).
+
+---
+
+## Features
+
+- **Five wake methods:** Wake-on-LAN, SSH command, HTTP webhook, Home Assistant webhook, IPMI.
+- **Smart waking:** skips devices that are already online, respects a cooldown, and can wake dependencies first (e.g. the NAS before the media server).
+- **Waiting page:** visitors see a progress page and are sent to the service as soon as it responds.
+- **Scheduled wakes:** wake devices at fixed times on chosen weekdays.
+- **Groups:** wake several devices with one click or one API call.
+- **Notifications:** webhooks (Discord, ntfy, …), Slack and Telegram on wake success or failure.
+- **Statistics and logs:** wake history, average boot times, audit trail, live application log.
+- **Backup and restore**, **network scanner**, **REST API** with scoped keys and OpenAPI docs, **15 UI languages**.
 
 <p align="center">
-  <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake Dashboard" width="900" />
+  <img src="docs/assets/screenshots/dashboard.png" alt="ProxyWake dashboard" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshots/integration.png" alt="NPM integration" width="700" />
+  <img src="docs/assets/screenshots/integration.png" alt="Integration tab with generated proxy snippets" width="700" />
 </p>
 
 ---
@@ -95,10 +108,10 @@ Works with **Nginx Proxy Manager**, **Traefik**, **Caddy**, and **Home Assistant
 |-------|------|
 | **Start here** | [docs/quick-start.md](docs/quick-start.md) |
 | All guides | [docs/README.md](docs/README.md) |
-| Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
+| Something not working? | [docs/troubleshooting.md](docs/troubleshooting.md) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
-API reference (when running): `/api/docs`
+API reference while ProxyWake is running: `http://<ip>:5001/api/docs`
 
 ---
 

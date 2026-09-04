@@ -62,7 +62,7 @@ Then open **`http://<ip-of-that-machine>:5001`** and follow the setup wizard.
 | Unraid (Community Applications) | [docs/unraid.md](docs/unraid.md) |
 | Settings and environment variables | [docs/configuration.md](docs/configuration.md) |
 
-Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) — tags `latest`, `4.4`, `4.4.0` · amd64 & arm64
+Image: [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) on Docker Hub, or the identical [`ghcr.io/jeffreymooiweer/proxywake`](https://github.com/jeffreymooiweer/ProxyWake/pkgs/container/proxywake) on GitHub Container Registry — tags `latest`, `4.4`, `4.4.0` · amd64 & arm64
 
 ---
 

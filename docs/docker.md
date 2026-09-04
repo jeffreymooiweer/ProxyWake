@@ -60,7 +60,7 @@ docker run -d \
   jeffersonmouze/proxywake:latest
 ```
 
-Pin a release with `:4.4.0`, or follow a minor line with `:4.4`.
+Pin a release with `:4.4.0`, or follow a minor line with `:4.4`. Prefer GitHub's registry? Use `ghcr.io/jeffreymooiweer/proxywake` instead of `jeffersonmouze/proxywake` — the images are built from the same commit in the same workflow run.
 
 ## Docker Compose
 
@@ -77,7 +77,8 @@ The bundled Compose file uses host networking. If you really need bridge network
 
 | Property | Value |
 |----------|-------|
-| Image | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
+| Image (Docker Hub) | [`jeffersonmouze/proxywake`](https://hub.docker.com/r/jeffersonmouze/proxywake) |
+| Image (GitHub Container Registry) | [`ghcr.io/jeffreymooiweer/proxywake`](https://github.com/jeffreymooiweer/ProxyWake/pkgs/container/proxywake) — identical builds, same tags |
 | Tags | `latest`, `4.4`, `4.4.0` |
 | Architectures | `linux/amd64`, `linux/arm64` |
 | Web UI port | `5001` (host networking) — or map it with `-p 8462:5001` in bridge mode |

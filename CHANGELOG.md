@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Images are also published to GitHub Container Registry as `ghcr.io/jeffreymooiweer/proxywake`, with the same tags as Docker Hub, from the same workflow run
+
 ## [4.4.0] - 2026-09-03
 
 ### Added

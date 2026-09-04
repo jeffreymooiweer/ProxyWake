@@ -4,11 +4,35 @@
   <img src="docs/assets/banner.png" alt="ProxyWake — Access it. Wake it." width="900" />
 </p>
 
+<!-- Distribution -->
 <p align="center">
-  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker" alt="Docker Pulls"></a>
-  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&label=version" alt="Docker Version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/platform-amd64%20%7C%20arm64-blue?style=flat-square" alt="Platform">
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/v/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&logoColor=white&label=version&color=2496ED" alt="Latest version"></a>
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/pulls/jeffersonmouze/proxywake?style=flat-square&logo=docker&logoColor=white&color=2496ED" alt="Docker pulls"></a>
+  <a href="https://hub.docker.com/r/jeffersonmouze/proxywake"><img src="https://img.shields.io/docker/image-size/jeffersonmouze/proxywake/latest?style=flat-square&logo=docker&logoColor=white&label=image%20size&color=2496ED" alt="Image size"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/pkgs/container/proxywake"><img src="https://img.shields.io/badge/ghcr.io-jeffreymooiweer%2Fproxywake-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Container Registry"></a>
+  <img src="https://img.shields.io/badge/platform-amd64%20%7C%20arm64-555?style=flat-square&logo=linux&logoColor=white" alt="Platform amd64 and arm64">
+  <a href="unraid/"><img src="https://img.shields.io/badge/Unraid-Community%20Apps-F15A2C?style=flat-square&logo=unraid&logoColor=white" alt="Unraid Community Applications template"></a>
+</p>
+
+<!-- Build & quality -->
+<p align="center">
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/actions/workflows/backend-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/backend-tests.yml?style=flat-square&logo=pytest&logoColor=white&label=tests" alt="Backend tests"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/actions/workflows/frontend-build.yml"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/frontend-build.yml?style=flat-square&logo=vite&logoColor=white&label=frontend" alt="Frontend build"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/docker.yml?style=flat-square&logo=githubactions&logoColor=white&label=docker%20publish" alt="Docker publish"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/security/code-scanning"><img src="https://img.shields.io/github/actions/workflow/status/jeffreymooiweer/ProxyWake/codeql.yml?style=flat-square&logo=github&logoColor=white&label=CodeQL" alt="CodeQL"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/commits/main"><img src="https://img.shields.io/github/last-commit/jeffreymooiweer/ProxyWake?style=flat-square&logo=git&logoColor=white" alt="Last commit"></a>
+</p>
+
+<!-- Tech & community -->
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11">
+  <img src="https://img.shields.io/badge/Flask-3-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask 3">
+  <img src="https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19">
+  <img src="https://img.shields.io/badge/MUI-9-007FFF?style=flat-square&logo=mui&logoColor=white" alt="MUI 9">
+  <img src="https://img.shields.io/badge/i18n-15%20languages-8A2BE2?style=flat-square&logo=googletranslate&logoColor=white" alt="15 UI languages">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/jeffreymooiweer/ProxyWake?style=flat-square&color=blue" alt="License MIT"></a>
+  <a href="https://github.com/jeffreymooiweer/ProxyWake/stargazers"><img src="https://img.shields.io/github/stars/jeffreymooiweer/ProxyWake?style=flat-square&logo=github&color=yellow" alt="GitHub stars"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs welcome"></a>
 </p>
 
 <p align="center">

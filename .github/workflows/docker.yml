@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    # Documentation-only changes do not need a new image. (Path filters are
+    # not applied to tag pushes, so releases always build.)
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
     tags:
       - 'v*'
   workflow_dispatch:
